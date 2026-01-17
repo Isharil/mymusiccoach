@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive } from 'lucide-react';
+import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive, Download, Upload } from 'lucide-react';
+import { useLocalStorage, exportAppData, importAppData } from './hooks/useLocalStorage';
 
 const MyMusicCoach = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -8,7 +9,7 @@ const MyMusicCoach = () => {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [currentTempo, setCurrentTempo] = useState({});
   const [showSchedule, setShowSchedule] = useState(false);
-  const [sessionHistory, setSessionHistory] = useState([
+  const [sessionHistory, setSessionHistory] = useLocalStorage('mmc_sessionHistory', [
     { id: 1, date: "2026-01-10", time: "18:30", workoutId: 1, workoutName: "Routine Débutant", completed: 3, skipped: 0, total: 3 },
     { id: 2, date: "2026-01-12", time: "19:00", workoutId: 2, workoutName: "Improvisation Blues", completed: 2, skipped: 0, total: 2 },
     { id: 3, date: "2026-01-13", time: "17:45", workoutId: 1, workoutName: "Routine Débutant", completed: 2, skipped: 1, total: 3 }
@@ -20,11 +21,11 @@ const MyMusicCoach = () => {
   const [newExerciseType, setNewExerciseType] = useState('none');
   
   // États pour les objectifs et réglages
-  const [goals, setGoals] = useState([
+  const [goals, setGoals] = useLocalStorage('mmc_goals', [
     { id: 1, title: "Maîtriser la gamme pentatonique", target: 100, current: 75, unit: "BPM" },
     { id: 2, title: "Pratiquer 4 fois cette semaine", target: 4, current: 2, unit: "sessions" }
   ]);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useLocalStorage('mmc_settings', {
     notifications: true,
     practiceReminder: "18:00",
     theme: "light",
@@ -44,9 +45,9 @@ const MyMusicCoach = () => {
 
   const [isMobile] = useState(isMobileDevice());
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [deletedExercises, setDeletedExercises] = useState([]);
+  const [deletedExercises, setDeletedExercises] = useLocalStorage('mmc_deletedExercises', []);
   const [showTrash, setShowTrash] = useState(false);
-  const [archivedWorkouts, setArchivedWorkouts] = useState([]);
+  const [archivedWorkouts, setArchivedWorkouts] = useLocalStorage('mmc_archivedWorkouts', []);
   const [showArchive, setShowArchive] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -333,9 +334,9 @@ const MyMusicCoach = () => {
     return baseExercises[instrument] || baseExercises.autre;
   };
 
-  const [exercises, setExercises] = useState(getDefaultExercises(settings.instrument));
-  
-  const [workouts, setWorkouts] = useState([
+  const [exercises, setExercises] = useLocalStorage('mmc_exercises', getDefaultExercises(settings.instrument));
+
+  const [workouts, setWorkouts] = useLocalStorage('mmc_workouts', [
     {
       id: 1,
       name: "Routine Débutant",
@@ -351,8 +352,8 @@ const MyMusicCoach = () => {
       category: "Improvisation"
     }
   ]);
-  
-  const [weeklySchedule, setWeeklySchedule] = useState({
+
+  const [weeklySchedule, setWeeklySchedule] = useLocalStorage('mmc_weeklySchedule', {
     semaine1: {
       lundi: 1,
       mardi: null,
@@ -419,38 +420,34 @@ const MyMusicCoach = () => {
   // Fonctions de notification
   const requestNotificationPermission = async () => {
     if (!isMobile) {
-      alert('📱 Les notifications sont disponibles uniquement sur l\'application mobile.');
+      alert('Les notifications sont disponibles uniquement sur l\'application mobile.');
       return;
     }
 
     if (typeof Notification === 'undefined') {
-      alert('⚠️ Les notifications ne sont pas supportées par ce navigateur.');
+      alert('Les notifications ne sont pas supportées par ce navigateur.');
       return;
     }
 
     if (Notification.permission === 'granted') {
-      alert('✅ Les notifications sont déjà autorisées !');
+      alert('Les notifications sont déjà autorisées.');
       return;
     }
 
     if (Notification.permission === 'denied') {
-      alert('❌ Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.');
+      alert('Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.');
       return;
     }
 
     try {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
-      
+
       if (permission === 'granted') {
-        alert('✅ Notifications activées avec succès !');
-        // Envoyer une notification de test
         sendTestNotification();
-      } else {
-        alert('❌ Permission refusée. Vous pouvez la modifier dans les paramètres du navigateur.');
       }
     } catch (error) {
-      alert('⚠️ Erreur lors de la demande de permission.');
+      alert('Erreur lors de la demande de permission.');
     }
   };
 
@@ -508,6 +505,48 @@ const MyMusicCoach = () => {
 
     return () => clearInterval(interval);
   }, [settings.notifications, settings.practiceReminder, weeklySchedule, sessionHistory, workouts]);
+
+  // Fonctions d'export/import des données
+  const handleExportData = () => {
+    try {
+      const dataToExport = exportAppData();
+      const blob = new Blob([dataToExport], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      // Exporté avec succès
+    } catch (error) {
+      alert('Erreur lors de l\'export des données.');
+      console.error(error);
+    }
+  };
+
+  const handleImportData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = importAppData(e.target.result);
+        if (result.success) {
+          alert('Données importées. La page va se recharger.');
+          window.location.reload();
+        } else {
+          alert(result.message);
+        }
+      } catch (error) {
+        alert('Fichier invalide.');
+        console.error(error);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   // Fonction pour obtenir le jour actuel
   const getCurrentDay = () => {
@@ -651,7 +690,6 @@ const MyMusicCoach = () => {
       setDeletedExercises([...deletedExercises, exerciseToDelete]);
       setExercises(exercises.filter(ex => ex.id !== exerciseId));
       setSelectedExercise(null);
-      alert('✅ Exercice déplacé dans la corbeille');
     }
   };
 
@@ -660,14 +698,12 @@ const MyMusicCoach = () => {
     if (exerciseToRestore) {
       setExercises([...exercises, exerciseToRestore]);
       setDeletedExercises(deletedExercises.filter(ex => ex.id !== exerciseId));
-      alert('✅ Exercice restauré');
     }
   };
 
   const permanentlyDeleteExercise = (exerciseId) => {
     if (window.confirm('Supprimer définitivement cet exercice ? Cette action est irréversible.')) {
       setDeletedExercises(deletedExercises.filter(ex => ex.id !== exerciseId));
-      alert('✅ Exercice supprimé définitivement');
     }
   };
 
@@ -680,7 +716,6 @@ const MyMusicCoach = () => {
         setEditingWorkout(null);
         setShowCreateWorkout(false);
       }
-      alert('✅ Session archivée');
     }
   };
 
@@ -689,14 +724,12 @@ const MyMusicCoach = () => {
     if (workoutToRestore) {
       setWorkouts([...workouts, workoutToRestore]);
       setArchivedWorkouts(archivedWorkouts.filter(w => w.id !== workoutId));
-      alert('✅ Session restaurée');
     }
   };
 
   const permanentlyDeleteWorkout = (workoutId) => {
     if (window.confirm('Supprimer définitivement cette session ? Cette action est irréversible.')) {
       setArchivedWorkouts(archivedWorkouts.filter(w => w.id !== workoutId));
-      alert('✅ Session supprimée définitivement');
     }
   };
 
@@ -715,7 +748,6 @@ const MyMusicCoach = () => {
     };
     setGoals([...goals, newGoal]);
     setShowGoalForm(false);
-    alert('✅ Objectif créé avec succès !');
   };
 
   const handleFileUpload = (e) => {
@@ -749,7 +781,6 @@ const MyMusicCoach = () => {
     setShowCreateExercise(false);
     setNewExerciseType('none');
     setUploadedFile(null); // Réinitialiser le fichier uploadé
-    alert('✅ Exercice créé avec succès !');
   };
 
   const createOrUpdateWorkout = (workoutData) => {
@@ -757,7 +788,6 @@ const MyMusicCoach = () => {
       setWorkouts(workouts.map(w => w.id === editingWorkout.id ? { ...w, ...workoutData } : w));
       setEditingWorkout(null);
       setShowCreateWorkout(false);
-      alert('✅ Session modifiée avec succès !');
     } else {
       const maxId = workouts.length > 0 ? Math.max(...workouts.map(w => w.id)) : 0;
       const newWorkout = {
@@ -766,7 +796,6 @@ const MyMusicCoach = () => {
       };
       setWorkouts([...workouts, newWorkout]);
       setShowCreateWorkout(false);
-      alert('✅ Session créée avec succès !');
     }
   };
 
@@ -806,7 +835,7 @@ const MyMusicCoach = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    alert(`✅ Session "${workout.name}" exportée avec succès !`);
+    // Session exportée
   };
 
   const handleImportFile = (e) => {
@@ -814,7 +843,7 @@ const MyMusicCoach = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.json')) {
-      alert('⚠️ Le fichier doit être au format JSON');
+      alert('Le fichier doit être au format JSON');
       return;
     }
 
@@ -825,12 +854,12 @@ const MyMusicCoach = () => {
 
         // Vérifier la structure du fichier
         if (!importData.version || !importData.workout || !importData.exercises) {
-          alert('⚠️ Format de fichier invalide');
+          alert('Format de fichier invalide');
           return;
         }
 
         if (importData.appName !== "MyMusicCoach") {
-          if (!window.confirm('⚠️ Ce fichier ne provient pas de MyMusicCoach. Continuer quand même ?')) {
+          if (!window.confirm('Ce fichier ne provient pas de MyMusicCoach. Continuer quand même ?')) {
             return;
           }
         }
@@ -866,13 +895,12 @@ const MyMusicCoach = () => {
 
         setWorkouts([...workouts, newWorkout]);
 
-        alert(`✅ Session "${importData.workout.name}" importée avec succès !\n${newExercises.length} exercice(s) ajouté(s).`);
         setShowImportModal(false);
         setImportFile(null);
 
       } catch (error) {
         console.error('Erreur import:', error);
-        alert('❌ Erreur lors de l\'importation du fichier');
+        alert('Erreur lors de l\'importation du fichier');
       }
     };
     reader.readAsText(file);
@@ -1245,8 +1273,7 @@ const MyMusicCoach = () => {
         </div>
 
         <script>
-          // Message au chargement
-          console.log('✅ Rapport chargé ! Appuyez sur Ctrl+P pour enregistrer en PDF.');
+          // Rapport prêt à être imprimé
         </script>
       </body>
       </html>
@@ -1264,7 +1291,7 @@ const MyMusicCoach = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    alert('✅ Rapport téléchargé !\n\n1. Ouvre le fichier HTML téléchargé\n2. Appuie sur Ctrl+P (ou Cmd+P)\n3. Choisis "Enregistrer au format PDF"\n4. Partage le PDF avec ton prof !');
+    alert('Rapport téléchargé ! Ouvre le fichier HTML et appuie sur Ctrl+P (ou Cmd+P) pour l\'enregistrer en PDF.');
   };
 
   const currentInstrument = instruments[settings.instrument];
@@ -2373,7 +2400,6 @@ const MyMusicCoach = () => {
                         e.stopPropagation();
                         const goalId = goal.id;
                         setGoals(goals.filter(g => g.id !== goalId));
-                        alert('✅ Objectif supprimé !');
                       }}
                       className="text-red-500 hover:text-red-700"
                     >
@@ -2396,6 +2422,38 @@ const MyMusicCoach = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Section Sauvegarde et Restauration */}
+          <div className="bg-white rounded-3xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Sauvegarde des données</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Exportez vos données pour créer une sauvegarde ou importez une sauvegarde précédente.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={handleExportData}
+                className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Download className="w-5 h-5" />
+                Exporter mes données
+              </button>
+              <label className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                <Upload className="w-5 h-5" />
+                Importer une sauvegarde
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <p className="text-xs text-blue-800">
+                💡 Vos données sont automatiquement sauvegardées localement sur votre appareil. L'export permet de créer une copie de secours que vous pouvez conserver ailleurs.
+              </p>
             </div>
           </div>
         </div>
@@ -2424,8 +2482,7 @@ const MyMusicCoach = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log('Form submitted!');
-              
+
               const formData = new FormData(e.target);
               const data = {
                 name: formData.get('name'),
@@ -2438,10 +2495,7 @@ const MyMusicCoach = () => {
                 description: formData.get('description'),
                 videoUrl: formData.get('videoUrl') || undefined,
               };
-              
-              console.log('Exercise data:', data);
-              console.log('Uploaded file:', uploadedFile);
-              
+
               createExercise(data);
             }}
             className="flex-1 flex flex-col min-h-0"
@@ -2603,15 +2657,12 @@ const MyMusicCoach = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  
-                  alert('🔍 Bouton cliqué !');
-                  
+
                   const form = e.target.closest('form');
                   if (!form) {
-                    alert('❌ Formulaire non trouvé');
                     return;
                   }
-                  
+
                   const formData = new FormData(form);
                   const data = {
                     name: formData.get('name'),
@@ -2624,19 +2675,13 @@ const MyMusicCoach = () => {
                     description: formData.get('description'),
                     videoUrl: formData.get('videoUrl') || undefined,
                   };
-                  
+
                   if (!data.name || !data.duration || !data.sets) {
-                    alert('❌ Veuillez remplir tous les champs obligatoires');
+                    alert('Veuillez remplir tous les champs obligatoires');
                     return;
                   }
-                  
-                  alert('✅ Données récupérées !');
-                  
-                  try {
-                    createExercise(data);
-                  } catch (error) {
-                    alert('❌ Erreur: ' + error.message);
-                  }
+
+                  createExercise(data);
                 }}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
               >
@@ -2756,10 +2801,9 @@ const MyMusicCoach = () => {
                   
                   const form = e.target.closest('form');
                   if (!form) {
-                    alert('❌ Formulaire non trouvé');
                     return;
                   }
-                  
+
                   const formData = new FormData(form);
                   const selectedExercises = Array.from(formData.getAll('exercises')).map(id => parseInt(id));
                   const data = {
@@ -2768,17 +2812,16 @@ const MyMusicCoach = () => {
                     category: formData.get('category'),
                     exercises: selectedExercises
                   };
-                  
+
                   if (!data.name || !data.duration || !data.category) {
-                    alert('❌ Veuillez remplir tous les champs obligatoires');
+                    alert('Veuillez remplir tous les champs obligatoires');
                     return;
                   }
-                  
+
                   if (editingWorkout) {
                     setWorkouts(workouts.map(w => w.id === editingWorkout.id ? { ...w, ...data } : w));
                     setEditingWorkout(null);
                     setShowCreateWorkout(false);
-                    alert('✅ Session modifiée avec succès !');
                   } else {
                     const maxId = workouts.length > 0 ? Math.max(...workouts.map(w => w.id)) : 0;
                     const newWorkout = {
@@ -2787,7 +2830,6 @@ const MyMusicCoach = () => {
                     };
                     setWorkouts([...workouts, newWorkout]);
                     setShowCreateWorkout(false);
-                    alert('✅ Session créée avec succès !');
                   }
                 }}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
@@ -2801,12 +2843,11 @@ const MyMusicCoach = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce workout ?')) {
+                    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
                       const workoutId = editingWorkout.id;
                       setWorkouts(workouts.filter(w => w.id !== workoutId));
                       setEditingWorkout(null);
                       setShowCreateWorkout(false);
-                      alert('✅ Session supprimée !');
                     }
                   }}
                   className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-medium border-2 border-red-200"
@@ -2893,7 +2934,6 @@ const MyMusicCoach = () => {
                   
                   const form = e.target.closest('form');
                   if (!form) {
-                    alert('❌ Formulaire non trouvé');
                     return;
                   }
                   
@@ -2901,12 +2941,12 @@ const MyMusicCoach = () => {
                   const title = formData.get('title');
                   const target = formData.get('target');
                   const unit = formData.get('unit');
-                  
+
                   if (!title || !target || !unit) {
-                    alert('❌ Veuillez remplir tous les champs');
+                    alert('Veuillez remplir tous les champs');
                     return;
                   }
-                  
+
                   const maxId = goals.length > 0 ? Math.max(...goals.map(g => g.id)) : 0;
                   const newGoal = {
                     id: maxId + 1,
@@ -2917,7 +2957,6 @@ const MyMusicCoach = () => {
                   };
                   setGoals([...goals, newGoal]);
                   setShowGoalForm(false);
-                  alert('✅ Objectif créé avec succès !');
                 }}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
               >
@@ -3132,7 +3171,6 @@ const MyMusicCoach = () => {
             <div className="flex-shrink-0 border-t-2 border-gray-200 p-4 bg-white shadow-2xl">
               <button
                 onClick={() => {
-                  alert('🟢 CLIC DÉTECTÉ sur le bouton !');
                   deleteExercise(selectedExercise.id);
                 }}
                 className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-medium border-2 border-red-200 hover:bg-red-100 transition-colors"
