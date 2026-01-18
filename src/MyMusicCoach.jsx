@@ -1592,20 +1592,20 @@ const MyMusicCoach = () => {
                           e.stopPropagation();
                           exportWorkout(workout);
                         }}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-lg transition-all"
-                        title="Exporter cette session"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all border border-blue-200"
                       >
-                        <FileText className="w-4 h-4" />
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Exporter</span>
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteWorkout(workout.id);
                         }}
-                        className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-white rounded-lg transition-all"
-                        title="Archiver la session"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all border border-orange-200"
                       >
-                        <Archive className="w-4 h-4" />
+                        <Archive className="w-3.5 h-3.5" />
+                        <span>Archiver</span>
                       </button>
                     </div>
                   </div>
@@ -1992,18 +1992,6 @@ const MyMusicCoach = () => {
                       )}
                     </div>
                   </div>
-                  
-                  {/* Bouton supprimer - positionné en haut à droite */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteExercise(exercise.id);
-                    }}
-                    className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors z-10 border border-transparent hover:border-red-200"
-                    title="Supprimer l'exercice"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
                 </div>
               ))}
             </div>
@@ -3164,19 +3152,19 @@ const MyMusicCoach = () => {
                     </div>
                   </>
                 )}
-              </div>
-            </div>
 
-            {/* Footer sticky avec le bouton Supprimer */}
-            <div className="flex-shrink-0 border-t-2 border-gray-200 p-4 bg-white shadow-2xl">
-              <button
-                onClick={() => {
-                  deleteExercise(selectedExercise.id);
-                }}
-                className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-medium border-2 border-red-200 hover:bg-red-100 transition-colors"
-              >
-                🗑️ Supprimer cet exercice
-              </button>
+                {/* Bouton Supprimer en bas du contenu */}
+                <div className="pt-6 pb-4">
+                  <button
+                    onClick={() => {
+                      deleteExercise(selectedExercise.id);
+                    }}
+                    className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-medium border-2 border-red-200 hover:bg-red-100 transition-colors"
+                  >
+                    🗑️ Supprimer cet exercice
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
