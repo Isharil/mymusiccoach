@@ -113,7 +113,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Gammes",
           description: "Travail de la gamme pentatonique en position 1.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtube.com/shorts/y6Qcxd0cuTU?si=pHSn7fHKBaezhyQJ",
           tempoHistory: [
             { date: "2026-01-06", tempo: 55 },
             { date: "2026-01-08", tempo: 58 },
@@ -130,7 +130,7 @@ const MyMusicCoach = () => {
           baseTempo: 80,
           category: "Techniques",
           description: "Technique d'aller-retour au médiator.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/q8SHmo1-dac?si=sIfy2-PxeaTc7C-M",
           tempoHistory: []
         }
       ],
@@ -145,7 +145,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Gammes",
           description: "Travail de la gamme de Do majeur sur 2 octaves.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/d4_fZ8FLM1s?si=lDSqZxdB-eiQWAIY",
           tempoHistory: []
         },
         {
@@ -158,6 +158,7 @@ const MyMusicCoach = () => {
           baseTempo: 70,
           category: "Arpeges",
           description: "Travail des arpèges d'accords de 7ème.",
+          videoUrl: "https://youtu.be/I5yeuOSLdpA?si=wkVRFs0iOvIq9KqL",
           tempoHistory: []
         }
       ],
@@ -172,7 +173,7 @@ const MyMusicCoach = () => {
           baseTempo: 80,
           category: "Rudiments",
           description: "Travail du paradiddle simple (RLRR LRLL).",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtube.com/shorts/RiTRF3W1muA?si=_U40VYDrAJt9cdC6",
           tempoHistory: []
         },
         {
@@ -185,7 +186,7 @@ const MyMusicCoach = () => {
           baseTempo: 100,
           category: "Grooves",
           description: "Pattern de base rock : charleston, caisse claire et grosse caisse.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtube.com/shorts/eEBscgvQSjg?si=EERicOM4YPc5-_nE",
           tempoHistory: []
         }
       ],
@@ -200,7 +201,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Gammes",
           description: "Travail de la pentatonique mineure sur tout le manche.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/rPE9OPnW6lo?si=qkSHlBlrSifGvOGx",
           tempoHistory: []
         },
         {
@@ -213,7 +214,7 @@ const MyMusicCoach = () => {
           baseTempo: 90,
           category: "Slap",
           description: "Technique de slap : alternance pouce et pop.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "hhttps://youtu.be/ZihTfk2vYYI?si=vsjoqKmhIrYMaDlE",
           tempoHistory: []
         }
       ],
@@ -228,7 +229,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Gammes",
           description: "Travail de la gamme de La majeur sur 2 octaves.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/2RIjMFAGzkA?si=C_FQB4-6uUf7s5gr",
           tempoHistory: []
         },
         {
@@ -241,7 +242,7 @@ const MyMusicCoach = () => {
           baseTempo: 80,
           category: "Techniques d'archet",
           description: "Travail du détaché avec différentes longueurs d'archet.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/xEP0HOgkXfg?si=M0q8pkJYodLZ53bJ",
           tempoHistory: []
         }
       ],
@@ -256,7 +257,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Respiration",
           description: "Exercices de respiration abdominale pour le chant.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtube.com/shorts/UmbFIVSVrkU?si=aXCTo75194etscD6",
           tempoHistory: []
         },
         {
@@ -269,7 +270,7 @@ const MyMusicCoach = () => {
           baseTempo: 0,
           category: "Vocalises",
           description: "Vocalises sur voyelles pour échauffer la voix.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/oGn5NhyNJ7g?si=fnAVMbu8rY1hSkKm",
           tempoHistory: []
         }
       ],
@@ -284,7 +285,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Gammes",
           description: "Travail de la gamme de Sib majeur sur toute la tessiture.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/mA9vMvSD4ps?si=_iYkfIMF_JNwUZC1",
           tempoHistory: []
         },
         {
@@ -297,7 +298,7 @@ const MyMusicCoach = () => {
           baseTempo: 80,
           category: "Articulation",
           description: "Travail des différentes articulations au saxophone.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtube.com/shorts/MeBDAcqiN84?si=Nce3V2IL-dbvk_Gm",
           tempoHistory: []
         }
       ],
@@ -312,7 +313,7 @@ const MyMusicCoach = () => {
           baseTempo: 60,
           category: "Technique",
           description: "Exercice d'échauffement général.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/a9EtBnKwEro?si=i_U-CzQmAMsQn7vP",
           tempoHistory: []
         },
         {
@@ -325,7 +326,7 @@ const MyMusicCoach = () => {
           baseTempo: 80,
           category: "Pratique",
           description: "Travail du sens rythmique.",
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          videoUrl: "https://youtu.be/s2IBDpvHUQQ?si=MU-_88SYQbuXhDOV",
           tempoHistory: []
         }
       ]
