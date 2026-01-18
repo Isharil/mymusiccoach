@@ -92,6 +92,12 @@ const MyMusicCoach = () => {
       emoji: "🎷",
       categories: ["Gammes", "Embouchure", "Articulation", "Improvisation", "Morceaux"]
     },
+    harpe: {
+      name: "Harpe",
+      emoji: "harpe",
+      icon: "/harpe.png",
+      categories: ["Gammes", "Arpèges", "Techniques", "Pédales", "Morceaux"]
+    },
     autre: {
       name: "Autre",
       emoji: "🎵",
@@ -299,6 +305,34 @@ const MyMusicCoach = () => {
           category: "Articulation",
           description: "Travail des différentes articulations au saxophone.",
           videoUrl: "https://youtube.com/shorts/MeBDAcqiN84?si=Nce3V2IL-dbvk_Gm",
+          tempoHistory: []
+        }
+      ],
+      harpe: [
+        {
+          id: 1,
+          name: "Arpèges de base",
+          duration: "5 min",
+          sets: "3 séries",
+          type: "video",
+          difficulty: "Débutant",
+          baseTempo: 60,
+          category: "Arpèges",
+          description: "Travail des arpèges fondamentaux à la harpe.",
+          videoUrl: "https://youtu.be/Lt-EbtQDXpw?si=zHyBh2aufaJXaNaN",
+          tempoHistory: []
+        },
+        {
+          id: 2,
+          name: "Gamme de Do majeur",
+          duration: "8 min",
+          sets: "4 séries",
+          type: "video",
+          difficulty: "Débutant",
+          baseTempo: 70,
+          category: "Gammes",
+          description: "Travail de la gamme de Do majeur sur plusieurs octaves.",
+          videoUrl: "https://youtu.be/5pQUZbryDJY?si=08qm9_35XOp1Shma",
           tempoHistory: []
         }
       ],
@@ -1311,7 +1345,11 @@ const MyMusicCoach = () => {
               Bonjour, {settings.userName} 👋
             </h1>
             <p className="text-gray-600 flex items-center justify-center gap-2">
-              <span className="text-2xl">{currentInstrument.emoji}</span>
+              {currentInstrument.icon ? (
+                <img src={currentInstrument.icon} alt={currentInstrument.name} className="w-7 h-7" />
+              ) : (
+                <span className="text-2xl">{currentInstrument.emoji}</span>
+              )}
               Prêt pour ta session de {currentInstrument.name.toLowerCase()} ?
             </p>
           </div>
@@ -1343,7 +1381,14 @@ const MyMusicCoach = () => {
                       </div>
                       <div>
                         <p className="font-bold text-green-900">Session complétée !</p>
-                        <p className="text-sm text-green-700">Excellent travail aujourd'hui {currentInstrument.emoji}</p>
+                        <p className="text-sm text-green-700 flex items-center gap-1">
+                          Excellent travail aujourd'hui
+                          {currentInstrument.icon ? (
+                            <img src={currentInstrument.icon} alt="" className="w-5 h-5 inline" />
+                          ) : (
+                            currentInstrument.emoji
+                          )}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -1776,7 +1821,7 @@ const MyMusicCoach = () => {
                   >
                     <option value="">🌙 Repos</option>
                     {workouts.map(w => (
-                      <option key={w.id} value={w.id}>{currentInstrument.emoji} {w.name}</option>
+                      <option key={w.id} value={w.id}>{currentInstrument.icon ? '🎵' : currentInstrument.emoji} {w.name}</option>
                     ))}
                   </select>
                 </div>
@@ -2266,7 +2311,7 @@ const MyMusicCoach = () => {
               >
                 {Object.entries(instruments).map(([key, inst]) => (
                   <option key={key} value={key}>
-                    {inst.emoji} {inst.name}
+                    {inst.icon ? '🎵' : inst.emoji} {inst.name}
                   </option>
                 ))}
               </select>
