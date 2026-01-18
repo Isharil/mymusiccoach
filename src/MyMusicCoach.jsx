@@ -2989,16 +2989,22 @@ const MyMusicCoach = () => {
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-6">
                 {selectedExercise.type === 'video' && selectedExercise.videoUrl && (
-                  <div className="bg-gray-900 rounded-2xl overflow-hidden shadow-lg">
-                    <iframe
-                      className="w-full aspect-video"
-                      src={selectedExercise.videoUrl.replace('watch?v=', 'embed/')}
-                      title="YouTube video"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
+                  <a
+                    href={selectedExercise.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+                  >
+                    <div className="flex items-center gap-4 text-white">
+                      <div className="bg-white bg-opacity-20 rounded-full p-4">
+                        <Video className="w-8 h-8" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-lg">Voir la vidéo</p>
+                        <p className="text-red-100 text-sm">Ouvrir sur YouTube</p>
+                      </div>
+                    </div>
+                  </a>
                 )}
 
                 {selectedExercise.type === 'file' && selectedExercise.fileData && (
