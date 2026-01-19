@@ -541,20 +541,54 @@ const MyMusicCoach = () => {
     return () => clearInterval(interval);
   }, [settings.notifications, settings.practiceReminder, weeklySchedule, sessionHistory, workouts]);
 
+  // Fonction utilitaire pour télécharger un fichier (compatible mobile)
+  const downloadFile = async (blob, fileName) => {
+    // Sur mobile, essayer l'API Web Share si disponible
+    if (navigator.share && navigator.canShare && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      try {
+        const file = new File([blob], fileName, { type: blob.type });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: fileName
+          });
+          return true;
+        }
+      } catch (error) {
+        // Si l'utilisateur annule le partage, ne pas afficher d'erreur
+        if (error.name === 'AbortError') return true;
+        console.log('Web Share non disponible, fallback au téléchargement classique');
+      }
+    }
+
+    // Fallback : téléchargement classique
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+
+    // Délai pour s'assurer que le lien est bien dans le DOM
+    await new Promise(resolve => setTimeout(resolve, 100));
+    link.click();
+
+    // Délai avant nettoyage pour laisser le temps au téléchargement de démarrer
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1000);
+
+    return true;
+  };
+
   // Fonctions d'export/import des données
-  const handleExportData = () => {
+  const handleExportData = async () => {
     try {
       const dataToExport = exportAppData();
       const blob = new Blob([dataToExport], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      // Exporté avec succès
+      const fileName = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
+      await downloadFile(blob, fileName);
     } catch (error) {
       alert('Erreur lors de l\'export des données.');
       console.error(error);
@@ -835,7 +869,7 @@ const MyMusicCoach = () => {
   };
 
   // ===== IMPORT/EXPORT DE SESSIONS =====
-  const exportWorkout = (workout) => {
+  const exportWorkout = async (workout) => {
     // Récupérer les exercices de la session
     const workoutExercises = workout.exercises.map(exId => {
       const exercise = exercises.find(ex => ex.id === exId);
@@ -859,18 +893,10 @@ const MyMusicCoach = () => {
       exercises: workoutExercises
     };
 
-    // Créer le fichier JSON
+    // Créer le fichier JSON et télécharger
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${workout.name.replace(/[^a-z0-9]/gi, '_')}_MyMusicCoach.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    // Session exportée
+    const fileName = `${workout.name.replace(/[^a-z0-9]/gi, '_')}_MyMusicCoach.json`;
+    await downloadFile(blob, fileName);
   };
 
   const handleImportFile = (e) => {
@@ -1009,7 +1035,7 @@ const MyMusicCoach = () => {
   }, [timerInterval]);
 
   // ===== GÉNÉRATION DU RAPPORT PDF =====
-  const generateProgressReport = () => {
+  const generateProgressReport = async () => {
     // Créer le contenu du rapport
     const reportData = {
       userName: settings.userName,
@@ -1316,15 +1342,8 @@ const MyMusicCoach = () => {
 
     // Créer un blob et télécharger le fichier HTML
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
     const fileName = `Rapport_${reportData.userName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    await downloadFile(blob, fileName);
 
     alert('Rapport téléchargé ! Ouvre le fichier HTML et appuie sur Ctrl+P (ou Cmd+P) pour l\'enregistrer en PDF.');
   };
