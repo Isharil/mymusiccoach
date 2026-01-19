@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MyMusicCoach</string>
+    <string name="title_activity_main">MyMusicCoach</string>
+    <string name="package_name">com.mymusiccoach.app</string>
+    <string name="custom_url_scheme">com.mymusiccoach.app</string>
+</resources>
