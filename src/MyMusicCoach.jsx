@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive, Download, Upload } from 'lucide-react';
 import { useLocalStorage, exportAppData, importAppData } from './hooks/useLocalStorage';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 
 const MyMusicCoach = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -541,7 +544,7 @@ const MyMusicCoach = () => {
     return () => clearInterval(interval);
   }, [settings.notifications, settings.practiceReminder, weeklySchedule, sessionHistory, workouts]);
 
-  // Fonction utilitaire pour télécharger un fichier (compatible mobile)
+  // Fonction utilitaire pour télécharger un fichier (compatible mobile via Capacitor)
   const downloadFile = async (content, fileName, mimeType = 'application/json') => {
     // Convertir le contenu en string si c'est un Blob
     let dataStr;
@@ -551,27 +554,66 @@ const MyMusicCoach = () => {
       dataStr = content;
     }
 
-    // Créer une Data URL (plus compatible mobile que Blob URL)
-    const dataUrl = `data:${mimeType};charset=utf-8,${encodeURIComponent(dataStr)}`;
+    // Vérifier si on est sur une plateforme native (Android/iOS avec Capacitor)
+    const isNative = Capacitor.isNativePlatform();
 
-    // Créer un lien avec la Data URL
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = fileName;
-    link.style.display = 'none';
+    // Détecter iOS en mode PWA ou navigateur (sans Capacitor natif)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isIOSWeb = isIOS && !isNative;
 
-    // Ajouter au DOM
-    document.body.appendChild(link);
+    if (isNative) {
+      try {
+        // Sur app native : utiliser Capacitor Filesystem + Share
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: dataStr,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8
+        });
 
-    // Déclencher le téléchargement
-    link.click();
+        // Partager le fichier pour permettre à l'utilisateur de le sauvegarder
+        await Share.share({
+          title: fileName,
+          url: result.uri,
+          dialogTitle: 'Exporter le fichier'
+        });
 
-    // Nettoyer après un délai
-    setTimeout(() => {
-      document.body.removeChild(link);
-    }, 500);
+        return true;
+      } catch (error) {
+        console.error('Erreur export mobile:', error);
+        alert('Erreur lors de l\'export. Veuillez réessayer.');
+        return false;
+      }
+    } else if (isIOSWeb) {
+      // Sur iOS PWA/Safari : copier dans le presse-papier (seule méthode fiable)
+      try {
+        await navigator.clipboard.writeText(dataStr);
+        alert(`Contenu copié dans le presse-papier !\n\nCollez-le dans l'app Fichiers ou Notes pour le sauvegarder sous le nom :\n${fileName}`);
+        return true;
+      } catch (error) {
+        // Fallback si clipboard API non disponible
+        console.error('Erreur clipboard:', error);
+        prompt('Impossible de copier automatiquement.\nSélectionnez et copiez le contenu :', dataStr.substring(0, 500) + '...');
+        return false;
+      }
+    } else {
+      // Sur web desktop/Android : utiliser la méthode classique avec Data URL
+      const dataUrl = `data:${mimeType};charset=utf-8,${encodeURIComponent(dataStr)}`;
 
-    return true;
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 500);
+
+      return true;
+    }
   };
 
   // Fonctions d'export/import des données
