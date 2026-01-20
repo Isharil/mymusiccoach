@@ -436,11 +436,59 @@ const MyMusicCoach = () => {
 
   const [viewingWeek, setViewingWeek] = useState(1); // Pour le modal de planning
 
-  const stats = {
-    thisWeek: sessionHistory.length,
-    streak: 5,
-    totalSessions: 47 + sessionHistory.length
+  // Calcul des statistiques réelles
+  const calculateStats = () => {
+    const now = new Date();
+
+    // Sessions cette semaine (lundi à dimanche)
+    const startOfWeek = new Date(now);
+    const dayOfWeek = now.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    startOfWeek.setDate(now.getDate() - diffToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const sessionsThisWeek = sessionHistory.filter(session => {
+      const sessionDate = new Date(session.date);
+      return sessionDate >= startOfWeek;
+    }).length;
+
+    // Calcul du streak (jours consécutifs)
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Obtenir les dates uniques triées (du plus récent au plus ancien)
+    const uniqueDates = [...new Set(sessionHistory.map(s => s.date))].sort().reverse();
+
+    if (uniqueDates.length > 0) {
+      let checkDate = new Date(today);
+
+      // Si pas de session aujourd'hui, commencer à vérifier depuis hier
+      const todayStr = today.toISOString().split('T')[0];
+      if (!uniqueDates.includes(todayStr)) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      // Compter les jours consécutifs
+      for (let i = 0; i < 365; i++) {
+        const dateStr = checkDate.toISOString().split('T')[0];
+        if (uniqueDates.includes(dateStr)) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+    }
+
+    return {
+      thisWeek: sessionsThisWeek,
+      streak: streak,
+      totalSessions: sessionHistory.length
+    };
   };
+
+  const stats = calculateStats();
 
   // Fonction pour changer d'instrument
   const changeInstrument = (newInstrument) => {
