@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive, Download, Upload } from 'lucide-react';
+import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
 import { useLocalStorage, exportAppData, importAppData } from './hooks/useLocalStorage';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -22,6 +22,7 @@ const MyMusicCoach = () => {
   const [showCreateWorkout, setShowCreateWorkout] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
   const [exportModalData, setExportModalData] = useState(null); // { content, fileName, mimeType }
+  const [showExerciseMenu, setShowExerciseMenu] = useState(false);
   const [newExerciseType, setNewExerciseType] = useState('none');
   
   // États pour les objectifs et réglages
@@ -1422,8 +1423,6 @@ const MyMusicCoach = () => {
     // Télécharger le fichier HTML
     const fileName = `Rapport_${reportData.userName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
     await downloadFile(htmlContent, fileName, 'text/html');
-
-    alert('Rapport téléchargé ! Ouvre le fichier HTML et appuie sur Ctrl+P (ou Cmd+P) pour l\'enregistrer en PDF.');
   };
 
   const currentInstrument = instruments[settings.instrument];
@@ -3104,17 +3103,40 @@ const MyMusicCoach = () => {
           <div className="h-full flex flex-col bg-white max-w-md mx-auto">
             <div className="flex-shrink-0 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6">
               <div className="flex items-center justify-between mb-4">
-                <button 
+                <button
                   onClick={() => {
                     stopTimer();
                     setSelectedExercise(null);
                     setCurrentTempo({});
+                    setShowExerciseMenu(false);
                   }}
                   className="text-white text-sm font-medium"
                 >
                   ← Retour
                 </button>
-                <h3 className="font-bold text-lg flex-1 text-center pr-16">{selectedExercise.name}</h3>
+                <h3 className="font-bold text-lg flex-1 text-center">{selectedExercise.name}</h3>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowExerciseMenu(!showExerciseMenu)}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  {showExerciseMenu && (
+                    <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg py-2 min-w-[200px] z-10">
+                      <button
+                        onClick={() => {
+                          setShowExerciseMenu(false);
+                          deleteExercise(selectedExercise.id);
+                        }}
+                        className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 flex items-center gap-3"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                        Supprimer l'exercice
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -3302,17 +3324,6 @@ const MyMusicCoach = () => {
                   </>
                 )}
 
-                {/* Bouton Supprimer en bas du contenu */}
-                <div className="pt-6 pb-4">
-                  <button
-                    onClick={() => {
-                      deleteExercise(selectedExercise.id);
-                    }}
-                    className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-medium border-2 border-red-200 hover:bg-red-100 transition-colors"
-                  >
-                    🗑️ Supprimer cet exercice
-                  </button>
-                </div>
               </div>
             </div>
           </div>
