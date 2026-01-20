@@ -21,6 +21,7 @@ const MyMusicCoach = () => {
   const [showCreateExercise, setShowCreateExercise] = useState(false);
   const [showCreateWorkout, setShowCreateWorkout] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
+  const [exportModalData, setExportModalData] = useState(null); // { content, fileName, mimeType }
   const [newExerciseType, setNewExerciseType] = useState('none');
   
   // États pour les objectifs et réglages
@@ -544,6 +545,67 @@ const MyMusicCoach = () => {
     return () => clearInterval(interval);
   }, [settings.notifications, settings.practiceReminder, weeklySchedule, sessionHistory, workouts]);
 
+  // Sauvegarder dans le dossier Downloads (Android natif)
+  const saveToDownloads = async (dataStr, fileName) => {
+    try {
+      await Filesystem.writeFile({
+        path: `Download/${fileName}`,
+        data: dataStr,
+        directory: Directory.ExternalStorage,
+        encoding: Encoding.UTF8,
+        recursive: true
+      });
+      alert(`Fichier sauvegardé dans Téléchargements :\n${fileName}`);
+      setExportModalData(null);
+      return true;
+    } catch (error) {
+      console.error('Erreur sauvegarde Downloads:', error);
+      // Fallback : essayer avec Documents si ExternalStorage échoue
+      try {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: dataStr,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8
+        });
+        alert(`Fichier sauvegardé dans Documents :\n${fileName}`);
+        setExportModalData(null);
+        return true;
+      } catch (err) {
+        alert('Erreur lors de la sauvegarde. Essayez l\'option Partager.');
+        return false;
+      }
+    }
+  };
+
+  // Partager le fichier (Android/iOS natif)
+  const shareFile = async (dataStr, fileName) => {
+    try {
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: dataStr,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8
+      });
+
+      await Share.share({
+        title: fileName,
+        url: result.uri,
+        dialogTitle: 'Partager le fichier'
+      });
+      setExportModalData(null);
+      return true;
+    } catch (error) {
+      if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+        // L'utilisateur a annulé, pas une vraie erreur
+        return true;
+      }
+      console.error('Erreur partage:', error);
+      alert('Erreur lors du partage.');
+      return false;
+    }
+  };
+
   // Fonction utilitaire pour télécharger un fichier (compatible mobile via Capacitor)
   const downloadFile = async (content, fileName, mimeType = 'application/json') => {
     // Convertir le contenu en string si c'est un Blob
@@ -556,34 +618,19 @@ const MyMusicCoach = () => {
 
     // Vérifier si on est sur une plateforme native (Android/iOS avec Capacitor)
     const isNative = Capacitor.isNativePlatform();
+    const platform = Capacitor.getPlatform();
 
     // Détecter iOS en mode PWA ou navigateur (sans Capacitor natif)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isIOSWeb = isIOS && !isNative;
 
-    if (isNative) {
-      try {
-        // Sur app native : utiliser Capacitor Filesystem + Share
-        const result = await Filesystem.writeFile({
-          path: fileName,
-          data: dataStr,
-          directory: Directory.Cache,
-          encoding: Encoding.UTF8
-        });
-
-        // Partager le fichier pour permettre à l'utilisateur de le sauvegarder
-        await Share.share({
-          title: fileName,
-          url: result.uri,
-          dialogTitle: 'Exporter le fichier'
-        });
-
-        return true;
-      } catch (error) {
-        console.error('Erreur export mobile:', error);
-        alert('Erreur lors de l\'export. Veuillez réessayer.');
-        return false;
-      }
+    if (isNative && platform === 'android') {
+      // Sur Android natif : afficher la modal de choix
+      setExportModalData({ content: dataStr, fileName, mimeType });
+      return true;
+    } else if (isNative && platform === 'ios') {
+      // Sur iOS natif : utiliser directement le partage
+      return await shareFile(dataStr, fileName);
     } else if (isIOSWeb) {
       // Sur iOS PWA/Safari : copier dans le presse-papier (seule méthode fiable)
       try {
@@ -591,13 +638,12 @@ const MyMusicCoach = () => {
         alert(`Contenu copié dans le presse-papier !\n\nCollez-le dans l'app Fichiers ou Notes pour le sauvegarder sous le nom :\n${fileName}`);
         return true;
       } catch (error) {
-        // Fallback si clipboard API non disponible
         console.error('Erreur clipboard:', error);
         prompt('Impossible de copier automatiquement.\nSélectionnez et copiez le contenu :', dataStr.substring(0, 500) + '...');
         return false;
       }
     } else {
-      // Sur web desktop/Android : utiliser la méthode classique avec Data URL
+      // Sur web desktop : utiliser la méthode classique avec Data URL
       const dataUrl = `data:${mimeType};charset=utf-8,${encodeURIComponent(dataStr)}`;
 
       const link = document.createElement('a');
@@ -3336,6 +3382,53 @@ const MyMusicCoach = () => {
                   setImportFile(null);
                 }}
                 className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de choix d'export (Android) */}
+      {exportModalData && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-5">
+              <h2 className="text-white font-bold text-lg">Exporter le fichier</h2>
+              <p className="text-purple-200 text-sm mt-1">{exportModalData.fileName}</p>
+            </div>
+
+            <div className="p-5 space-y-3">
+              <button
+                onClick={() => saveToDownloads(exportModalData.content, exportModalData.fileName)}
+                className="w-full flex items-center gap-4 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
+              >
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                  <Download className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-gray-900">Télécharger</p>
+                  <p className="text-sm text-gray-500">Sauvegarder dans Téléchargements</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => shareFile(exportModalData.content, exportModalData.fileName)}
+                className="w-full flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+              >
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-gray-900">Partager</p>
+                  <p className="text-sm text-gray-500">Envoyer par email, Drive, etc.</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setExportModalData(null)}
+                className="w-full p-3 text-gray-500 hover:text-gray-700 font-medium"
               >
                 Annuler
               </button>
