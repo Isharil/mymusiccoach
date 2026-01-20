@@ -542,42 +542,34 @@ const MyMusicCoach = () => {
   }, [settings.notifications, settings.practiceReminder, weeklySchedule, sessionHistory, workouts]);
 
   // Fonction utilitaire pour télécharger un fichier (compatible mobile)
-  const downloadFile = async (blob, fileName) => {
-    // Sur mobile, essayer l'API Web Share si disponible
-    if (navigator.share && navigator.canShare && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      try {
-        const file = new File([blob], fileName, { type: blob.type });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: fileName
-          });
-          return true;
-        }
-      } catch (error) {
-        // Si l'utilisateur annule le partage, ne pas afficher d'erreur
-        if (error.name === 'AbortError') return true;
-        console.log('Web Share non disponible, fallback au téléchargement classique');
-      }
+  const downloadFile = async (content, fileName, mimeType = 'application/json') => {
+    // Convertir le contenu en string si c'est un Blob
+    let dataStr;
+    if (content instanceof Blob) {
+      dataStr = await content.text();
+    } else {
+      dataStr = content;
     }
 
-    // Fallback : téléchargement classique
-    const url = URL.createObjectURL(blob);
+    // Créer une Data URL (plus compatible mobile que Blob URL)
+    const dataUrl = `data:${mimeType};charset=utf-8,${encodeURIComponent(dataStr)}`;
+
+    // Créer un lien avec la Data URL
     const link = document.createElement('a');
-    link.href = url;
+    link.href = dataUrl;
     link.download = fileName;
     link.style.display = 'none';
+
+    // Ajouter au DOM
     document.body.appendChild(link);
 
-    // Délai pour s'assurer que le lien est bien dans le DOM
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Déclencher le téléchargement
     link.click();
 
-    // Délai avant nettoyage pour laisser le temps au téléchargement de démarrer
+    // Nettoyer après un délai
     setTimeout(() => {
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }, 1000);
+    }, 500);
 
     return true;
   };
@@ -586,9 +578,8 @@ const MyMusicCoach = () => {
   const handleExportData = async () => {
     try {
       const dataToExport = exportAppData();
-      const blob = new Blob([dataToExport], { type: 'application/json' });
       const fileName = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
-      await downloadFile(blob, fileName);
+      await downloadFile(dataToExport, fileName, 'application/json');
     } catch (error) {
       alert('Erreur lors de l\'export des données.');
       console.error(error);
@@ -894,9 +885,9 @@ const MyMusicCoach = () => {
     };
 
     // Créer le fichier JSON et télécharger
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const jsonContent = JSON.stringify(exportData, null, 2);
     const fileName = `${workout.name.replace(/[^a-z0-9]/gi, '_')}_MyMusicCoach.json`;
-    await downloadFile(blob, fileName);
+    await downloadFile(jsonContent, fileName, 'application/json');
   };
 
   const handleImportFile = (e) => {
@@ -1340,10 +1331,9 @@ const MyMusicCoach = () => {
       </html>
     `;
 
-    // Créer un blob et télécharger le fichier HTML
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    // Télécharger le fichier HTML
     const fileName = `Rapport_${reportData.userName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
-    await downloadFile(blob, fileName);
+    await downloadFile(htmlContent, fileName, 'text/html');
 
     alert('Rapport téléchargé ! Ouvre le fichier HTML et appuie sur Ctrl+P (ou Cmd+P) pour l\'enregistrer en PDF.');
   };
