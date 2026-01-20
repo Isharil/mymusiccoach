@@ -21,6 +21,8 @@ const MyMusicCoach = () => {
   const [showCreateExercise, setShowCreateExercise] = useState(false);
   const [showCreateWorkout, setShowCreateWorkout] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
+  const [editingSession, setEditingSession] = useState(null);
+  const [editingSessionProgress, setEditingSessionProgress] = useState({});
   const [exportModalData, setExportModalData] = useState(null); // { content, fileName, mimeType }
   const [showExerciseMenu, setShowExerciseMenu] = useState(false);
   const [newExerciseType, setNewExerciseType] = useState('none');
@@ -839,6 +841,73 @@ const MyMusicCoach = () => {
     }
   };
 
+  // Fonction pour démarrer l'édition d'une session terminée
+  const startEditSession = (session) => {
+    const workout = workouts.find(w => w.id === session.workoutId);
+    if (!workout) {
+      alert('La session originale n\'existe plus.');
+      return;
+    }
+
+    // Initialiser le progress avec les données existantes ou des valeurs par défaut
+    const progress = {};
+    workout.exercises.forEach(exId => {
+      if (session.exerciseProgress && session.exerciseProgress[exId]) {
+        progress[exId] = session.exerciseProgress[exId];
+      } else {
+        // Pour les anciennes sessions sans exerciseProgress, marquer comme "completed" par défaut
+        progress[exId] = 'completed';
+      }
+    });
+
+    setEditingSession(session);
+    setEditingSessionProgress(progress);
+  };
+
+  // Fonction pour toggle le statut d'un exercice en mode édition
+  const toggleEditingExercise = (exerciseId) => {
+    const newProgress = { ...editingSessionProgress };
+
+    if (!newProgress[exerciseId] || newProgress[exerciseId] === 'pending') {
+      newProgress[exerciseId] = 'completed';
+    } else if (newProgress[exerciseId] === 'completed') {
+      newProgress[exerciseId] = 'skipped';
+    } else {
+      newProgress[exerciseId] = 'completed';
+    }
+
+    setEditingSessionProgress(newProgress);
+  };
+
+  // Fonction pour sauvegarder les modifications d'une session
+  const updateSession = () => {
+    if (!editingSession) return;
+
+    let completed = 0;
+    let skipped = 0;
+
+    Object.values(editingSessionProgress).forEach(status => {
+      if (status === 'completed') completed++;
+      if (status === 'skipped') skipped++;
+    });
+
+    const updatedSessions = sessionHistory.map(session => {
+      if (session.id === editingSession.id) {
+        return {
+          ...session,
+          completed,
+          skipped,
+          exerciseProgress: { ...editingSessionProgress }
+        };
+      }
+      return session;
+    });
+
+    setSessionHistory(updatedSessions);
+    setEditingSession(null);
+    setEditingSessionProgress({});
+  };
+
   // Fonction pour démarrer une session avec notification
   const startWorkout = (workout) => {
     setActiveWorkout(workout);
@@ -1491,21 +1560,30 @@ const MyMusicCoach = () => {
               {getTodayWorkout() ? (
                 <div className="space-y-4">
                   {isTodaySessionCompleted() && (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
-                      <div className="bg-green-500 rounded-full p-2">
-                        <Check className="w-5 h-5 text-white" />
+                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-green-500 rounded-full p-2">
+                          <Check className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-green-900">Session complétée !</p>
+                          <p className="text-sm text-green-700 flex items-center gap-1">
+                            Excellent travail aujourd'hui
+                            {currentInstrument.icon ? (
+                              <img src={currentInstrument.icon} alt="" className="w-5 h-5 inline" />
+                            ) : (
+                              currentInstrument.emoji
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-green-900">Session complétée !</p>
-                        <p className="text-sm text-green-700 flex items-center gap-1">
-                          Excellent travail aujourd'hui
-                          {currentInstrument.icon ? (
-                            <img src={currentInstrument.icon} alt="" className="w-5 h-5 inline" />
-                          ) : (
-                            currentInstrument.emoji
-                          )}
-                        </p>
-                      </div>
+                      <button
+                        onClick={() => startEditSession(getTodayCompletedSession())}
+                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                        title="Modifier cette session"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
                     </div>
                   )}
                   
@@ -1524,12 +1602,27 @@ const MyMusicCoach = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => startWorkout(getTodayWorkout())}
-                      className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                      disabled={isTodaySessionCompleted()}
+                      onClick={() => isTodaySessionCompleted()
+                        ? startEditSession(getTodayCompletedSession())
+                        : startWorkout(getTodayWorkout())
+                      }
+                      className={`w-full py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
+                        isTodaySessionCompleted()
+                          ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
+                          : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
+                      }`}
                     >
-                      <Play className="w-5 h-5" />
-                      {isTodaySessionCompleted() ? 'Session terminée' : 'Commencer la session'}
+                      {isTodaySessionCompleted() ? (
+                        <>
+                          <Check className="w-5 h-5" />
+                          Session terminée - Modifier
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-5 h-5" />
+                          Commencer la session
+                        </>
+                      )}
                     </button>
                   </div>
 
@@ -2265,7 +2358,16 @@ const MyMusicCoach = () => {
                       <h3 className="font-bold text-gray-900">{session.workoutName}</h3>
                       <p className="text-sm text-gray-500">{session.date} à {session.time}</p>
                     </div>
-                    <Award className="w-5 h-5 text-purple-600" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => startEditSession(session)}
+                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Modifier cette session"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <Award className="w-5 h-5 text-purple-600" />
+                    </div>
                   </div>
                   <div className="flex gap-4 text-sm">
                     <span className="text-green-600 font-medium">
@@ -3415,6 +3517,99 @@ const MyMusicCoach = () => {
                 className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
               >
                 Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal d'édition de session terminée */}
+      {editingSession && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+          <div className="bg-white rounded-t-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-t-3xl">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-white font-bold text-xl">Modifier la session</h2>
+                  <p className="text-purple-200 text-sm">{editingSession.date} à {editingSession.time}</p>
+                </div>
+                <button
+                  onClick={() => { setEditingSession(null); setEditingSessionProgress({}); }}
+                  className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <p className="text-white mt-2 font-medium">{editingSession.workoutName}</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-500 mb-4">
+                Clique sur chaque exercice pour changer son statut (complété / sauté).
+              </p>
+
+              {(() => {
+                const workout = workouts.find(w => w.id === editingSession.workoutId);
+                if (!workout) {
+                  return (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">La session originale n'existe plus.</p>
+                    </div>
+                  );
+                }
+
+                return workout.exercises.map((exerciseId, index) => {
+                  const exercise = exercises.find(ex => ex.id === exerciseId);
+                  if (!exercise) return null;
+
+                  const status = editingSessionProgress[exerciseId] || 'pending';
+
+                  return (
+                    <div
+                      key={exerciseId}
+                      className={`border-2 rounded-2xl p-5 transition-all ${
+                        status === 'completed' ? 'border-green-500 bg-green-50' :
+                        status === 'skipped' ? 'border-gray-300 bg-gray-50' :
+                        'border-purple-200 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-bold text-purple-600">#{index + 1}</span>
+                            <h3 className="font-bold text-gray-900">{exercise.name}</h3>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {exercise.duration}
+                            </span>
+                            <span>{exercise.sets}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => toggleEditingExercise(exerciseId)}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            status === 'completed' ? 'bg-green-500 text-white' :
+                            status === 'skipped' ? 'bg-gray-300 text-gray-600' :
+                            'bg-purple-100 text-purple-600'
+                          }`}
+                        >
+                          {status === 'completed' ? <Check className="w-5 h-5" /> :
+                           status === 'skipped' ? <X className="w-5 h-5" /> :
+                           <Play className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+
+              <button
+                onClick={updateSession}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg mt-6"
+              >
+                Enregistrer les modifications
               </button>
             </div>
           </div>
