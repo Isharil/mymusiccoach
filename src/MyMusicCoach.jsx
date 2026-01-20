@@ -719,10 +719,29 @@ const MyMusicCoach = () => {
     return new Date().toISOString().split('T')[0];
   };
 
-  // Fonction pour vérifier si la session d'aujourd'hui a été faite
+  // Fonction pour vérifier si la session d'aujourd'hui a été faite (pour l'instrument actuel)
   const isTodaySessionCompleted = () => {
     const today = getTodayDate();
-    return sessionHistory.some(session => session.date === today);
+    const todayWorkout = getTodayWorkout();
+    if (!todayWorkout) return false;
+    // Vérifie que la session correspond au workout du jour ET à l'instrument actuel
+    return sessionHistory.some(session =>
+      session.date === today &&
+      session.workoutId === todayWorkout.id &&
+      session.instrument === settings.instrument
+    );
+  };
+
+  // Fonction pour récupérer la session terminée d'aujourd'hui (pour la modifier)
+  const getTodayCompletedSession = () => {
+    const today = getTodayDate();
+    const todayWorkout = getTodayWorkout();
+    if (!todayWorkout) return null;
+    return sessionHistory.find(session =>
+      session.date === today &&
+      session.workoutId === todayWorkout.id &&
+      session.instrument === settings.instrument
+    );
   };
 
   // Fonction pour obtenir la session du jour
@@ -800,6 +819,7 @@ const MyMusicCoach = () => {
       time: timeStr,
       workoutId: workout.id,
       workoutName: workout.name,
+      instrument: settings.instrument,
       completed,
       skipped,
       total: workoutExercises.length
