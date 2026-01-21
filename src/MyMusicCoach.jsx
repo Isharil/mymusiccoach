@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
-import { useLocalStorage, exportAppData, importAppData } from './hooks/useLocalStorage';
+import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence } from './hooks/useIndexedDB';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 const MyMusicCoach = () => {
+  // État pour la migration et l'initialisation
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [storagePersisted, setStoragePersisted] = useState(false);
+
   const [activeTab, setActiveTab] = useState('home');
   const [activeWorkout, setActiveWorkout] = useState(null);
   const [workoutProgress, setWorkoutProgress] = useState({});
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [currentTempo, setCurrentTempo] = useState({});
   const [showSchedule, setShowSchedule] = useState(false);
-  const [sessionHistory, setSessionHistory] = useLocalStorage('mmc_sessionHistory', [
+  const [sessionHistory, setSessionHistory, sessionHistoryLoading] = useIndexedDB('mmc_sessionHistory', [
     { id: 1, date: "2026-01-10", time: "18:30", workoutId: 1, workoutName: "Routine Débutant", completed: 3, skipped: 0, total: 3 },
     { id: 2, date: "2026-01-12", time: "19:00", workoutId: 2, workoutName: "Improvisation Blues", completed: 2, skipped: 0, total: 2 },
     { id: 3, date: "2026-01-13", time: "17:45", workoutId: 1, workoutName: "Routine Débutant", completed: 2, skipped: 1, total: 3 }
@@ -30,11 +34,11 @@ const MyMusicCoach = () => {
   const [newExerciseType, setNewExerciseType] = useState('none');
 
   // États pour les objectifs et réglages
-  const [goals, setGoals] = useLocalStorage('mmc_goals', [
+  const [goals, setGoals, goalsLoading] = useIndexedDB('mmc_goals', [
     { id: 1, title: "Maîtriser la gamme pentatonique", target: 100, current: 75, unit: "BPM" },
     { id: 2, title: "Pratiquer 4 fois cette semaine", target: 4, current: 2, unit: "sessions" }
   ]);
-  const [settings, setSettings] = useLocalStorage('mmc_settings', {
+  const [settings, setSettings, settingsLoading] = useIndexedDB('mmc_settings', {
     notifications: true,
     practiceReminder: "18:00",
     reminderEnabled: true,
@@ -49,9 +53,9 @@ const MyMusicCoach = () => {
   );
 
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [deletedExercises, setDeletedExercises] = useLocalStorage('mmc_deletedExercises', []);
+  const [deletedExercises, setDeletedExercises, deletedExercisesLoading] = useIndexedDB('mmc_deletedExercises', []);
   const [showTrash, setShowTrash] = useState(false);
-  const [archivedWorkouts, setArchivedWorkouts] = useLocalStorage('mmc_archivedWorkouts', []);
+  const [archivedWorkouts, setArchivedWorkouts, archivedWorkoutsLoading] = useIndexedDB('mmc_archivedWorkouts', []);
   const [showArchive, setShowArchive] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -373,9 +377,9 @@ const MyMusicCoach = () => {
     return baseExercises[instrument] || baseExercises.autre;
   };
 
-  const [exercises, setExercises] = useLocalStorage('mmc_exercises', getDefaultExercises(settings.instrument));
+  const [exercises, setExercises, exercisesLoading] = useIndexedDB('mmc_exercises', getDefaultExercises(settings.instrument));
 
-  const [workouts, setWorkouts] = useLocalStorage('mmc_workouts', [
+  const [workouts, setWorkouts, workoutsLoading] = useIndexedDB('mmc_workouts', [
     {
       id: 1,
       name: "Routine Débutant",
@@ -392,7 +396,7 @@ const MyMusicCoach = () => {
     }
   ]);
 
-  const [weeklySchedule, setWeeklySchedule] = useLocalStorage('mmc_weeklySchedule', {
+  const [weeklySchedule, setWeeklySchedule, weeklyScheduleLoading] = useIndexedDB('mmc_weeklySchedule', {
     semaine1: {
       lundi: 1,
       mardi: null,
@@ -432,6 +436,35 @@ const MyMusicCoach = () => {
   });
 
   const [viewingWeek, setViewingWeek] = useState(1); // Pour le modal de planning
+
+  // Vérifier si toutes les données sont chargées
+  const isDataLoading = sessionHistoryLoading || goalsLoading || settingsLoading ||
+    deletedExercisesLoading || archivedWorkoutsLoading || exercisesLoading ||
+    workoutsLoading || weeklyScheduleLoading;
+
+  // Migration depuis localStorage et demande de persistance au démarrage
+  useEffect(() => {
+    const initializeStorage = async () => {
+      try {
+        // Migrer les données de localStorage vers IndexedDB
+        const migrationResult = await migrateFromLocalStorage();
+        if (migrationResult.migrated && migrationResult.count > 0) {
+          console.log(`Migration réussie: ${migrationResult.count} éléments migrés`);
+        }
+
+        // Demander la persistance des données
+        const persisted = await requestStoragePersistence();
+        setStoragePersisted(persisted);
+
+        setIsAppReady(true);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du stockage:', error);
+        setIsAppReady(true); // Continuer même en cas d'erreur
+      }
+    };
+
+    initializeStorage();
+  }, []);
 
   // Calcul des statistiques réelles
   const calculateStats = () => {
@@ -546,7 +579,7 @@ const MyMusicCoach = () => {
           body: `Bonjour ${settings.userName} ! Les notifications sont activées.`,
           id: 9999,
           schedule: { at: new Date(Date.now() + 1000) },
-          sound: 'default',
+          sound: null,
           smallIcon: 'ic_stat_music_note',
           largeIcon: 'ic_launcher'
         }]
@@ -587,7 +620,7 @@ const MyMusicCoach = () => {
             repeats: true,
             every: 'day'
           },
-          sound: 'default',
+          sound: null,
           smallIcon: 'ic_stat_music_note',
           largeIcon: 'ic_launcher'
         }]
@@ -625,7 +658,7 @@ const MyMusicCoach = () => {
           body,
           id,
           schedule: { at: new Date(Date.now() + 500) },
-          sound: 'default',
+          sound: null,
           smallIcon: 'ic_stat_music_note',
           largeIcon: 'ic_launcher'
         }]
@@ -669,36 +702,31 @@ const MyMusicCoach = () => {
     updateReminder();
   }, [settings.notifications, settings.practiceReminder, settings.reminderEnabled]);
 
-  // Sauvegarder dans le dossier Downloads (Android natif)
+  // Sauvegarder le fichier (Android natif) - utilise Share pour sauvegarder
   const saveToDownloads = async (dataStr, fileName) => {
     try {
-      await Filesystem.writeFile({
-        path: `Download/${fileName}`,
+      const result = await Filesystem.writeFile({
+        path: fileName,
         data: dataStr,
-        directory: Directory.ExternalStorage,
-        encoding: Encoding.UTF8,
-        recursive: true
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8
       });
-      alert(`Fichier sauvegardé dans Téléchargements :\n${fileName}`);
+
+      await Share.share({
+        title: fileName,
+        url: result.uri,
+        dialogTitle: 'Enregistrer le fichier'
+      });
       setExportModalData(null);
       return true;
     } catch (error) {
-      console.error('Erreur sauvegarde Downloads:', error);
-      // Fallback : essayer avec Documents si ExternalStorage échoue
-      try {
-        await Filesystem.writeFile({
-          path: fileName,
-          data: dataStr,
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8
-        });
-        alert(`Fichier sauvegardé dans Documents :\n${fileName}`);
+      if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
         setExportModalData(null);
         return true;
-      } catch (err) {
-        alert('Erreur lors de la sauvegarde. Essayez l\'option Partager.');
-        return false;
       }
+      console.error('Erreur sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde.');
+      return false;
     }
   };
 
@@ -789,7 +817,11 @@ const MyMusicCoach = () => {
   // Fonctions d'export/import des données
   const handleExportData = async () => {
     try {
-      const dataToExport = exportAppData();
+      const dataToExport = await exportAppData();
+      if (!dataToExport) {
+        alert('Erreur lors de la préparation des données');
+        return;
+      }
       const fileName = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
       await downloadFile(dataToExport, fileName, 'application/json');
     } catch (error) {
@@ -803,9 +835,9 @@ const MyMusicCoach = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
-        const result = importAppData(e.target.result);
+        const result = await importAppData(e.target.result);
         if (result.success) {
           alert('Données importées. La page va se recharger.');
           window.location.reload();
@@ -1616,6 +1648,18 @@ const MyMusicCoach = () => {
   const filteredExercises = libraryFilter === 'Tous' 
     ? exercises 
     : exercises.filter(ex => ex.category === libraryFilter);
+
+  // Écran de chargement pendant l'initialisation
+  if (!isAppReady || isDataLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-20">
@@ -2795,16 +2839,16 @@ const MyMusicCoach = () => {
                 )}
               </div>
             ) : (
-              /* Message pour la version desktop */
+              /* Message pour la version desktop/iOS */
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <div className="flex items-start gap-3">
                   <Bell className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-blue-900 mb-1">
-                      Notifications disponibles sur mobile
+                      Notifications disponibles sur Android uniquement
                     </p>
                     <p className="text-xs text-blue-700">
-                      Les notifications et rappels sont uniquement disponibles sur l'application mobile. Installez MyMusicCoach sur votre smartphone pour recevoir des rappels de pratique quotidiens !
+                      Les notifications et rappels quotidiens sont disponibles uniquement sur l'application Android (APK). Cette fonctionnalité n'est pas disponible sur iOS ou en version web.
                     </p>
                   </div>
                 </div>
@@ -3986,7 +4030,7 @@ const MyMusicCoach = () => {
         </div>
       )}
 
-      {/* Modal de choix d'export (Android) */}
+      {/* Modal d'export (Android) */}
       {exportModalData && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
@@ -3998,27 +4042,14 @@ const MyMusicCoach = () => {
             <div className="p-5 space-y-3">
               <button
                 onClick={() => saveToDownloads(exportModalData.content, exportModalData.fileName)}
-                className="w-full flex items-center gap-4 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
+                className="w-full flex items-center gap-4 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
               >
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
                   <Download className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-gray-900">Télécharger</p>
-                  <p className="text-sm text-gray-500">Sauvegarder dans Téléchargements</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => shareFile(exportModalData.content, exportModalData.fileName)}
-                className="w-full flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
-              >
-                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Upload className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-gray-900">Partager</p>
-                  <p className="text-sm text-gray-500">Envoyer par email, Drive, etc.</p>
+                  <p className="font-bold text-gray-900">Exporter</p>
+                  <p className="text-sm text-gray-500">Enregistrer ou partager le fichier</p>
                 </div>
               </button>
 
