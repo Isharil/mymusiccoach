@@ -807,21 +807,6 @@ const MyMusicCoach = () => {
     return null;
   };
 
-  const toggleExercise = (workoutId, exerciseId) => {
-    const key = `${workoutId}-${exerciseId}`;
-    const newProgress = {...workoutProgress};
-    
-    if (!newProgress[key]) {
-      newProgress[key] = 'completed';
-    } else if (newProgress[key] === 'completed') {
-      newProgress[key] = 'skipped';
-    } else {
-      newProgress[key] = 'completed';
-    }
-    
-    setWorkoutProgress(newProgress);
-  };
-
   const saveTempo = (exerciseId) => {
     const tempo = parseInt(currentTempo[exerciseId]);
     if (!tempo || tempo <= 0) {
@@ -2203,18 +2188,17 @@ const MyMusicCoach = () => {
                         <span>{exercise.sets}</span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => toggleExercise(activeWorkout.id, exerciseId)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         status === 'completed' ? 'bg-green-500 text-white' :
                         status === 'skipped' ? 'bg-gray-300 text-gray-600' :
                         'bg-purple-100 text-purple-600'
                       }`}
                     >
-                      {status === 'completed' ? <Check className="w-5 h-5" /> : 
+                      {status === 'completed' ? <Check className="w-5 h-5" /> :
                        status === 'skipped' ? <X className="w-5 h-5" /> :
                        <Play className="w-5 h-5" />}
-                    </button>
+                    </div>
                   </div>
 
                   <button
@@ -2227,12 +2211,38 @@ const MyMusicCoach = () => {
               );
             })}
 
-            <button
-              onClick={() => saveSession(activeWorkout)}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg mt-6"
-            >
-              Terminer la session
-            </button>
+            {(() => {
+              // Vérifier si tous les exercices ont été validés ou sautés
+              const allExercisesHandled = activeWorkout.exercises.every(exId => {
+                const key = `${activeWorkout.id}-${exId}`;
+                return workoutProgress[key] === 'completed' || workoutProgress[key] === 'skipped';
+              });
+              const handledCount = activeWorkout.exercises.filter(exId => {
+                const key = `${activeWorkout.id}-${exId}`;
+                return workoutProgress[key] === 'completed' || workoutProgress[key] === 'skipped';
+              }).length;
+
+              return (
+                <div className="mt-6 space-y-2">
+                  {!allExercisesHandled && (
+                    <p className="text-center text-sm text-gray-500">
+                      {handledCount}/{activeWorkout.exercises.length} exercices traités
+                    </p>
+                  )}
+                  <button
+                    onClick={() => saveSession(activeWorkout)}
+                    disabled={!allExercisesHandled}
+                    className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${
+                      allExercisesHandled
+                        ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-xl'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Terminer la session
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -3570,7 +3580,7 @@ const MyMusicCoach = () => {
                   </>
                 )}
 
-                {/* Bouton Valider l'exercice - uniquement pendant une session active */}
+                {/* Boutons Valider/Sauter l'exercice - uniquement pendant une session active */}
                 {activeWorkout && activeWorkout.exercises.includes(selectedExercise.id) && (
                   <div className="pt-4 pb-2">
                     {(() => {
@@ -3594,22 +3604,56 @@ const MyMusicCoach = () => {
                               }}
                               className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
                             >
-                              Annuler la validation
+                              Annuler
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      if (status === 'skipped') {
+                        return (
+                          <div className="space-y-3">
+                            <div className="bg-gray-100 border-2 border-gray-300 rounded-xl p-4 flex items-center gap-3">
+                              <div className="bg-gray-400 rounded-full p-2">
+                                <X className="w-5 h-5 text-white" />
+                              </div>
+                              <span className="font-bold text-gray-700">Exercice sauté</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const newProgress = {...workoutProgress};
+                                delete newProgress[key];
+                                setWorkoutProgress(newProgress);
+                              }}
+                              className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                            >
+                              Annuler
                             </button>
                           </div>
                         );
                       }
 
                       return (
-                        <button
-                          onClick={() => {
-                            setWorkoutProgress({...workoutProgress, [key]: 'completed'});
-                          }}
-                          className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                        >
-                          <Check className="w-6 h-6" />
-                          Valider l'exercice
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              setWorkoutProgress({...workoutProgress, [key]: 'skipped'});
+                            }}
+                            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <X className="w-5 h-5" />
+                            Sauter
+                          </button>
+                          <button
+                            onClick={() => {
+                              setWorkoutProgress({...workoutProgress, [key]: 'completed'});
+                            }}
+                            className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                          >
+                            <Check className="w-6 h-6" />
+                            Valider
+                          </button>
+                        </div>
                       );
                     })()}
                   </div>
