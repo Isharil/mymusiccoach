@@ -4,6 +4,7 @@ import { useLocalStorage, exportAppData, importAppData } from './hooks/useLocalS
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const MyMusicCoach = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -36,6 +37,7 @@ const MyMusicCoach = () => {
   const [settings, setSettings] = useLocalStorage('mmc_settings', {
     notifications: true,
     practiceReminder: "18:00",
+    reminderEnabled: true,
     theme: "light",
     defaultTempo: 60,
     userName: "Musicien",
@@ -46,12 +48,6 @@ const MyMusicCoach = () => {
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
 
-  // Fonction pour détecter si on est sur mobile
-  const isMobileDevice = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
-
-  const [isMobile] = useState(isMobileDevice());
   const [uploadedFile, setUploadedFile] = useState(null);
   const [deletedExercises, setDeletedExercises] = useLocalStorage('mmc_deletedExercises', []);
   const [showTrash, setShowTrash] = useState(false);
@@ -508,94 +504,170 @@ const MyMusicCoach = () => {
     ]);
   };
 
-  // Fonctions de notification
+  // Fonctions de notification avec Capacitor LocalNotifications
+  const isNativePlatform = Capacitor.isNativePlatform();
+
   const requestNotificationPermission = async () => {
-    if (!isMobile) {
+    if (!isNativePlatform) {
       alert('Les notifications sont disponibles uniquement sur l\'application mobile.');
       return;
     }
 
-    if (typeof Notification === 'undefined') {
-      alert('Les notifications ne sont pas supportées par ce navigateur.');
-      return;
-    }
-
-    if (Notification.permission === 'granted') {
-      alert('Les notifications sont déjà autorisées.');
-      return;
-    }
-
-    if (Notification.permission === 'denied') {
-      alert('Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.');
-      return;
-    }
-
     try {
-      const permission = await Notification.requestPermission();
-      setNotificationPermission(permission);
+      const permStatus = await LocalNotifications.checkPermissions();
 
-      if (permission === 'granted') {
-        sendTestNotification();
+      if (permStatus.display === 'granted') {
+        setNotificationPermission('granted');
+        alert('Les notifications sont déjà autorisées.');
+        return;
+      }
+
+      const result = await LocalNotifications.requestPermissions();
+      setNotificationPermission(result.display);
+
+      if (result.display === 'granted') {
+        await sendTestNotification();
+        // Planifier le rappel quotidien
+        await scheduleDailyReminder();
       }
     } catch (error) {
+      console.error('Erreur permissions notification:', error);
       alert('Erreur lors de la demande de permission.');
     }
   };
 
-  const sendTestNotification = () => {
-    if (!isMobile) return;
-    if (Notification.permission === 'granted') {
-      new Notification('🎵 MyMusicCoach', {
-        body: `Bonjour ${settings.userName} ! Les notifications sont activées.`,
-        icon: '🎵',
-        badge: '🎵'
+  const sendTestNotification = async () => {
+    if (!isNativePlatform) return;
+
+    try {
+      await LocalNotifications.schedule({
+        notifications: [{
+          title: '🎵 MyMusicCoach',
+          body: `Bonjour ${settings.userName} ! Les notifications sont activées.`,
+          id: 9999,
+          schedule: { at: new Date(Date.now() + 1000) },
+          sound: 'default',
+          smallIcon: 'ic_stat_music_note',
+          largeIcon: 'ic_launcher'
+        }]
       });
+    } catch (error) {
+      console.error('Erreur envoi notification test:', error);
     }
   };
 
-  const sendSessionReminder = () => {
-    if (!isMobile) return;
-    if (Notification.permission !== 'granted' || !settings.notifications) return;
+  const scheduleDailyReminder = async () => {
+    if (!isNativePlatform) return;
+    if (!settings.notifications || !settings.reminderEnabled) return;
 
-    const todayWorkout = getTodayWorkout();
-    if (!todayWorkout) return;
+    try {
+      // Annuler les anciennes notifications planifiées
+      await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
 
-    const isCompleted = isTodaySessionCompleted();
-    if (isCompleted) return;
+      // Parser l'heure du rappel
+      const [hours, minutes] = settings.practiceReminder.split(':').map(Number);
 
-    new Notification('🎵 MyMusicCoach - Session du jour', {
-      body: `Il est temps de pratiquer ! Session : ${todayWorkout.name} (${todayWorkout.duration})`,
-      icon: '🎵',
-      badge: '🎵',
-      tag: 'daily-practice',
-      requireInteraction: false
-    });
+      // Créer la date du prochain rappel
+      const now = new Date();
+      const scheduledDate = new Date();
+      scheduledDate.setHours(hours, minutes, 0, 0);
+
+      // Si l'heure est déjà passée aujourd'hui, planifier pour demain
+      if (scheduledDate <= now) {
+        scheduledDate.setDate(scheduledDate.getDate() + 1);
+      }
+
+      await LocalNotifications.schedule({
+        notifications: [{
+          title: '🎵 MyMusicCoach - Session du jour',
+          body: `Il est temps de pratiquer ! Ouvre l'app pour voir ta session.`,
+          id: 1,
+          schedule: {
+            at: scheduledDate,
+            repeats: true,
+            every: 'day'
+          },
+          sound: 'default',
+          smallIcon: 'ic_stat_music_note',
+          largeIcon: 'ic_launcher'
+        }]
+      });
+
+      console.log('Rappel quotidien planifié pour:', scheduledDate);
+    } catch (error) {
+      console.error('Erreur planification rappel:', error);
+    }
   };
 
-  const checkAndSendReminder = () => {
-    if (!isMobile) return;
+  const cancelDailyReminder = async () => {
+    if (!isNativePlatform) return;
+
+    try {
+      await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
+      console.log('Rappel quotidien annulé');
+    } catch (error) {
+      console.error('Erreur annulation rappel:', error);
+    }
+  };
+
+  // Envoyer une notification immédiate (pour session terminée, etc.)
+  const sendImmediateNotification = async (title, body, id = 9998) => {
+    if (!isNativePlatform) return;
     if (!settings.notifications) return;
-    if (Notification.permission !== 'granted') return;
 
-    const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
-    // Vérifier si c'est l'heure du rappel
-    if (currentTime === settings.practiceReminder) {
-      sendSessionReminder();
+    try {
+      const permStatus = await LocalNotifications.checkPermissions();
+      if (permStatus.display !== 'granted') return;
+
+      await LocalNotifications.schedule({
+        notifications: [{
+          title,
+          body,
+          id,
+          schedule: { at: new Date(Date.now() + 500) },
+          sound: 'default',
+          smallIcon: 'ic_stat_music_note',
+          largeIcon: 'ic_launcher'
+        }]
+      });
+    } catch (error) {
+      console.error('Erreur notification:', error);
     }
   };
 
-  // Vérifier toutes les minutes si c'est l'heure du rappel (seulement sur mobile)
+  // Vérifier et mettre à jour les permissions au démarrage
   React.useEffect(() => {
-    if (!isMobile) return;
+    const checkPermissions = async () => {
+      if (!isNativePlatform) return;
 
-    const interval = setInterval(() => {
-      checkAndSendReminder();
-    }, 60000); // Toutes les 60 secondes
+      try {
+        const permStatus = await LocalNotifications.checkPermissions();
+        setNotificationPermission(permStatus.display);
+      } catch (error) {
+        console.error('Erreur vérification permissions:', error);
+      }
+    };
 
-    return () => clearInterval(interval);
-  }, [settings.notifications, settings.practiceReminder, weeklySchedule, sessionHistory, workouts]);
+    checkPermissions();
+  }, []);
+
+  // Mettre à jour le rappel quotidien quand les settings changent
+  React.useEffect(() => {
+    if (!isNativePlatform) return;
+
+    const updateReminder = async () => {
+      if (settings.notifications && settings.reminderEnabled) {
+        const permStatus = await LocalNotifications.checkPermissions();
+        if (permStatus.display === 'granted') {
+          await scheduleDailyReminder();
+        }
+      } else {
+        await cancelDailyReminder();
+      }
+    };
+
+    updateReminder();
+  }, [settings.notifications, settings.practiceReminder, settings.reminderEnabled]);
 
   // Sauvegarder dans le dossier Downloads (Android natif)
   const saveToDownloads = async (dataStr, fileName) => {
@@ -865,14 +937,12 @@ const MyMusicCoach = () => {
     setActiveWorkout(null);
     setWorkoutProgress({});
 
-    // Notification de félicitations (uniquement sur mobile)
-    if (isMobile && Notification.permission === 'granted' && settings.notifications) {
-      new Notification('🎉 Session terminée !', {
-        body: `Bravo ${settings.userName} ! ${completed} exercice${completed > 1 ? 's' : ''} complété${completed > 1 ? 's' : ''} sur ${workoutExercises.length}.`,
-        icon: '🎉',
-        badge: '🎵'
-      });
-    }
+    // Notification de félicitations (uniquement sur mobile natif)
+    sendImmediateNotification(
+      '🎉 Session terminée !',
+      `Bravo ${settings.userName} ! ${completed} exercice${completed > 1 ? 's' : ''} complété${completed > 1 ? 's' : ''} sur ${workoutExercises.length}.`,
+      100
+    );
   };
 
   // Fonction pour démarrer l'édition d'une session terminée
@@ -930,15 +1000,13 @@ const MyMusicCoach = () => {
   // Fonction pour démarrer une session avec notification
   const startWorkout = (workout) => {
     setActiveWorkout(workout);
-    
-    // Notification de début de session (uniquement sur mobile)
-    if (isMobile && Notification.permission === 'granted' && settings.notifications) {
-      new Notification('🎵 Session démarrée !', {
-        body: `${workout.name} - ${workout.exercises.length} exercice${workout.exercises.length > 1 ? 's' : ''} à pratiquer. Bon courage !`,
-        icon: '🎵',
-        badge: '🎵'
-      });
-    }
+
+    // Notification de début de session (uniquement sur mobile natif)
+    sendImmediateNotification(
+      '🎵 Session démarrée !',
+      `${workout.name} - ${workout.exercises.length} exercice${workout.exercises.length > 1 ? 's' : ''} à pratiquer. Bon courage !`,
+      101
+    );
   };
 
   const deleteExercise = (exerciseId) => {
@@ -2643,24 +2711,44 @@ const MyMusicCoach = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Rappel quotidien</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">Rappel quotidien</label>
+                <button
+                  onClick={() => setSettings({...settings, reminderEnabled: !settings.reminderEnabled})}
+                  className={`w-12 h-6 rounded-full transition-colors ${
+                    settings.reminderEnabled ? 'bg-purple-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    settings.reminderEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
               <input
                 type="time"
                 value={settings.practiceReminder}
                 onChange={(e) => setSettings({...settings, practiceReminder: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
+                disabled={!settings.reminderEnabled}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 ${
+                  !settings.reminderEnabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
+                }`}
               />
+              {settings.reminderEnabled && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Tu recevras un rappel chaque jour à cette heure
+                </p>
+              )}
             </div>
 
-            {/* Section Notifications - Uniquement sur mobile */}
-            {isMobile ? (
+            {/* Section Notifications - Uniquement sur app native */}
+            {isNativePlatform ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm font-medium text-gray-700 block">Notifications</span>
                     <span className="text-xs text-gray-500">
-                      {notificationPermission === 'granted' ? '✅ Autorisées' : 
-                       notificationPermission === 'denied' ? '❌ Bloquées' : 
+                      {notificationPermission === 'granted' ? '✅ Autorisées' :
+                       notificationPermission === 'denied' ? '❌ Bloquées' :
                        '⚠️ Non configurées'}
                     </span>
                   </div>
@@ -2683,7 +2771,7 @@ const MyMusicCoach = () => {
                     className="w-full bg-purple-100 text-purple-700 py-3 rounded-xl font-medium hover:bg-purple-200 transition-colors flex items-center justify-center gap-2"
                   >
                     <Bell className="w-5 h-5" />
-                    Activer les notifications du navigateur
+                    Activer les notifications
                   </button>
                 )}
 
