@@ -898,21 +898,6 @@ const MyMusicCoach = () => {
     setEditingSessionProgress(progress);
   };
 
-  // Fonction pour toggle le statut d'un exercice en mode édition
-  const toggleEditingExercise = (exerciseId) => {
-    const newProgress = { ...editingSessionProgress };
-
-    if (!newProgress[exerciseId] || newProgress[exerciseId] === 'pending') {
-      newProgress[exerciseId] = 'completed';
-    } else if (newProgress[exerciseId] === 'completed') {
-      newProgress[exerciseId] = 'skipped';
-    } else {
-      newProgress[exerciseId] = 'completed';
-    }
-
-    setEditingSessionProgress(newProgress);
-  };
-
   // Fonction pour sauvegarder les modifications d'une session
   const updateSession = () => {
     if (!editingSession) return;
@@ -3659,6 +3644,85 @@ const MyMusicCoach = () => {
                   </div>
                 )}
 
+                {/* Boutons Valider/Sauter l'exercice - en mode édition de session terminée */}
+                {editingSession && editingSession.workoutId && (() => {
+                  const workout = workouts.find(w => w.id === editingSession.workoutId);
+                  if (!workout || !workout.exercises.includes(selectedExercise.id)) return null;
+
+                  return (
+                    <div className="pt-4 pb-2">
+                      {(() => {
+                        const status = editingSessionProgress[selectedExercise.id];
+
+                        if (status === 'completed') {
+                          return (
+                            <div className="space-y-3">
+                              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
+                                <div className="bg-green-500 rounded-full p-2">
+                                  <Check className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="font-bold text-green-900">Exercice validé !</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'skipped'});
+                                }}
+                                className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                              >
+                                Marquer comme sauté
+                              </button>
+                            </div>
+                          );
+                        }
+
+                        if (status === 'skipped') {
+                          return (
+                            <div className="space-y-3">
+                              <div className="bg-gray-100 border-2 border-gray-300 rounded-xl p-4 flex items-center gap-3">
+                                <div className="bg-gray-400 rounded-full p-2">
+                                  <X className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="font-bold text-gray-700">Exercice sauté</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'completed'});
+                                }}
+                                className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                              >
+                                Marquer comme validé
+                              </button>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => {
+                                setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'skipped'});
+                              }}
+                              className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <X className="w-5 h-5" />
+                              Sauté
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'completed'});
+                              }}
+                              className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                            >
+                              <Check className="w-6 h-6" />
+                              Validé
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })()}
+
               </div>
             </div>
           </div>
@@ -3737,7 +3801,7 @@ const MyMusicCoach = () => {
       )}
 
       {/* Modal d'édition de session terminée */}
-      {editingSession && (
+      {editingSession && !selectedExercise && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
           <div className="bg-white rounded-t-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-t-3xl">
@@ -3758,7 +3822,7 @@ const MyMusicCoach = () => {
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-500 mb-4">
-                Clique sur chaque exercice pour changer son statut (complété / sauté).
+                Clique sur un exercice pour voir ses détails et modifier son statut ou ajouter un tempo.
               </p>
 
               {(() => {
@@ -3786,7 +3850,7 @@ const MyMusicCoach = () => {
                         'border-purple-200 bg-white'
                       }`}
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm font-bold text-purple-600">#{index + 1}</span>
@@ -3800,9 +3864,8 @@ const MyMusicCoach = () => {
                             <span>{exercise.sets}</span>
                           </div>
                         </div>
-                        <button
-                          onClick={() => toggleEditingExercise(exerciseId)}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
                             status === 'completed' ? 'bg-green-500 text-white' :
                             status === 'skipped' ? 'bg-gray-300 text-gray-600' :
                             'bg-purple-100 text-purple-600'
@@ -3811,8 +3874,14 @@ const MyMusicCoach = () => {
                           {status === 'completed' ? <Check className="w-5 h-5" /> :
                            status === 'skipped' ? <X className="w-5 h-5" /> :
                            <Play className="w-5 h-5" />}
-                        </button>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => setSelectedExercise(exercise)}
+                        className="w-full bg-purple-600 text-white py-2 rounded-xl font-medium hover:bg-purple-700 transition-colors text-sm"
+                      >
+                        Voir les détails
+                      </button>
                     </div>
                   );
                 });
