@@ -1804,6 +1804,7 @@ const MyMusicCoach = () => {
                       {editingGoal === goal.id ? (
                         <div className="flex items-center gap-1">
                           <button
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => updateGoalProgress(goal.id, goal.current - 1)}
                             className="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm"
                           >
@@ -1813,12 +1814,11 @@ const MyMusicCoach = () => {
                             type="number"
                             value={goal.current}
                             onChange={(e) => updateGoalProgress(goal.id, parseInt(e.target.value) || 0)}
-                            onBlur={() => setEditingGoal(null)}
-                            autoFocus
                             className="w-12 text-center font-bold text-purple-600 border border-purple-300 rounded-lg py-1 text-sm"
                           />
                           <span className="text-xs text-gray-500">/{goal.target}</span>
                           <button
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => updateGoalProgress(goal.id, goal.current + 1)}
                             className="w-7 h-7 bg-purple-100 hover:bg-purple-200 rounded-full flex items-center justify-center text-purple-700 font-bold text-sm"
                           >
@@ -3539,7 +3539,7 @@ const MyMusicCoach = () => {
                         />
                         <span className="text-gray-600 font-medium flex items-center px-3">BPM</span>
                       </div>
-                      <button 
+                      <button
                         onClick={() => saveTempo(selectedExercise.id)}
                         className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-shadow"
                       >
@@ -3568,6 +3568,51 @@ const MyMusicCoach = () => {
                       )}
                     </div>
                   </>
+                )}
+
+                {/* Bouton Valider l'exercice - uniquement pendant une session active */}
+                {activeWorkout && activeWorkout.exercises.includes(selectedExercise.id) && (
+                  <div className="pt-4 pb-2">
+                    {(() => {
+                      const key = `${activeWorkout.id}-${selectedExercise.id}`;
+                      const status = workoutProgress[key];
+
+                      if (status === 'completed') {
+                        return (
+                          <div className="space-y-3">
+                            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
+                              <div className="bg-green-500 rounded-full p-2">
+                                <Check className="w-5 h-5 text-white" />
+                              </div>
+                              <span className="font-bold text-green-900">Exercice validé !</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const newProgress = {...workoutProgress};
+                                delete newProgress[key];
+                                setWorkoutProgress(newProgress);
+                              }}
+                              className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                            >
+                              Annuler la validation
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <button
+                          onClick={() => {
+                            setWorkoutProgress({...workoutProgress, [key]: 'completed'});
+                          }}
+                          className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-6 h-6" />
+                          Valider l'exercice
+                        </button>
+                      );
+                    })()}
+                  </div>
                 )}
 
               </div>
