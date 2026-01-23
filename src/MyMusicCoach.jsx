@@ -1173,33 +1173,43 @@ const MyMusicCoach = () => {
 
   // ===== IMPORT/EXPORT DE SESSIONS =====
   const exportWorkout = async (workout) => {
-    // Récupérer les exercices de la session
-    const workoutExercises = workout.exercises.map(exId => {
-      const exercise = exercises.find(ex => ex.id === exId);
-      if (!exercise) return null;
-      // Retirer l'ID pour éviter les conflits lors de l'import
-      const { id, ...exerciseData } = exercise;
-      return exerciseData;
-    }).filter(Boolean);
+    try {
+      if (!workout || !workout.exercises) {
+        alert('Session invalide');
+        return;
+      }
 
-    // Créer l'objet à exporter
-    const exportData = {
-      version: "1.0",
-      appName: "MyMusicCoach",
-      exportDate: new Date().toISOString(),
-      workout: {
-        name: workout.name,
-        duration: workout.duration,
-        category: workout.category,
-        exerciseCount: workoutExercises.length
-      },
-      exercises: workoutExercises
-    };
+      // Récupérer les exercices de la session
+      const workoutExercises = workout.exercises.map(exId => {
+        const exercise = exercises.find(ex => ex.id === exId);
+        if (!exercise) return null;
+        // Retirer l'ID pour éviter les conflits lors de l'import
+        const { id, ...exerciseData } = exercise;
+        return exerciseData;
+      }).filter(Boolean);
 
-    // Créer le fichier JSON et télécharger
-    const jsonContent = JSON.stringify(exportData, null, 2);
-    const fileName = `${workout.name.replace(/[^a-z0-9]/gi, '_')}_MyMusicCoach.json`;
-    await downloadFile(jsonContent, fileName, 'application/json');
+      // Créer l'objet à exporter
+      const exportData = {
+        version: "1.0",
+        appName: "MyMusicCoach",
+        exportDate: new Date().toISOString(),
+        workout: {
+          name: workout.name,
+          duration: workout.duration,
+          category: workout.category,
+          exerciseCount: workoutExercises.length
+        },
+        exercises: workoutExercises
+      };
+
+      // Créer le fichier JSON et télécharger
+      const jsonContent = JSON.stringify(exportData, null, 2);
+      const fileName = `${workout.name.replace(/[^a-z0-9]/gi, '_')}_MyMusicCoach.json`;
+      await downloadFile(jsonContent, fileName, 'application/json');
+    } catch (error) {
+      alert(`Erreur lors de l'export: ${error.message}`);
+      console.error('Export workout error:', error);
+    }
   };
 
   const handleImportFile = (e) => {

@@ -103,6 +103,9 @@ export function useIndexedDB(key, initialValue) {
         if (isMounted) {
           if (value !== undefined) {
             setStoredValue(value);
+          } else {
+            // Si aucune valeur n'existe, sauvegarder la valeur initiale
+            await set(key, initialValue);
           }
           setIsLoading(false);
         }
