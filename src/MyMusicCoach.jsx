@@ -1204,7 +1204,7 @@ const MyMusicCoach = () => {
 
       // Créer le fichier JSON et télécharger
       const jsonContent = JSON.stringify(exportData, null, 2);
-      const fileName = `${workout.name.replace(/[^a-z0-9]/gi, '_')}_MyMusicCoach.json`;
+      const fileName = `mymusiccoach-session-${new Date().toISOString().split('T')[0]}.json`;
       await downloadFile(jsonContent, fileName, 'application/json');
     } catch (error) {
       alert(`Erreur lors de l'export: ${error.message}`);
