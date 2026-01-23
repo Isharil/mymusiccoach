@@ -702,31 +702,36 @@ const MyMusicCoach = () => {
     updateReminder();
   }, [settings.notifications, settings.practiceReminder, settings.reminderEnabled]);
 
-  // Sauvegarder le fichier (Android natif) - utilise Share pour sauvegarder
+  // Sauvegarder dans le dossier Downloads (Android natif)
   const saveToDownloads = async (dataStr, fileName) => {
     try {
-      const result = await Filesystem.writeFile({
-        path: fileName,
+      await Filesystem.writeFile({
+        path: `Download/${fileName}`,
         data: dataStr,
-        directory: Directory.Cache,
-        encoding: Encoding.UTF8
+        directory: Directory.ExternalStorage,
+        encoding: Encoding.UTF8,
+        recursive: true
       });
-
-      await Share.share({
-        title: fileName,
-        url: result.uri,
-        dialogTitle: 'Enregistrer le fichier'
-      });
+      alert(`Fichier sauvegardé dans Téléchargements :\n${fileName}`);
       setExportModalData(null);
       return true;
     } catch (error) {
-      if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+      console.error('Erreur sauvegarde Downloads:', error);
+      // Fallback : essayer avec Documents si ExternalStorage échoue
+      try {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: dataStr,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8
+        });
+        alert(`Fichier sauvegardé dans Documents :\n${fileName}`);
         setExportModalData(null);
         return true;
+      } catch (err) {
+        alert('Erreur lors de la sauvegarde. Essayez l\'option Partager.');
+        return false;
       }
-      console.error('Erreur sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde.');
-      return false;
     }
   };
 
@@ -4030,7 +4035,7 @@ const MyMusicCoach = () => {
         </div>
       )}
 
-      {/* Modal d'export (Android) */}
+      {/* Modal de choix d'export (Android) */}
       {exportModalData && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
@@ -4042,14 +4047,27 @@ const MyMusicCoach = () => {
             <div className="p-5 space-y-3">
               <button
                 onClick={() => saveToDownloads(exportModalData.content, exportModalData.fileName)}
-                className="w-full flex items-center gap-4 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+                className="w-full flex items-center gap-4 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
               >
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
                   <Download className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-gray-900">Exporter</p>
-                  <p className="text-sm text-gray-500">Enregistrer ou partager le fichier</p>
+                  <p className="font-bold text-gray-900">Télécharger</p>
+                  <p className="text-sm text-gray-500">Sauvegarder dans Téléchargements</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => shareFile(exportModalData.content, exportModalData.fileName)}
+                className="w-full flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+              >
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-gray-900">Partager</p>
+                  <p className="text-sm text-gray-500">Envoyer par email, Drive, etc.</p>
                 </div>
               </button>
 
