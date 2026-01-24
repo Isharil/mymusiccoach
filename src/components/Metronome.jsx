@@ -13,13 +13,14 @@ const SUBDIVISIONS = [
 // Pour les mesures composées (6/8, 12/8), beats = nombre de temps principaux
 // Pour les mesures asymétriques (7/8, 5/8), grouping définit les accents
 const TIME_SIGNATURES = [
-  { id: '4/4', beats: 4, name: '4/4' },
-  { id: '3/4', beats: 3, name: '3/4' },
+  { id: '1/4', beats: 1, name: '1/4' },
   { id: '2/4', beats: 2, name: '2/4' },
-  { id: '6/8', beats: 2, name: '6/8', isCompound: true, compoundSubdiv: 3, displayGrouping: '3+3' }, // 2 temps, chacun divisé en 3
+  { id: '3/4', beats: 3, name: '3/4' },
+  { id: '4/4', beats: 4, name: '4/4' },
   { id: '5/4', beats: 5, name: '5/4' },
-  { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2] }, // 3+2+2 (ou 2+2+3 selon style)
   { id: '5/8', beats: 5, name: '5/8', grouping: [3, 2] }, // 3+2
+  { id: '6/8', beats: 2, name: '6/8', grouping: [3, 3] },/* isCompound: true, compoundSubdiv: 3, displayGrouping: '3+3' }, */ // 2 temps, chacun divisé en 3
+  { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2] }, // 3+2+2 (ou 2+2+3 selon style)
 ];
 
 const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
