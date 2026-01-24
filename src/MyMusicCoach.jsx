@@ -5,6 +5,7 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import Metronome from './components/Metronome';
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -61,6 +62,7 @@ const MyMusicCoach = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerInterval, setTimerInterval] = useState(null);
+  const [showMetronome, setShowMetronome] = useState(false);
 
   // Catégories d'exercices disponibles
   const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation"];
@@ -1555,6 +1557,24 @@ const MyMusicCoach = () => {
                 );
               })}
             </div>
+          </div>
+
+          {/* Outils */}
+          <div className="bg-white rounded-3xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Outils</h2>
+            <button
+              onClick={() => setShowMetronome(true)}
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
+            >
+              <div className="bg-white/20 rounded-xl p-3">
+                <span className="text-2xl">🎵</span>
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-lg">Métronome</p>
+                <p className="text-sm text-white/80">Tempo, subdivisions, signatures</p>
+              </div>
+              <ChevronRight className="w-6 h-6 ml-auto" />
+            </button>
           </div>
 
           {/* Statistiques rapides */}
@@ -3277,6 +3297,12 @@ const MyMusicCoach = () => {
                   <p className="text-gray-600">{selectedExercise.description}</p>
                 </div>
 
+                {/* Métronome compact */}
+                <Metronome
+                  initialTempo={selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120}
+                  compact={true}
+                />
+
                 <div className="grid grid-cols-2 gap-4">
                   {/* Bloc Durée avec Chronomètre */}
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 shadow-md">
@@ -3540,6 +3566,15 @@ const MyMusicCoach = () => {
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Métronome */}
+      {showMetronome && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            <Metronome onClose={() => setShowMetronome(false)} />
           </div>
         </div>
       )}
