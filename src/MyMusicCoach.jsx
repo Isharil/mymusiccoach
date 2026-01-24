@@ -3297,12 +3297,6 @@ const MyMusicCoach = () => {
                   <p className="text-gray-600">{selectedExercise.description}</p>
                 </div>
 
-                {/* Métronome compact */}
-                <Metronome
-                  initialTempo={selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120}
-                  compact={true}
-                />
-
                 <div className="grid grid-cols-2 gap-4">
                   {/* Bloc Durée avec Chronomètre */}
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 shadow-md">
@@ -3360,6 +3354,12 @@ const MyMusicCoach = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Métronome compact */}
+                <Metronome
+                  initialTempo={selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120}
+                  compact={true}
+                />
 
                 {selectedExercise.baseTempo > 0 && (
                   <>

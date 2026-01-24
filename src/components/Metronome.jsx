@@ -192,51 +192,84 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
           {Array.from({ length: timeSignature.beats }).map((_, i) => (
             <div
               key={i}
-              className={`w-4 h-4 rounded-full transition-all duration-75 ${
+              className={`w-5 h-5 rounded-full transition-all duration-75 flex items-center justify-center text-xs font-bold ${
                 isPlaying && currentBeat === i
                   ? i === 0
-                    ? 'bg-red-500 scale-125 shadow-lg shadow-red-300'
-                    : 'bg-indigo-500 scale-110 shadow-lg shadow-indigo-300'
-                  : 'bg-gray-300'
+                    ? 'bg-red-500 text-white scale-125 shadow-lg shadow-red-300'
+                    : 'bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-300'
+                  : 'bg-gray-300 text-gray-500'
               }`}
-            />
+            >
+              {i + 1}
+            </div>
           ))}
         </div>
 
-        {/* Contrôles compacts */}
-        <div className="flex items-center gap-3">
+        {/* Contrôle du tempo avec boutons -5/+5 */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <button
+            onClick={() => setTempo(Math.max(20, tempo - 5))}
+            className="w-10 h-10 bg-white border-2 border-indigo-300 rounded-xl font-bold text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm"
+          >
+            -5
+          </button>
+          <div className="flex items-center gap-1 bg-white border-2 border-indigo-300 rounded-xl px-3 py-2 shadow-sm">
+            <input
+              type="number"
+              value={tempo}
+              onChange={handleTempoChange}
+              className="w-14 text-center font-bold text-xl text-indigo-900 bg-transparent focus:outline-none"
+              min="20"
+              max="300"
+            />
+            <span className="text-sm text-gray-500">BPM</span>
+          </div>
+          <button
+            onClick={() => setTempo(Math.min(300, tempo + 5))}
+            className="w-10 h-10 bg-white border-2 border-indigo-300 rounded-xl font-bold text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm"
+          >
+            +5
+          </button>
+        </div>
+
+        {/* Contrôles play et options */}
+        <div className="flex items-center gap-2">
           <button
             onClick={togglePlay}
-            className={`p-3 rounded-xl font-bold shadow-lg transition-all ${
+            className={`flex-1 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
               isPlaying
                 ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
             }`}
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            {isPlaying ? 'Stop' : 'Démarrer'}
           </button>
-
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={tempo}
-                onChange={handleTempoChange}
-                className="w-16 px-2 py-1 text-center font-bold text-lg border-2 border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                min="20"
-                max="300"
-              />
-              <span className="text-sm text-gray-600">BPM</span>
-            </div>
-          </div>
 
           <select
             value={subdivision.id}
             onChange={(e) => setSubdivision(SUBDIVISIONS.find(s => s.id === e.target.value))}
-            className="px-2 py-1 border-2 border-indigo-300 rounded-lg text-sm bg-white"
+            className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
           >
             {SUBDIVISIONS.map(sub => (
-              <option key={sub.id} value={sub.id}>{sub.symbol}</option>
+              <option key={sub.id} value={sub.id}>{sub.symbol} {sub.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={timeSignature.id}
+            onChange={(e) => {
+              const ts = TIME_SIGNATURES.find(t => t.id === e.target.value);
+              setTimeSignature(ts);
+              if (currentBeatRef.current >= ts.beats) {
+                currentBeatRef.current = 0;
+                setCurrentBeat(0);
+              }
+            }}
+            className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
+          >
+            {TIME_SIGNATURES.map(ts => (
+              <option key={ts.id} value={ts.id}>{ts.name}</option>
             ))}
           </select>
         </div>
