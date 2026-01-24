@@ -10,13 +10,16 @@ const SUBDIVISIONS = [
 ];
 
 // Signatures rythmiques courantes
+// Pour les mesures composées (6/8, 12/8), beats = nombre de temps principaux
+// Pour les mesures asymétriques (7/8, 5/8), grouping définit les accents
 const TIME_SIGNATURES = [
-  { id: '4/4', beats: 4, noteValue: 4, name: '4/4' },
-  { id: '3/4', beats: 3, noteValue: 4, name: '3/4' },
-  { id: '2/4', beats: 2, noteValue: 4, name: '2/4' },
-  { id: '6/8', beats: 6, noteValue: 8, name: '6/8' },
-  { id: '5/4', beats: 5, noteValue: 4, name: '5/4' },
-  { id: '7/8', beats: 7, noteValue: 8, name: '7/8' },
+  { id: '4/4', beats: 4, name: '4/4' },
+  { id: '3/4', beats: 3, name: '3/4' },
+  { id: '2/4', beats: 2, name: '2/4' },
+  { id: '6/8', beats: 2, name: '6/8', isCompound: true, compoundSubdiv: 3, displayGrouping: '3+3' }, // 2 temps, chacun divisé en 3
+  { id: '5/4', beats: 5, name: '5/4' },
+  { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2] }, // 3+2+2 (ou 2+2+3 selon style)
+  { id: '5/8', beats: 5, name: '5/8', grouping: [3, 2] }, // 3+2
 ];
 
 const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
@@ -56,14 +59,14 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
 
     // Fréquences différentes pour temps fort, temps faible, et subdivisions
     if (isDownbeat) {
-      oscillator.frequency.value = 1000; // Temps fort - son aigu
+      oscillator.frequency.value = 1200; // Temps fort (beat 1) - son aigu
       gainNode.gain.value = volume;
     } else if (isSubBeat) {
-      oscillator.frequency.value = 600; // Subdivision - son moyen plus doux
-      gainNode.gain.value = volume * 0.4;
+      oscillator.frequency.value = 800; // Subdivision - son moyen
+      gainNode.gain.value = volume * 0.5;
     } else {
-      oscillator.frequency.value = 800; // Temps faible - son moyen
-      gainNode.gain.value = volume * 0.7;
+      oscillator.frequency.value = 1000; // Accent secondaire - son moyen-aigu
+      gainNode.gain.value = volume * 0.8;
     }
 
     oscillator.type = 'sine';
@@ -78,44 +81,135 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
     oscillator.stop(now + 0.05);
   }, [isMuted, volume, getAudioContext]);
 
+  // Calculer le nombre total de subdivisions pour la mesure
+  const getTotalSubdivisions = useCallback(() => {
+    if (timeSignature.isCompound) {
+      // Pour 6/8: 2 temps principaux, chacun divisé naturellement en 3 croches
+      const totalEighths = timeSignature.beats * timeSignature.compoundSubdiv; // = 6 pour 6/8
+      if (subdivision.divisor === 1) {
+        // "Noires" = seulement les temps principaux (2 pour 6/8)
+        return timeSignature.beats;
+      } else {
+        // "Croches" = toutes les croches (6 pour 6/8)
+        // "Doubles" = 2 par croche (12 pour 6/8)
+        const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+        return totalEighths * subMultiplier;
+      }
+    } else if (timeSignature.grouping) {
+      // Pour 7/8, 5/8 avec mesures asymétriques
+      const totalEighths = timeSignature.grouping.reduce((a, b) => a + b, 0);
+      if (subdivision.divisor === 1) {
+        // "Noires" = seulement les temps de groupe (3 pour 7/8)
+        return timeSignature.grouping.length;
+      } else {
+        // "Croches" et au-delà = toutes les croches × subdivision
+        // divisor 2 = croches (7 pour 7/8)
+        // divisor 4 = doubles (14 pour 7/8)
+        const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+        return totalEighths * subMultiplier;
+      }
+    }
+    // Pour mesures simples: beats × subdivision
+    return timeSignature.beats * subdivision.divisor;
+  }, [timeSignature, subdivision]);
+
+  // Pour mesures asymétriques: obtenir la durée du groupe actuel (en croches)
+  const getCurrentGroupSize = useCallback((groupIndex) => {
+    if (!timeSignature.grouping) return 1;
+    return timeSignature.grouping[groupIndex % timeSignature.grouping.length];
+  }, [timeSignature]);
+
+  // Vérifier si une position est un temps fort (début de groupe)
+  const isAccentBeat = useCallback((position) => {
+    if (timeSignature.grouping) {
+      if (subdivision.divisor === 1) {
+        // Mode "Noires" pour asymétrique: chaque position est un accent
+        return true;
+      }
+      // Pour "Croches" et au-delà: accent au début de chaque groupe
+      const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+      let accumulatedPosition = 0;
+      for (const groupSize of timeSignature.grouping) {
+        if (position === accumulatedPosition * subMultiplier) return true;
+        accumulatedPosition += groupSize;
+      }
+      return false;
+    }
+    if (timeSignature.isCompound) {
+      if (subdivision.divisor === 1) {
+        // "Noires": chaque position est un temps principal
+        return true;
+      }
+      // Pour "Croches" et au-delà: accent au début de chaque groupe de temps
+      const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+      const subdivsPerBeat = timeSignature.compoundSubdiv * subMultiplier;
+      return position % subdivsPerBeat === 0;
+    }
+    // Pour mesures simples: accent sur chaque temps
+    return position % subdivision.divisor === 0;
+  }, [timeSignature, subdivision]);
+
   // Scheduler pour le timing précis
   const scheduler = useCallback(() => {
     const audioContext = getAudioContext();
-    const secondsPerBeat = 60.0 / tempo;
-    const secondsPerSubBeat = secondsPerBeat / subdivision.divisor;
+    const totalSubdivs = getTotalSubdivisions();
+
+    // BPM = noire pour toutes les signatures
+    const secondsPerQuarter = 60.0 / tempo;
+    const secondsPerEighth = secondsPerQuarter / 2; // Croche = moitié de la noire
 
     while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
-      const beat = currentBeatRef.current;
-      const subBeat = currentSubBeatRef.current;
-
-      const isDownbeat = beat === 0 && subBeat === 0;
-      const isMainBeat = subBeat === 0;
-      const isSubBeat = subBeat > 0;
+      const position = currentBeatRef.current;
+      const isDownbeat = position === 0;
+      const isAccent = isAccentBeat(position);
 
       // Jouer le son
-      if (isMainBeat) {
+      if (isAccent) {
         playClick(isDownbeat, false);
       } else {
         playClick(false, true);
       }
 
       // Mettre à jour l'affichage
-      setCurrentBeat(beat);
-      setCurrentSubBeat(subBeat);
+      setCurrentBeat(position);
 
-      // Avancer au prochain sub-beat
-      currentSubBeatRef.current++;
-      if (currentSubBeatRef.current >= subdivision.divisor) {
-        currentSubBeatRef.current = 0;
-        currentBeatRef.current++;
-        if (currentBeatRef.current >= timeSignature.beats) {
-          currentBeatRef.current = 0;
+      // Calculer l'intervalle jusqu'au prochain clic
+      let nextInterval;
+      if (timeSignature.isCompound) {
+        // Pour 6/8: BPM = noire
+        if (subdivision.divisor === 1) {
+          // "Noires": intervalle = noire pointée = 1.5 × noire
+          nextInterval = secondsPerQuarter * 1.5;
+        } else {
+          // "Croches" et au-delà: intervalle basé sur la croche
+          const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+          nextInterval = secondsPerEighth / subMultiplier;
         }
+      } else if (timeSignature.grouping) {
+        // Pour 7/8, 5/8: BPM = noire, croche = moitié
+        if (subdivision.divisor === 1) {
+          // "Noires" pour asymétrique: intervalle = taille du groupe × durée d'une croche
+          const groupSize = getCurrentGroupSize(position);
+          nextInterval = groupSize * secondsPerEighth;
+        } else {
+          // "Croches" et au-delà: intervalle régulier basé sur la croche
+          const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+          nextInterval = secondsPerEighth / subMultiplier;
+        }
+      } else {
+        // Mesures simples: BPM = noire
+        nextInterval = secondsPerQuarter / subdivision.divisor;
       }
 
-      nextNoteTimeRef.current += secondsPerSubBeat;
+      // Avancer à la prochaine position
+      currentBeatRef.current++;
+      if (currentBeatRef.current >= totalSubdivs) {
+        currentBeatRef.current = 0;
+      }
+
+      nextNoteTimeRef.current += nextInterval;
     }
-  }, [tempo, subdivision, timeSignature, playClick, getAudioContext]);
+  }, [tempo, subdivision, timeSignature, playClick, getAudioContext, getTotalSubdivisions, isAccentBeat, getCurrentGroupSize]);
 
   // Démarrer/Arrêter le métronome
   const togglePlay = useCallback(() => {
@@ -171,6 +265,66 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
     setTempo(Math.min(300, Math.max(20, value)));
   };
 
+  // Obtenir les indicateurs visuels pour la signature actuelle
+  const getVisualBeats = useCallback(() => {
+    if (timeSignature.grouping) {
+      // Pour 7/8, 5/8: afficher les groupes (ex: 3+2+2 pour 7/8)
+      return timeSignature.grouping.map((size, idx) => ({
+        index: idx,
+        size,
+        label: idx === 0 ? '1' : String(timeSignature.grouping.slice(0, idx).reduce((a, b) => a + b, 0) + 1)
+      }));
+    }
+    if (timeSignature.isCompound) {
+      // Pour 6/8: afficher les groupes (ex: 3+3 pour 6/8)
+      return Array.from({ length: timeSignature.beats }, (_, i) => ({
+        index: i,
+        size: timeSignature.compoundSubdiv,
+        label: String(i * timeSignature.compoundSubdiv + 1)
+      }));
+    }
+    // Pour mesures simples: afficher le nombre de temps principaux
+    return Array.from({ length: timeSignature.beats }, (_, i) => ({
+      index: i,
+      size: 1,
+      label: String(i + 1)
+    }));
+  }, [timeSignature]);
+
+  // Déterminer quel indicateur visuel est actif
+  const getActiveVisualBeat = useCallback(() => {
+    if (timeSignature.grouping) {
+      if (subdivision.divisor === 1) {
+        // "Noires": currentBeat correspond directement au groupe
+        return currentBeat % timeSignature.grouping.length;
+      }
+      // "Croches" et au-delà: trouver le groupe actif
+      const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+      let accumulatedPosition = 0;
+      for (let i = 0; i < timeSignature.grouping.length; i++) {
+        const groupSize = timeSignature.grouping[i];
+        const groupEnd = (accumulatedPosition + groupSize) * subMultiplier;
+        if (currentBeat < groupEnd) {
+          return i;
+        }
+        accumulatedPosition += groupSize;
+      }
+      return 0;
+    }
+    if (timeSignature.isCompound) {
+      if (subdivision.divisor === 1) {
+        // "Noires": currentBeat correspond directement au temps
+        return currentBeat % timeSignature.beats;
+      }
+      // Pour "Croches" et au-delà: quel temps principal est actif
+      const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+      const subdivsPerBeat = timeSignature.compoundSubdiv * subMultiplier;
+      return Math.floor(currentBeat / subdivsPerBeat);
+    }
+    // Pour mesures simples
+    return Math.floor(currentBeat / subdivision.divisor);
+  }, [timeSignature, subdivision, currentBeat]);
+
   // Version compacte pour intégration dans exercice
   if (compact) {
     return (
@@ -189,20 +343,25 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
 
         {/* Indicateur de beat visuel */}
         <div className="flex justify-center gap-2 mb-4">
-          {Array.from({ length: timeSignature.beats }).map((_, i) => (
+          {getVisualBeats().map((beat, i) => (
             <div
               key={i}
-              className={`w-5 h-5 rounded-full transition-all duration-75 flex items-center justify-center text-xs font-bold ${
-                isPlaying && currentBeat === i
+              className={`rounded-full transition-all duration-75 flex items-center justify-center text-xs font-bold ${
+                (timeSignature.grouping || timeSignature.isCompound) ? 'px-2 py-1' : 'w-6 h-6'
+              } ${
+                isPlaying && getActiveVisualBeat() === i
                   ? i === 0
                     ? 'bg-red-500 text-white scale-125 shadow-lg shadow-red-300'
                     : 'bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-300'
                   : 'bg-gray-300 text-gray-500'
               }`}
             >
-              {i + 1}
+              {(timeSignature.grouping || timeSignature.isCompound) ? beat.size : beat.label}
             </div>
           ))}
+          {timeSignature.grouping && (
+            <span className="text-xs text-gray-400 ml-1">({timeSignature.name})</span>
+          )}
         </div>
 
         {/* Contrôle du tempo avec boutons -5/+5 */}
@@ -261,15 +420,13 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             onChange={(e) => {
               const ts = TIME_SIGNATURES.find(t => t.id === e.target.value);
               setTimeSignature(ts);
-              if (currentBeatRef.current >= ts.beats) {
-                currentBeatRef.current = 0;
-                setCurrentBeat(0);
-              }
+              currentBeatRef.current = 0;
+              setCurrentBeat(0);
             }}
             className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
           >
             {TIME_SIGNATURES.map(ts => (
-              <option key={ts.id} value={ts.id}>{ts.name}</option>
+              <option key={ts.id} value={ts.id}>{ts.name}{ts.grouping ? ` (${ts.grouping.join('+')})` : ts.displayGrouping ? ` (${ts.displayGrouping})` : ''}</option>
             ))}
           </select>
         </div>
@@ -296,21 +453,26 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
 
       <div className="p-6 space-y-6">
         {/* Indicateur de beat visuel - Grand */}
-        <div className="flex justify-center gap-3">
-          {Array.from({ length: timeSignature.beats }).map((_, i) => (
+        <div className="flex justify-center items-center gap-3">
+          {getVisualBeats().map((beat, i) => (
             <div
               key={i}
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-75 ${
-                isPlaying && currentBeat === i
+              className={`rounded-full flex items-center justify-center font-bold transition-all duration-75 ${
+                (timeSignature.grouping || timeSignature.isCompound) ? 'px-4 py-2 text-lg' : 'w-12 h-12 text-xl'
+              } ${
+                isPlaying && getActiveVisualBeat() === i
                   ? i === 0
                     ? 'bg-red-500 text-white scale-125 shadow-xl shadow-red-300'
                     : 'bg-indigo-500 text-white scale-110 shadow-xl shadow-indigo-300'
                   : 'bg-gray-200 text-gray-500'
               }`}
             >
-              {i + 1}
+              {(timeSignature.grouping || timeSignature.isCompound) ? beat.size : beat.label}
             </div>
           ))}
+          {timeSignature.grouping && (
+            <span className="text-sm text-gray-400 ml-2">({timeSignature.name})</span>
+          )}
         </div>
 
         {/* Affichage du tempo actuel */}
@@ -373,24 +535,24 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
         {/* Signature rythmique */}
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">Signature rythmique</label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {TIME_SIGNATURES.map(ts => (
               <button
                 key={ts.id}
                 onClick={() => {
                   setTimeSignature(ts);
-                  if (currentBeatRef.current >= ts.beats) {
-                    currentBeatRef.current = 0;
-                    setCurrentBeat(0);
-                  }
+                  currentBeatRef.current = 0;
+                  setCurrentBeat(0);
                 }}
-                className={`py-3 rounded-xl font-bold text-lg transition-all ${
+                className={`py-3 rounded-xl font-bold transition-all ${
                   timeSignature.id === ts.id
                     ? 'bg-indigo-600 text-white shadow-lg'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {ts.name}
+                <div className="text-lg">{ts.name}</div>
+                {ts.displayGrouping && <div className="text-xs opacity-75">{ts.displayGrouping}</div>}
+                {ts.grouping && <div className="text-xs opacity-75">{ts.grouping.join('+')}</div>}
               </button>
             ))}
           </div>
