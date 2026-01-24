@@ -3380,166 +3380,166 @@ const MyMusicCoach = () => {
                   </>
                 )}
 
-                {/* Boutons Valider/Sauter l'exercice - uniquement pendant une session active */}
-                {activeWorkout && activeWorkout.exercises.includes(selectedExercise.id) && (
-                  <div className="pt-4 pb-2">
-                    {(() => {
-                      const key = `${activeWorkout.id}-${selectedExercise.id}`;
-                      const status = workoutProgress[key];
+              </div>
+            </div>
 
-                      if (status === 'completed') {
-                        return (
-                          <div className="space-y-3">
-                            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
-                              <div className="bg-green-500 rounded-full p-2">
-                                <Check className="w-5 h-5 text-white" />
-                              </div>
-                              <span className="font-bold text-green-900">Exercice validé !</span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                const newProgress = {...workoutProgress};
-                                delete newProgress[key];
-                                setWorkoutProgress(newProgress);
-                              }}
-                              className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-                            >
-                              Annuler
-                            </button>
+            {/* Boutons flottants en bas - uniquement pendant une session active */}
+            {activeWorkout && activeWorkout.exercises.includes(selectedExercise.id) && (
+              <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200 shadow-lg">
+                {(() => {
+                  const key = `${activeWorkout.id}-${selectedExercise.id}`;
+                  const status = workoutProgress[key];
+
+                  if (status === 'completed') {
+                    return (
+                      <div className="space-y-3">
+                        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
+                          <div className="bg-green-500 rounded-full p-2">
+                            <Check className="w-5 h-5 text-white" />
                           </div>
-                        );
-                      }
-
-                      if (status === 'skipped') {
-                        return (
-                          <div className="space-y-3">
-                            <div className="bg-gray-100 border-2 border-gray-300 rounded-xl p-4 flex items-center gap-3">
-                              <div className="bg-gray-400 rounded-full p-2">
-                                <X className="w-5 h-5 text-white" />
-                              </div>
-                              <span className="font-bold text-gray-700">Exercice sauté</span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                const newProgress = {...workoutProgress};
-                                delete newProgress[key];
-                                setWorkoutProgress(newProgress);
-                              }}
-                              className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-                            >
-                              Annuler
-                            </button>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => {
-                              setWorkoutProgress({...workoutProgress, [key]: 'skipped'});
-                            }}
-                            className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
-                          >
-                            <X className="w-5 h-5" />
-                            Sauter
-                          </button>
-                          <button
-                            onClick={() => {
-                              setWorkoutProgress({...workoutProgress, [key]: 'completed'});
-                            }}
-                            className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                          >
-                            <Check className="w-6 h-6" />
-                            Valider
-                          </button>
+                          <span className="font-bold text-green-900">Exercice validé !</span>
                         </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                        <button
+                          onClick={() => {
+                            const newProgress = {...workoutProgress};
+                            delete newProgress[key];
+                            setWorkoutProgress(newProgress);
+                          }}
+                          className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    );
+                  }
 
-                {/* Boutons Valider/Sauter l'exercice - en mode édition de session terminée */}
-                {editingSession && editingSession.workoutId && (() => {
-                  const workout = workouts.find(w => w.id === editingSession.workoutId);
-                  if (!workout || !workout.exercises.includes(selectedExercise.id)) return null;
+                  if (status === 'skipped') {
+                    return (
+                      <div className="space-y-3">
+                        <div className="bg-gray-100 border-2 border-gray-300 rounded-xl p-4 flex items-center gap-3">
+                          <div className="bg-gray-400 rounded-full p-2">
+                            <X className="w-5 h-5 text-white" />
+                          </div>
+                          <span className="font-bold text-gray-700">Exercice sauté</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newProgress = {...workoutProgress};
+                            delete newProgress[key];
+                            setWorkoutProgress(newProgress);
+                          }}
+                          className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    );
+                  }
 
                   return (
-                    <div className="pt-4 pb-2">
-                      {(() => {
-                        const status = editingSessionProgress[selectedExercise.id];
-
-                        if (status === 'completed') {
-                          return (
-                            <div className="space-y-3">
-                              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
-                                <div className="bg-green-500 rounded-full p-2">
-                                  <Check className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="font-bold text-green-900">Exercice validé !</span>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'skipped'});
-                                }}
-                                className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-                              >
-                                Marquer comme sauté
-                              </button>
-                            </div>
-                          );
-                        }
-
-                        if (status === 'skipped') {
-                          return (
-                            <div className="space-y-3">
-                              <div className="bg-gray-100 border-2 border-gray-300 rounded-xl p-4 flex items-center gap-3">
-                                <div className="bg-gray-400 rounded-full p-2">
-                                  <X className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="font-bold text-gray-700">Exercice sauté</span>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'completed'});
-                                }}
-                                className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
-                              >
-                                Marquer comme validé
-                              </button>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => {
-                                setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'skipped'});
-                              }}
-                              className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <X className="w-5 h-5" />
-                              Sauté
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'completed'});
-                              }}
-                              className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                            >
-                              <Check className="w-6 h-6" />
-                              Validé
-                            </button>
-                          </div>
-                        );
-                      })()}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setWorkoutProgress({...workoutProgress, [key]: 'skipped'});
+                        }}
+                        className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <X className="w-5 h-5" />
+                        Sauter
+                      </button>
+                      <button
+                        onClick={() => {
+                          setWorkoutProgress({...workoutProgress, [key]: 'completed'});
+                        }}
+                        className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-6 h-6" />
+                        Valider
+                      </button>
                     </div>
                   );
                 })()}
-
               </div>
-            </div>
+            )}
+
+            {/* Boutons flottants en bas - en mode édition de session terminée */}
+            {editingSession && editingSession.workoutId && (() => {
+              const workout = workouts.find(w => w.id === editingSession.workoutId);
+              if (!workout || !workout.exercises.includes(selectedExercise.id)) return null;
+
+              return (
+                <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200 shadow-lg">
+                  {(() => {
+                    const status = editingSessionProgress[selectedExercise.id];
+
+                    if (status === 'completed') {
+                      return (
+                        <div className="space-y-3">
+                          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center gap-3">
+                            <div className="bg-green-500 rounded-full p-2">
+                              <Check className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="font-bold text-green-900">Exercice validé !</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'skipped'});
+                            }}
+                            className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                          >
+                            Marquer comme sauté
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    if (status === 'skipped') {
+                      return (
+                        <div className="space-y-3">
+                          <div className="bg-gray-100 border-2 border-gray-300 rounded-xl p-4 flex items-center gap-3">
+                            <div className="bg-gray-400 rounded-full p-2">
+                              <X className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="font-bold text-gray-700">Exercice sauté</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'completed'});
+                            }}
+                            className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                          >
+                            Marquer comme validé
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'skipped'});
+                          }}
+                          className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <X className="w-5 h-5" />
+                          Sauté
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingSessionProgress({...editingSessionProgress, [selectedExercise.id]: 'completed'});
+                          }}
+                          className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-6 h-6" />
+                          Validé
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
