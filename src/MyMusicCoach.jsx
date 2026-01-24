@@ -44,8 +44,7 @@ const MyMusicCoach = () => {
     reminderEnabled: true,
     theme: "light",
     defaultTempo: 60,
-    userName: "Musicien",
-    instrument: "guitare" // Nouvel ajout
+    userName: "Musicien"
   });
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState(
@@ -63,321 +62,40 @@ const MyMusicCoach = () => {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerInterval, setTimerInterval] = useState(null);
 
-  // Configuration des instruments disponibles
-  const instruments = {
-    guitare: {
-      name: "Guitare",
-      emoji: "🎸",
-      categories: ["Gammes", "Accords", "Techniques", "Rythmes", "Solos"]
+  // Catégories d'exercices disponibles
+  const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation"];
+
+  // Exercices par défaut
+  const defaultExercises = [
+    {
+      id: 1,
+      name: "Échauffement technique",
+      duration: "5 min",
+      sets: "3 séries",
+      type: "video",
+      difficulty: "Débutant",
+      baseTempo: 60,
+      category: "Technique",
+      description: "Exercice d'échauffement pour préparer ta session.",
+      videoUrl: "",
+      tempoHistory: []
     },
-    piano: {
-      name: "Piano",
-      emoji: "🎹",
-      categories: ["Gammes", "Accords", "Arpeges", "Techniques", "Morceaux"]
-    },
-    batterie: {
-      name: "Batterie",
-      emoji: "🥁",
-      categories: ["Rythmes", "Rudiments", "Grooves", "Fills", "Techniques"]
-    },
-    basse: {
-      name: "Basse",
-      emoji: "🎸",
-      categories: ["Gammes", "Slap", "Techniques", "Grooves", "Walking Bass"]
-    },
-    violon: {
-      name: "Violon",
-      emoji: "🎻",
-      categories: ["Gammes", "Techniques d'archet", "Vibrato", "Positions", "Morceaux"]
-    },
-    chant: {
-      name: "Chant",
-      emoji: "🎤",
-      categories: ["Respiration", "Vocalises", "Tessiture", "Interprétation", "Répertoire"]
-    },
-    saxophone: {
-      name: "Saxophone",
-      emoji: "🎷",
-      categories: ["Gammes", "Embouchure", "Articulation", "Improvisation", "Morceaux"]
-    },
-    harpe: {
-      name: "Harpe",
-      emoji: "harpe",
-      icon: "/harpe.png",
-      categories: ["Gammes", "Arpèges", "Techniques", "Pédales", "Morceaux"]
-    },
-    autre: {
-      name: "Autre",
-      emoji: "🎵",
-      categories: ["Technique", "Théorie", "Pratique", "Répertoire", "Improvisation"]
+    {
+      id: 2,
+      name: "Exercice de rythme",
+      duration: "8 min",
+      sets: "4 séries",
+      type: "video",
+      difficulty: "Intermédiaire",
+      baseTempo: 80,
+      category: "Rythme",
+      description: "Travail du sens rythmique.",
+      videoUrl: "",
+      tempoHistory: []
     }
-  };
+  ];
 
-  // Exercices adaptés selon l'instrument
-  const getDefaultExercises = (instrument) => {
-    const baseExercises = {
-      guitare: [
-        {
-          id: 1,
-          name: "Gamme pentatonique - Position 1",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Gammes",
-          description: "Travail de la gamme pentatonique en position 1.",
-          videoUrl: "https://youtube.com/shorts/y6Qcxd0cuTU?si=pHSn7fHKBaezhyQJ",
-          tempoHistory: [
-            { date: "2026-01-06", tempo: 55 },
-            { date: "2026-01-08", tempo: 58 },
-            { date: "2026-01-10", tempo: 62 }
-          ]
-        },
-        {
-          id: 2,
-          name: "Alternate picking - Exercice 1",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Intermédiaire",
-          baseTempo: 80,
-          category: "Techniques",
-          description: "Technique d'aller-retour au médiator.",
-          videoUrl: "https://youtu.be/q8SHmo1-dac?si=sIfy2-PxeaTc7C-M",
-          tempoHistory: []
-        }
-      ],
-      piano: [
-        {
-          id: 1,
-          name: "Gammes majeures - Do majeur",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Gammes",
-          description: "Travail de la gamme de Do majeur sur 2 octaves.",
-          videoUrl: "https://youtu.be/d4_fZ8FLM1s?si=lDSqZxdB-eiQWAIY",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Arpèges - Accords de 7ème",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "pdf",
-          difficulty: "Intermédiaire",
-          baseTempo: 70,
-          category: "Arpeges",
-          description: "Travail des arpèges d'accords de 7ème.",
-          videoUrl: "https://youtu.be/I5yeuOSLdpA?si=wkVRFs0iOvIq9KqL",
-          tempoHistory: []
-        }
-      ],
-      batterie: [
-        {
-          id: 1,
-          name: "Paradiddle simple",
-          duration: "5 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 80,
-          category: "Rudiments",
-          description: "Travail du paradiddle simple (RLRR LRLL).",
-          videoUrl: "https://youtube.com/shorts/RiTRF3W1muA?si=_U40VYDrAJt9cdC6",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Groove Rock de base",
-          duration: "8 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 100,
-          category: "Grooves",
-          description: "Pattern de base rock : charleston, caisse claire et grosse caisse.",
-          videoUrl: "https://youtube.com/shorts/eEBscgvQSjg?si=EERicOM4YPc5-_nE",
-          tempoHistory: []
-        }
-      ],
-      basse: [
-        {
-          id: 1,
-          name: "Gamme pentatonique mineure",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Gammes",
-          description: "Travail de la pentatonique mineure sur tout le manche.",
-          videoUrl: "https://youtu.be/rPE9OPnW6lo?si=qkSHlBlrSifGvOGx",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Slap de base - Pouce et pop",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Intermédiaire",
-          baseTempo: 90,
-          category: "Slap",
-          description: "Technique de slap : alternance pouce et pop.",
-          videoUrl: "hhttps://youtu.be/ZihTfk2vYYI?si=vsjoqKmhIrYMaDlE",
-          tempoHistory: []
-        }
-      ],
-      violon: [
-        {
-          id: 1,
-          name: "Gamme de La majeur - 2 octaves",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Gammes",
-          description: "Travail de la gamme de La majeur sur 2 octaves.",
-          videoUrl: "https://youtu.be/2RIjMFAGzkA?si=C_FQB4-6uUf7s5gr",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Détaché - Coups d'archet",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Intermédiaire",
-          baseTempo: 80,
-          category: "Techniques d'archet",
-          description: "Travail du détaché avec différentes longueurs d'archet.",
-          videoUrl: "https://youtu.be/xEP0HOgkXfg?si=M0q8pkJYodLZ53bJ",
-          tempoHistory: []
-        }
-      ],
-      chant: [
-        {
-          id: 1,
-          name: "Respiration diaphragmatique",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Respiration",
-          description: "Exercices de respiration abdominale pour le chant.",
-          videoUrl: "https://youtube.com/shorts/UmbFIVSVrkU?si=aXCTo75194etscD6",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Vocalises - Montées chromatiques",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Intermédiaire",
-          baseTempo: 0,
-          category: "Vocalises",
-          description: "Vocalises sur voyelles pour échauffer la voix.",
-          videoUrl: "https://youtu.be/oGn5NhyNJ7g?si=fnAVMbu8rY1hSkKm",
-          tempoHistory: []
-        }
-      ],
-      saxophone: [
-        {
-          id: 1,
-          name: "Gamme de Sib majeur",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Gammes",
-          description: "Travail de la gamme de Sib majeur sur toute la tessiture.",
-          videoUrl: "https://youtu.be/mA9vMvSD4ps?si=_iYkfIMF_JNwUZC1",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Articulation - Staccato et legato",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Intermédiaire",
-          baseTempo: 80,
-          category: "Articulation",
-          description: "Travail des différentes articulations au saxophone.",
-          videoUrl: "https://youtube.com/shorts/MeBDAcqiN84?si=Nce3V2IL-dbvk_Gm",
-          tempoHistory: []
-        }
-      ],
-      harpe: [
-        {
-          id: 1,
-          name: "Arpèges de base",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Arpèges",
-          description: "Travail des arpèges fondamentaux à la harpe.",
-          videoUrl: "https://youtu.be/Lt-EbtQDXpw?si=zHyBh2aufaJXaNaN",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Gamme de Do majeur",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 70,
-          category: "Gammes",
-          description: "Travail de la gamme de Do majeur sur plusieurs octaves.",
-          videoUrl: "https://youtu.be/5pQUZbryDJY?si=08qm9_35XOp1Shma",
-          tempoHistory: []
-        }
-      ],
-      autre: [
-        {
-          id: 1,
-          name: "Échauffement technique",
-          duration: "5 min",
-          sets: "3 séries",
-          type: "video",
-          difficulty: "Débutant",
-          baseTempo: 60,
-          category: "Technique",
-          description: "Exercice d'échauffement général.",
-          videoUrl: "https://youtu.be/a9EtBnKwEro?si=i_U-CzQmAMsQn7vP",
-          tempoHistory: []
-        },
-        {
-          id: 2,
-          name: "Exercice de rythme",
-          duration: "8 min",
-          sets: "4 séries",
-          type: "video",
-          difficulty: "Intermédiaire",
-          baseTempo: 80,
-          category: "Pratique",
-          description: "Travail du sens rythmique.",
-          videoUrl: "https://youtu.be/s2IBDpvHUQQ?si=MU-_88SYQbuXhDOV",
-          tempoHistory: []
-        }
-      ]
-    };
-
-    return baseExercises[instrument] || baseExercises.autre;
-  };
-
-  const [exercises, setExercises, exercisesLoading] = useIndexedDB('mmc_exercises', getDefaultExercises(settings.instrument));
+  const [exercises, setExercises, exercisesLoading] = useIndexedDB('mmc_exercises', defaultExercises);
 
   const [workouts, setWorkouts, workoutsLoading] = useIndexedDB('mmc_workouts', [
     {
@@ -520,22 +238,6 @@ const MyMusicCoach = () => {
 
   const stats = calculateStats();
 
-  // Fonction pour changer d'instrument
-  const changeInstrument = (newInstrument) => {
-    setSettings({...settings, instrument: newInstrument});
-    // Réinitialiser les exercices avec ceux de l'instrument choisi
-    setExercises(getDefaultExercises(newInstrument));
-    // Optionnel : réinitialiser les workouts
-    setWorkouts([
-      {
-        id: 1,
-        name: "Routine Débutant",
-        duration: "30 min",
-        exercises: [1, 2],
-        category: "Technique"
-      }
-    ]);
-  };
 
   // Fonctions de notification avec Capacitor LocalNotifications
   const isNativePlatform = Capacitor.isNativePlatform();
@@ -884,11 +586,9 @@ const MyMusicCoach = () => {
     const today = getTodayDate();
     const todayWorkout = getTodayWorkout();
     if (!todayWorkout) return false;
-    // Vérifie que la session correspond au workout du jour ET à l'instrument actuel
     return sessionHistory.some(session =>
       session.date === today &&
-      session.workoutId === todayWorkout.id &&
-      session.instrument === settings.instrument
+      session.workoutId === todayWorkout.id
     );
   };
 
@@ -899,8 +599,7 @@ const MyMusicCoach = () => {
     if (!todayWorkout) return null;
     return sessionHistory.find(session =>
       session.date === today &&
-      session.workoutId === todayWorkout.id &&
-      session.instrument === settings.instrument
+      session.workoutId === todayWorkout.id
     );
   };
 
@@ -964,7 +663,6 @@ const MyMusicCoach = () => {
       time: timeStr,
       workoutId: workout.id,
       workoutName: workout.name,
-      instrument: settings.instrument,
       completed,
       skipped,
       total: workoutExercises.length
@@ -1352,7 +1050,6 @@ const MyMusicCoach = () => {
     // Créer le contenu du rapport
     const reportData = {
       userName: settings.userName,
-      instrument: currentInstrument.name,
       date: new Date().toLocaleDateString('fr-FR', { 
         weekday: 'long', 
         year: 'numeric', 
@@ -1541,7 +1238,7 @@ const MyMusicCoach = () => {
 
         <div class="header">
           <h1>📊 Rapport de Progression</h1>
-          <p><strong>${reportData.userName}</strong> - ${reportData.instrument}</p>
+          <p><strong>${reportData.userName}</strong></p>
           <p>${reportData.date}</p>
         </div>
 
@@ -1658,8 +1355,7 @@ const MyMusicCoach = () => {
     await downloadFile(htmlContent, fileName, 'text/html');
   };
 
-  const currentInstrument = instruments[settings.instrument];
-  const categories = ['Tous', ...currentInstrument.categories];
+  const categories = ['Tous', ...exerciseCategories];
   const filteredExercises = libraryFilter === 'Tous' 
     ? exercises 
     : exercises.filter(ex => ex.category === libraryFilter);
@@ -1686,12 +1382,8 @@ const MyMusicCoach = () => {
               Bonjour, {settings.userName} 👋
             </h1>
             <p className="text-gray-600 flex items-center justify-center gap-2">
-              {currentInstrument.icon ? (
-                <img src={currentInstrument.icon} alt={currentInstrument.name} className="w-7 h-7" />
-              ) : (
-                <span className="text-2xl">{currentInstrument.emoji}</span>
-              )}
-              Prêt pour ta session de {currentInstrument.name.toLowerCase()} ?
+              <span className="text-2xl">🎵</span>
+              Prêt pour ta session de musique ?
             </p>
           </div>
 
@@ -1724,12 +1416,7 @@ const MyMusicCoach = () => {
                         <div>
                           <p className="font-bold text-green-900">Session complétée !</p>
                           <p className="text-sm text-green-700 flex items-center gap-1">
-                            Excellent travail aujourd'hui
-                            {currentInstrument.icon ? (
-                              <img src={currentInstrument.icon} alt="" className="w-5 h-5 inline" />
-                            ) : (
-                              currentInstrument.emoji
-                            )}
+                            Excellent travail aujourd'hui 🎵
                           </p>
                         </div>
                       </div>
@@ -2226,7 +1913,7 @@ const MyMusicCoach = () => {
                   >
                     <option value="">🌙 Repos</option>
                     {workouts.map(w => (
-                      <option key={w.id} value={w.id}>{currentInstrument.icon ? '🎵' : currentInstrument.emoji} {w.name}</option>
+                      <option key={w.id} value={w.id}>🎵 {w.name}</option>
                     ))}
                   </select>
                 </div>
@@ -2740,25 +2427,6 @@ const MyMusicCoach = () => {
               />
             </div>
 
-            {/* NOUVEAU : Sélecteur d'instrument */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Ton instrument</label>
-              <select
-                value={settings.instrument}
-                onChange={(e) => changeInstrument(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
-              >
-                {Object.entries(instruments).map(([key, inst]) => (
-                  <option key={key} value={key}>
-                    {inst.icon ? '🎵' : inst.emoji} {inst.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-2">
-                Changer d'instrument réinitialisera tes exercices avec des exemples adaptés à {instruments[settings.instrument].name.toLowerCase()}.
-              </p>
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Tempo par défaut (BPM)</label>
               <input
@@ -3137,7 +2805,7 @@ const MyMusicCoach = () => {
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                 >
-                  {instruments[settings.instrument].categories.map(cat => (
+                  {exerciseCategories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
