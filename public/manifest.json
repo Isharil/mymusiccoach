@@ -1,0 +1,25 @@
+{
+  "name": "MyMusicCoach",
+  "short_name": "MusicCoach",
+  "description": "Application de coaching musical pour organiser et suivre tes sessions de pratique",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ff",
+  "theme_color": "#7c3aed",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["music", "education", "productivity"]
+}

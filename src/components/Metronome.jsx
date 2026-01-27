@@ -261,9 +261,24 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
   }, []);
 
   // Gestion du tempo via input
-  const handleTempoChange = (e) => {
-    const value = parseInt(e.target.value) || 60;
-    setTempo(Math.min(300, Math.max(20, value)));
+  const [tempoInput, setTempoInput] = useState(String(tempo));
+
+  // Synchroniser tempoInput quand tempo change (via slider ou boutons)
+  useEffect(() => {
+    setTempoInput(String(tempo));
+  }, [tempo]);
+
+  const handleTempoInputChange = (e) => {
+    // Permet la saisie libre sans validation immédiate
+    setTempoInput(e.target.value);
+  };
+
+  const handleTempoInputBlur = () => {
+    // Applique la validation quand l'utilisateur termine la saisie
+    const value = parseInt(tempoInput) || 60;
+    const clampedValue = Math.min(300, Math.max(20, value));
+    setTempo(clampedValue);
+    setTempoInput(String(clampedValue));
   };
 
   // Obtenir les indicateurs visuels pour la signature actuelle
@@ -376,8 +391,9 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
           <div className="flex items-center gap-1 bg-white border-2 border-indigo-300 rounded-xl px-3 py-2 shadow-sm">
             <input
               type="number"
-              value={tempo}
-              onChange={handleTempoChange}
+              value={tempoInput}
+              onChange={handleTempoInputChange}
+              onBlur={handleTempoInputBlur}
               className="w-14 text-center font-bold text-xl text-indigo-900 bg-transparent focus:outline-none"
               min="20"
               max="300"
@@ -489,7 +505,15 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
           </button>
 
           <div className="text-center">
-            <div className="text-4xl font-bold text-gray-900">{tempo}</div>
+            <input
+              type="number"
+              value={tempoInput}
+              onChange={handleTempoInputChange}
+              onBlur={handleTempoInputBlur}
+              className="w-20 text-4xl font-bold text-gray-900 text-center bg-transparent border-b-2 border-transparent focus:border-indigo-500 focus:outline-none"
+              min="20"
+              max="300"
+            />
             <div className="text-xs text-gray-500">BPM</div>
           </div>
 

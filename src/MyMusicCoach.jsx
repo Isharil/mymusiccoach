@@ -1327,7 +1327,7 @@ const MyMusicCoach = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-20">
       {/* Page d'accueil */}
       {activeTab === 'home' && !activeWorkout && (
-        <div className="p-6 space-y-6 max-w-md mx-auto">
+        <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Bonjour, {settings.userName} 👋
@@ -1708,7 +1708,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Planning */}
       {showSchedule && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md mx-auto h-screen">
+        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <button 
@@ -1836,7 +1836,7 @@ const MyMusicCoach = () => {
 
       {/* Page Workout actif */}
       {activeWorkout && (
-        <div className="min-h-screen bg-white max-w-md mx-auto">
+        <div className="min-h-screen bg-white max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6 pb-8">
             <button 
               onClick={() => setActiveWorkout(null)}
@@ -1949,7 +1949,7 @@ const MyMusicCoach = () => {
 
       {/* Page Bibliothèque */}
       {activeTab === 'library' && (
-        <div className="p-6 space-y-6 max-w-md mx-auto">
+        <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">
               {showTrash ? 'Corbeille' : 'Mes exercices'}
@@ -2115,7 +2115,7 @@ const MyMusicCoach = () => {
 
       {/* Page Statistiques */}
       {activeTab === 'stats' && (
-        <div className="p-6 space-y-6 max-w-md mx-auto">
+        <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Statistiques</h1>
             <button
@@ -2314,7 +2314,7 @@ const MyMusicCoach = () => {
 
       {/* Page Réglages */}
       {activeTab === 'settings' && (
-        <div className="p-6 space-y-6 max-w-md mx-auto">
+        <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900">Réglages</h1>
 
           <div className="bg-white rounded-3xl shadow-lg p-6 space-y-6">
@@ -2476,7 +2476,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Créer Exercice */}
       {showCreateExercise && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md mx-auto h-screen">
+        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
             <div className="flex items-center justify-between">
               <button 
@@ -2709,7 +2709,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Créer/Éditer Workout */}
       {showCreateWorkout && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md mx-auto h-screen">
+        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
             <div className="flex items-center justify-between">
               <button 
@@ -2878,7 +2878,7 @@ const MyMusicCoach = () => {
       {/* Modal Détails Exercice */}
       {selectedExercise && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
-          <div className="h-full flex flex-col bg-white max-w-md mx-auto">
+          <div className="h-full flex flex-col bg-white max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
             <div className="flex-shrink-0 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6">
               <div className="flex items-center justify-between mb-4">
                 <button
@@ -3278,7 +3278,7 @@ const MyMusicCoach = () => {
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6"
           onClick={() => setShowMetronome(false)}
         >
-          <div className="w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" onClick={(e) => e.stopPropagation()}>
             <Metronome onClose={() => setShowMetronome(false)} />
           </div>
         </div>
@@ -3287,7 +3287,7 @@ const MyMusicCoach = () => {
       {/* Modal Import Session */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
+          <div className="bg-white rounded-3xl max-w-md sm:max-w-lg landscape:max-w-lg w-full shadow-2xl">
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-3xl">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold">Importer une session</h2>
@@ -3358,7 +3358,7 @@ const MyMusicCoach = () => {
       {/* Modal d'édition de session terminée */}
       {editingSession && !selectedExercise && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
-          <div className="bg-white rounded-t-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-t-3xl w-full max-w-md sm:max-w-lg landscape:max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-t-3xl">
               <div className="flex justify-between items-center">
                 <div>
@@ -3502,7 +3502,7 @@ const MyMusicCoach = () => {
 
       {/* Barre de navigation */}
       {!selectedExercise && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 max-w-md mx-auto z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto z-40">
         <div className="flex justify-around">
           <button 
             onClick={() => { setActiveTab('home'); setActiveWorkout(null); setSelectedExercise(null); }}
