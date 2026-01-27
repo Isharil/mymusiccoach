@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Target, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
+import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
 import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence } from './hooks/useIndexedDB';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -31,14 +31,9 @@ const MyMusicCoach = () => {
   const [editingSessionProgress, setEditingSessionProgress] = useState({});
   const [exportModalData, setExportModalData] = useState(null); // { content, fileName, mimeType }
   const [showExerciseMenu, setShowExerciseMenu] = useState(false);
-  const [editingGoal, setEditingGoal] = useState(null);
   const [newExerciseType, setNewExerciseType] = useState('none');
 
-  // États pour les objectifs et réglages
-  const [goals, setGoals, goalsLoading] = useIndexedDB('mmc_goals', [
-    { id: 1, title: "Maîtriser la gamme pentatonique", target: 100, current: 75, unit: "BPM" },
-    { id: 2, title: "Pratiquer 4 fois cette semaine", target: 4, current: 2, unit: "sessions" }
-  ]);
+  // États pour les réglages
   const [settings, setSettings, settingsLoading] = useIndexedDB('mmc_settings', {
     notifications: true,
     practiceReminder: "18:00",
@@ -47,7 +42,6 @@ const MyMusicCoach = () => {
     defaultTempo: 60,
     userName: "Musicien"
   });
-  const [showGoalForm, setShowGoalForm] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
@@ -158,7 +152,7 @@ const MyMusicCoach = () => {
   const [viewingWeek, setViewingWeek] = useState(1); // Pour le modal de planning
 
   // Vérifier si toutes les données sont chargées
-  const isDataLoading = sessionHistoryLoading || goalsLoading || settingsLoading ||
+  const isDataLoading = sessionHistoryLoading || settingsLoading ||
     deletedExercisesLoading || archivedWorkoutsLoading || exercisesLoading ||
     workoutsLoading || weeklyScheduleLoading;
 
@@ -795,33 +789,6 @@ const MyMusicCoach = () => {
     }
   };
 
-  const deleteGoal = (goalId) => {
-    setGoals(goals.filter(g => g.id !== goalId));
-  };
-
-  const addGoal = (title, target, unit) => {
-    const maxId = goals.length > 0 ? Math.max(...goals.map(g => g.id)) : 0;
-    const newGoal = {
-      id: maxId + 1,
-      title,
-      target: parseInt(target),
-      current: 0,
-      unit
-    };
-    setGoals([...goals, newGoal]);
-    setShowGoalForm(false);
-  };
-
-  // Fonction pour mettre à jour la progression d'un objectif
-  const updateGoalProgress = (goalId, newValue) => {
-    setGoals(goals.map(goal => {
-      if (goal.id === goalId) {
-        return { ...goal, current: Math.max(0, Math.min(newValue, goal.target * 2)) };
-      }
-      return goal;
-    }));
-  };
-
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1064,7 +1031,6 @@ const MyMusicCoach = () => {
         totalSessions: stats.totalSessions
       },
       recentSessions: sessionHistory.slice(-10).reverse(),
-      goals: goals,
       exercisesWithProgress: exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0)
     };
 
@@ -1287,23 +1253,6 @@ const MyMusicCoach = () => {
             </tbody>
           </table>
         </div>
-
-        ${reportData.goals.length > 0 ? `
-        <div class="section">
-          <h2>🎯 Objectifs</h2>
-          ${reportData.goals.map(goal => `
-            <div style="margin: 15px 0;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <strong>${goal.title}</strong>
-                <span style="color: #9333EA; font-weight: bold;">${goal.current}/${goal.target} ${goal.unit}</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${Math.min((goal.current / goal.target) * 100, 100)}%"></div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-        ` : ''}
 
         ${reportData.exercisesWithProgress.length > 0 ? `
         <div class="section">
@@ -1592,74 +1541,6 @@ const MyMusicCoach = () => {
               <p className="text-xs text-gray-600">Sessions<br/>totales</p>
             </div>
           </div>
-
-          {/* Objectifs */}
-          {goals.length > 0 && (
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900">Mes objectifs</h2>
-                <Target className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="space-y-4">
-                {goals.slice(0, 2).map(goal => (
-                  <div key={goal.id} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">{goal.title}</span>
-                      {editingGoal === goal.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => updateGoalProgress(goal.id, goal.current - 1)}
-                            className="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm"
-                          >
-                            -
-                          </button>
-                          <input
-                            type="number"
-                            value={goal.current}
-                            onChange={(e) => updateGoalProgress(goal.id, parseInt(e.target.value) || 0)}
-                            className="w-12 text-center font-bold text-purple-600 border border-purple-300 rounded-lg py-1 text-sm"
-                          />
-                          <span className="text-xs text-gray-500">/{goal.target}</span>
-                          <button
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => updateGoalProgress(goal.id, goal.current + 1)}
-                            className="w-7 h-7 bg-purple-100 hover:bg-purple-200 rounded-full flex items-center justify-center text-purple-700 font-bold text-sm"
-                          >
-                            +
-                          </button>
-                          <button
-                            onClick={() => setEditingGoal(null)}
-                            className="ml-1 text-green-600"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setEditingGoal(goal.id)}
-                          className="text-sm font-bold text-purple-600 hover:bg-purple-50 px-2 py-1 rounded-lg transition-colors"
-                        >
-                          {goal.current}/{goal.target} {goal.unit}
-                          {goal.current >= goal.target && ' ✓'}
-                        </button>
-                      )}
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          goal.current >= goal.target
-                            ? 'bg-gradient-to-r from-green-500 to-green-600'
-                            : 'bg-gradient-to-r from-purple-500 to-purple-600'
-                        }`}
-                        style={{ width: `${Math.min((goal.current / goal.target) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Tous les workouts disponibles */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
@@ -2559,78 +2440,6 @@ const MyMusicCoach = () => {
             )}
           </div>
 
-          <div className="bg-white rounded-3xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">Mes objectifs</h2>
-              <button
-                onClick={() => setShowGoalForm(true)}
-                className="text-purple-600 text-sm font-medium"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              {goals.map(goal => (
-                <div key={goal.id} className="border border-gray-200 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="font-medium text-gray-900">{goal.title}</span>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        deleteGoal(goal.id);
-                      }}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Progression</span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateGoalProgress(goal.id, goal.current - 1)}
-                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold transition-colors"
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          value={goal.current}
-                          onChange={(e) => updateGoalProgress(goal.id, parseInt(e.target.value) || 0)}
-                          className="w-16 text-center font-bold text-purple-600 border border-gray-300 rounded-lg py-1"
-                        />
-                        <span className="text-sm text-gray-500">/ {goal.target} {goal.unit}</span>
-                        <button
-                          onClick={() => updateGoalProgress(goal.id, goal.current + 1)}
-                          className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-full flex items-center justify-center text-purple-700 font-bold transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          goal.current >= goal.target
-                            ? 'bg-gradient-to-r from-green-500 to-green-600'
-                            : 'bg-gradient-to-r from-purple-500 to-purple-600'
-                        }`}
-                        style={{ width: `${Math.min((goal.current / goal.target) * 100, 100)}%` }}
-                      />
-                    </div>
-                    {goal.current >= goal.target && (
-                      <p className="text-sm text-green-600 font-medium text-center">
-                        Objectif atteint !
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Section Sauvegarde et Restauration */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Sauvegarde des données</h2>
@@ -3061,113 +2870,6 @@ const MyMusicCoach = () => {
                   🗑️ Supprimer cette session
                 </button>
               )}
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Modal Ajouter Objectif */}
-      {showGoalForm && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md mx-auto h-screen">
-          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setShowGoalForm(false)}
-                className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
-              >
-                <span className="text-xl">←</span>
-                <span className="font-medium">Retour</span>
-              </button>
-              <h2 className="text-lg font-bold">Nouvel objectif</h2>
-              <div className="w-20"></div>
-            </div>
-          </div>
-          
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              addGoal(
-                formData.get('title'),
-                formData.get('target'),
-                formData.get('unit')
-              );
-            }}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-purple-50 to-blue-50" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
-                  placeholder="Mon objectif..."
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cible</label>
-                  <input
-                    type="number"
-                    name="target"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
-                    placeholder="100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Unité</label>
-                  <input
-                    type="text"
-                    name="unit"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
-                    placeholder="BPM, sessions..."
-                  />
-                </div>
-              </div>
-              <div className="h-4"></div>
-            </div>
-            
-            <div className="flex-shrink-0 border-t-2 border-gray-200 p-4 bg-white shadow-2xl">
-              <button
-                
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  
-                  const form = e.target.closest('form');
-                  if (!form) {
-                    return;
-                  }
-                  
-                  const formData = new FormData(form);
-                  const title = formData.get('title');
-                  const target = formData.get('target');
-                  const unit = formData.get('unit');
-
-                  if (!title || !target || !unit) {
-                    alert('Veuillez remplir tous les champs');
-                    return;
-                  }
-
-                  const maxId = goals.length > 0 ? Math.max(...goals.map(g => g.id)) : 0;
-                  const newGoal = {
-                    id: maxId + 1,
-                    title,
-                    target: parseInt(target),
-                    current: 0,
-                    unit
-                  };
-                  setGoals([...goals, newGoal]);
-                  setShowGoalForm(false);
-                }}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
-              >
-                ✓ Créer l'objectif
-              </button>
             </div>
           </form>
         </div>
