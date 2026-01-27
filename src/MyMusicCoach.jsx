@@ -3274,8 +3274,11 @@ const MyMusicCoach = () => {
 
       {/* Modal Métronome */}
       {showMetronome && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6"
+          onClick={() => setShowMetronome(false)}
+        >
+          <div className="w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
             <Metronome onClose={() => setShowMetronome(false)} />
           </div>
         </div>

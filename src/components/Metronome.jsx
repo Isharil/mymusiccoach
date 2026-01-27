@@ -19,7 +19,7 @@ const TIME_SIGNATURES = [
   { id: '4/4', beats: 4, name: '4/4' },
   { id: '5/4', beats: 5, name: '5/4' },
   { id: '5/8', beats: 5, name: '5/8', grouping: [3, 2] }, // 3+2
-  { id: '6/8', beats: 2, name: '6/8', grouping: [3, 3] },/* isCompound: true, compoundSubdiv: 3, displayGrouping: '3+3' }, */ // 2 temps, chacun divisé en 3
+  { id: '6/8', beats: 2, name: '6/8', grouping: [3, 3] }, // 2 temps, chacun divisé en 3
   { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2] }, // 3+2+2 (ou 2+2+3 selon style)
 ];
 
@@ -435,36 +435,39 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
     );
   }
 
-  // Version complète pour outil séparé
+  // Version complète pour outil séparé (optimisée mobile)
   return (
-    <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col">
+      {/* Header compact */}
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <span className="text-2xl">🎵</span> Métronome
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            🎵 Métronome
           </h2>
           {onClose && (
-            <button onClick={onClose} className="text-white/80 hover:text-white text-sm">
+            <button
+              onClick={onClose}
+              className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors text-sm"
+            >
               ✕ Fermer
             </button>
           )}
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Indicateur de beat visuel - Grand */}
-        <div className="flex justify-center items-center gap-3">
+      <div className="p-4 space-y-4 overflow-y-auto flex-1">
+        {/* Indicateur de beat visuel */}
+        <div className="flex justify-center items-center gap-2">
           {getVisualBeats().map((beat, i) => (
             <div
               key={i}
               className={`rounded-full flex items-center justify-center font-bold transition-all duration-75 ${
-                (timeSignature.grouping || timeSignature.isCompound) ? 'px-4 py-2 text-lg' : 'w-12 h-12 text-xl'
+                (timeSignature.grouping || timeSignature.isCompound) ? 'px-3 py-1.5 text-base' : 'w-10 h-10 text-lg'
               } ${
                 isPlaying && getActiveVisualBeat() === i
                   ? i === 0
-                    ? 'bg-red-500 text-white scale-125 shadow-xl shadow-red-300'
-                    : 'bg-indigo-500 text-white scale-110 shadow-xl shadow-indigo-300'
+                    ? 'bg-red-500 text-white scale-110 shadow-lg shadow-red-300'
+                    : 'bg-indigo-500 text-white scale-105 shadow-lg shadow-indigo-300'
                   : 'bg-gray-200 text-gray-500'
               }`}
             >
@@ -472,127 +475,98 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             </div>
           ))}
           {timeSignature.grouping && (
-            <span className="text-sm text-gray-400 ml-2">({timeSignature.name})</span>
+            <span className="text-xs text-gray-400 ml-1">({timeSignature.name})</span>
           )}
         </div>
 
-        {/* Affichage du tempo actuel */}
-        <div className="text-center">
-          <div className="text-6xl font-bold text-gray-900">{tempo}</div>
-          <div className="text-gray-500">BPM</div>
-        </div>
+        {/* Tempo + Play en ligne */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => setTempo(Math.max(20, tempo - 5))}
+            className="w-10 h-10 bg-gray-200 rounded-xl font-bold text-lg hover:bg-gray-300 transition-colors"
+          >
+            -5
+          </button>
 
-        {/* Bouton Play/Pause principal */}
-        <div className="flex justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-900">{tempo}</div>
+            <div className="text-xs text-gray-500">BPM</div>
+          </div>
+
+          <button
+            onClick={() => setTempo(Math.min(300, tempo + 5))}
+            className="w-10 h-10 bg-gray-200 rounded-xl font-bold text-lg hover:bg-gray-300 transition-colors"
+          >
+            +5
+          </button>
+
           <button
             onClick={togglePlay}
-            className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl transition-all transform hover:scale-105 ${
+            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all ${
               isPlaying
                 ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
             }`}
           >
-            {isPlaying ? <Pause className="w-10 h-10" /> : <Play className="w-10 h-10 ml-1" />}
+            {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-0.5" />}
           </button>
         </div>
 
-        {/* Contrôle du tempo */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Tempo</label>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setTempo(Math.max(20, tempo - 5))}
-              className="w-12 h-12 bg-gray-200 rounded-xl font-bold text-xl hover:bg-gray-300 transition-colors"
+        {/* Slider tempo */}
+        <input
+          type="range"
+          min="20"
+          max="300"
+          value={tempo}
+          onChange={(e) => setTempo(parseInt(e.target.value))}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+        />
+
+        {/* Signature + Subdivision en grille compacte */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Signature</label>
+            <select
+              value={timeSignature.id}
+              onChange={(e) => {
+                const ts = TIME_SIGNATURES.find(t => t.id === e.target.value);
+                setTimeSignature(ts);
+                currentBeatRef.current = 0;
+                setCurrentBeat(0);
+              }}
+              className="w-full px-3 py-2.5 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
             >
-              -5
-            </button>
-            <input
-              type="range"
-              min="20"
-              max="300"
-              value={tempo}
-              onChange={(e) => setTempo(parseInt(e.target.value))}
-              className="flex-1 h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-            />
-            <button
-              onClick={() => setTempo(Math.min(300, tempo + 5))}
-              className="w-12 h-12 bg-gray-200 rounded-xl font-bold text-xl hover:bg-gray-300 transition-colors"
-            >
-              +5
-            </button>
+              {TIME_SIGNATURES.map(ts => (
+                <option key={ts.id} value={ts.id}>
+                  {ts.name}{ts.grouping ? ` (${ts.grouping.join('+')})` : ''}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="flex justify-center">
-            <input
-              type="number"
-              value={tempo}
-              onChange={handleTempoChange}
-              className="w-24 px-4 py-2 text-center font-bold text-xl border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              min="20"
-              max="300"
-            />
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Subdivision</label>
+            <select
+              value={subdivision.id}
+              onChange={(e) => setSubdivision(SUBDIVISIONS.find(s => s.id === e.target.value))}
+              className="w-full px-3 py-2.5 border-2 border-purple-300 rounded-xl text-sm bg-white font-medium"
+            >
+              {SUBDIVISIONS.map(sub => (
+                <option key={sub.id} value={sub.id}>{sub.symbol} {sub.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Signature rythmique */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Signature rythmique</label>
-          <div className="grid grid-cols-4 gap-2">
-            {TIME_SIGNATURES.map(ts => (
-              <button
-                key={ts.id}
-                onClick={() => {
-                  setTimeSignature(ts);
-                  currentBeatRef.current = 0;
-                  setCurrentBeat(0);
-                }}
-                className={`py-3 rounded-xl font-bold transition-all ${
-                  timeSignature.id === ts.id
-                    ? 'bg-indigo-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <div className="text-lg">{ts.name}</div>
-                {ts.displayGrouping && <div className="text-xs opacity-75">{ts.displayGrouping}</div>}
-                {ts.grouping && <div className="text-xs opacity-75">{ts.grouping.join('+')}</div>}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Subdivisions */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Subdivision</label>
-          <div className="grid grid-cols-4 gap-2">
-            {SUBDIVISIONS.map(sub => (
-              <button
-                key={sub.id}
-                onClick={() => setSubdivision(sub)}
-                className={`py-3 rounded-xl font-bold transition-all ${
-                  subdivision.id === sub.id
-                    ? 'bg-purple-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <div className="text-lg">{sub.symbol}</div>
-                <div className="text-xs opacity-75">{sub.name}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Volume */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">Volume</label>
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className={`p-2 rounded-lg transition-colors ${
-                isMuted ? 'bg-gray-200 text-gray-500' : 'bg-indigo-100 text-indigo-600'
-              }`}
-            >
-              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            </button>
-          </div>
+        {/* Volume compact */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+              isMuted ? 'bg-gray-200 text-gray-500' : 'bg-indigo-100 text-indigo-600'
+            }`}
+          >
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
           <input
             type="range"
             min="0"
@@ -601,7 +575,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
             disabled={isMuted}
-            className={`w-full h-3 rounded-lg appearance-none cursor-pointer ${
+            className={`flex-1 h-2 rounded-lg appearance-none cursor-pointer ${
               isMuted ? 'bg-gray-200' : 'bg-gray-200 accent-indigo-600'
             }`}
           />
