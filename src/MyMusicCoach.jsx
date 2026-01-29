@@ -32,6 +32,7 @@ const MyMusicCoach = () => {
   const [exportModalData, setExportModalData] = useState(null); // { content, fileName, mimeType }
   const [showExerciseMenu, setShowExerciseMenu] = useState(false);
   const [newExerciseType, setNewExerciseType] = useState('none');
+  const [editingExercise, setEditingExercise] = useState(null);
 
   // États pour les réglages
   const [settings, setSettings, settingsLoading] = useIndexedDB('mmc_settings', {
@@ -2474,22 +2475,24 @@ const MyMusicCoach = () => {
         </div>
       )}
 
-      {/* Modal Créer Exercice */}
+      {/* Modal Créer/Modifier Exercice */}
       {showCreateExercise && (
         <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
             <div className="flex items-center justify-between">
-              <button 
+              <button
                 onClick={() => {
                   setShowCreateExercise(false);
                   setUploadedFile(null);
+                  setEditingExercise(null);
+                  setNewExerciseType('none');
                 }}
                 className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
               >
                 <span className="text-xl">←</span>
                 <span className="font-medium">Retour</span>
               </button>
-              <h2 className="text-lg font-bold">Nouvel exercice</h2>
+              <h2 className="text-lg font-bold">{editingExercise ? 'Modifier l\'exercice' : 'Nouvel exercice'}</h2>
               <div className="w-20"></div>
             </div>
           </div>
@@ -2526,6 +2529,7 @@ const MyMusicCoach = () => {
                   type="text"
                   name="name"
                   required
+                  defaultValue={editingExercise?.name || ''}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                   placeholder="Exercice technique..."
                 />
@@ -2538,6 +2542,7 @@ const MyMusicCoach = () => {
                     type="text"
                     name="duration"
                     required
+                    defaultValue={editingExercise?.duration || ''}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                     placeholder="5 min"
                   />
@@ -2548,6 +2553,7 @@ const MyMusicCoach = () => {
                     type="text"
                     name="sets"
                     required
+                    defaultValue={editingExercise?.sets || ''}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                     placeholder="3 séries"
                   />
@@ -2587,6 +2593,7 @@ const MyMusicCoach = () => {
                   <input
                     type="url"
                     name="videoUrl"
+                    defaultValue={editingExercise?.videoUrl || ''}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                     placeholder="https://youtube.com/..."
                   />
@@ -2619,6 +2626,7 @@ const MyMusicCoach = () => {
                 <select
                   name="difficulty"
                   required
+                  defaultValue={editingExercise?.difficulty || 'Débutant'}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                 >
                   <option value="Débutant">Débutant</option>
@@ -2632,6 +2640,7 @@ const MyMusicCoach = () => {
                 <select
                   name="category"
                   required
+                  defaultValue={editingExercise?.category || exerciseCategories[0]}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                 >
                   {exerciseCategories.map(cat => (
@@ -2642,14 +2651,14 @@ const MyMusicCoach = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tempo de base (BPM) * 
+                  Tempo de base (BPM) *
                   <span className="text-xs text-gray-500 ml-1">(mettre 0 si non applicable)</span>
                 </label>
                 <input
                   type="number"
                   name="baseTempo"
                   required
-                  defaultValue={settings.defaultTempo}
+                  defaultValue={editingExercise?.baseTempo ?? settings.defaultTempo}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                   placeholder="60"
                 />
@@ -2661,6 +2670,7 @@ const MyMusicCoach = () => {
                   name="description"
                   required
                   rows="3"
+                  defaultValue={editingExercise?.description || ''}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                   placeholder="Description de l'exercice..."
                 />
@@ -2696,11 +2706,28 @@ const MyMusicCoach = () => {
                     return;
                   }
 
-                  createExercise(data);
+                  if (editingExercise) {
+                    // Mode édition: mettre à jour l'exercice existant
+                    const updatedExercise = {
+                      ...editingExercise,
+                      ...data,
+                      fileData: uploadedFile || editingExercise.fileData,
+                    };
+                    setExercises(exercises.map(ex =>
+                      ex.id === editingExercise.id ? updatedExercise : ex
+                    ));
+                    setEditingExercise(null);
+                  } else {
+                    // Mode création
+                    createExercise(data);
+                  }
+                  setShowCreateExercise(false);
+                  setUploadedFile(null);
+                  setNewExerciseType('none');
                 }}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                ✓ Créer l'exercice
+                {editingExercise ? '✓ Enregistrer les modifications' : '✓ Créer l\'exercice'}
               </button>
             </div>
           </form>
@@ -2902,6 +2929,22 @@ const MyMusicCoach = () => {
                   </button>
                   {showExerciseMenu && (
                     <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg py-2 min-w-[200px] z-10">
+                      <button
+                        onClick={() => {
+                          setShowExerciseMenu(false);
+                          setEditingExercise(selectedExercise);
+                          setNewExerciseType(selectedExercise.type || 'none');
+                          if (selectedExercise.fileData) {
+                            setUploadedFile(selectedExercise.fileData);
+                          }
+                          setShowCreateExercise(true);
+                          setSelectedExercise(null);
+                        }}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                        Modifier l'exercice
+                      </button>
                       <button
                         onClick={() => {
                           setShowExerciseMenu(false);
