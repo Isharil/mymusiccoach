@@ -804,19 +804,47 @@ const MyMusicCoach = () => {
     reader.readAsDataURL(file);
   };
 
+  // Helper pour normaliser les champs durée et séries
+  const normalizeExerciseFields = (data) => {
+    let { duration, sets, ...rest } = data;
+
+    // Normaliser la durée: si c'est juste un nombre, ajouter "min"
+    if (duration) {
+      const durationTrimmed = duration.trim();
+      if (/^\d+$/.test(durationTrimmed)) {
+        duration = `${durationTrimmed} min`;
+      } else if (/^\d+\s*(minutes?|mins?)$/i.test(durationTrimmed)) {
+        // Normaliser les variations de "minutes" en "min"
+        duration = durationTrimmed.replace(/\s*(minutes?|mins?)$/i, ' min');
+      }
+    }
+
+    // Normaliser les séries: extraire le nombre et toujours afficher "séries"
+    if (sets) {
+      const setsTrimmed = sets.trim();
+      const match = setsTrimmed.match(/^(\d+)/);
+      if (match) {
+        sets = `${match[1]} séries`;
+      }
+    }
+
+    return { ...rest, duration, sets };
+  };
+
   const createExercise = (formData) => {
     const maxId = exercises.length > 0 ? Math.max(...exercises.map(ex => ex.id)) : 0;
+    const normalizedData = normalizeExerciseFields(formData);
     const newExercise = {
       id: maxId + 1,
-      ...formData,
+      ...normalizedData,
       tempoHistory: []
     };
-    
+
     // Ajouter les données du fichier si uploadé
     if (uploadedFile && formData.type === 'file') {
       newExercise.fileData = uploadedFile;
     }
-    
+
     setExercises([...exercises, newExercise]);
     setShowCreateExercise(false);
     setNewExerciseType('none');
@@ -2708,9 +2736,10 @@ const MyMusicCoach = () => {
 
                   if (editingExercise) {
                     // Mode édition: mettre à jour l'exercice existant
+                    const normalizedData = normalizeExerciseFields(data);
                     const updatedExercise = {
                       ...editingExercise,
-                      ...data,
+                      ...normalizedData,
                       fileData: uploadedFile || editingExercise.fileData,
                     };
                     setExercises(exercises.map(ex =>
