@@ -240,6 +240,43 @@ const MyMusicCoach = () => {
 
   const stats = calculateStats();
 
+  // Définition des badges
+  const BADGES = [
+    // Badges de streak
+    { id: 'streak_3', name: 'Première flamme', icon: '🔥', description: '3 jours consécutifs', type: 'streak', threshold: 3 },
+    { id: 'streak_7', name: 'Semaine parfaite', icon: '🔥🔥', description: '7 jours consécutifs', type: 'streak', threshold: 7 },
+    { id: 'streak_14', name: 'Deux semaines', icon: '💪', description: '14 jours consécutifs', type: 'streak', threshold: 14 },
+    { id: 'streak_30', name: 'Un mois !', icon: '⭐', description: '30 jours consécutifs', type: 'streak', threshold: 30 },
+    { id: 'streak_60', name: 'Imparable', icon: '🌟', description: '60 jours consécutifs', type: 'streak', threshold: 60 },
+    { id: 'streak_100', name: 'Légende', icon: '👑', description: '100 jours consécutifs', type: 'streak', threshold: 100 },
+    // Badges de sessions totales
+    { id: 'sessions_5', name: 'Premiers pas', icon: '🎵', description: '5 sessions complétées', type: 'sessions', threshold: 5 },
+    { id: 'sessions_10', name: 'On lâche rien !', icon: '🎸', description: '10 sessions complétées', type: 'sessions', threshold: 10 },
+    { id: 'sessions_25', name: 'Musicien assidu', icon: '🎹', description: '25 sessions complétées', type: 'sessions', threshold: 25 },
+    { id: 'sessions_50', name: 'Demi-centaine', icon: '🏆', description: '50 sessions complétées', type: 'sessions', threshold: 50 },
+    { id: 'sessions_100', name: 'Centurion', icon: '🥇', description: '100 sessions complétées', type: 'sessions', threshold: 100 },
+  ];
+
+  // Calculer les badges obtenus
+  const getEarnedBadges = () => {
+    return BADGES.filter(badge => {
+      if (badge.type === 'streak') {
+        return stats.streak >= badge.threshold;
+      } else if (badge.type === 'sessions') {
+        return stats.totalSessions >= badge.threshold;
+      }
+      return false;
+    });
+  };
+
+  // Obtenir le prochain badge à débloquer
+  const getNextBadge = () => {
+    const earnedIds = getEarnedBadges().map(b => b.id);
+    return BADGES.find(badge => !earnedIds.includes(badge.id));
+  };
+
+  const earnedBadges = getEarnedBadges();
+  const nextBadge = getNextBadge();
 
   // Fonctions de notification avec Capacitor LocalNotifications
   const isNativePlatform = Capacitor.isNativePlatform();
@@ -1670,21 +1707,80 @@ const MyMusicCoach = () => {
             </button>
           </div>
 
-          {/* Statistiques rapides */}
+          {/* Statistiques rapides avec flammes */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
               <p className="text-3xl font-bold text-purple-600 mb-1">{stats.thisWeek}</p>
               <p className="text-xs text-gray-600">Sessions<br/>cette semaine</p>
             </div>
-            <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-              <p className="text-3xl font-bold text-orange-500 mb-1">{stats.streak}</p>
-              <p className="text-xs text-gray-600">Jours<br/>consécutifs</p>
+            <div className={`rounded-2xl p-5 shadow-lg text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white'}`}>
+              <div className="flex items-center justify-center gap-1">
+                {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
+                <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-500'}`}>{stats.streak}</p>
+              </div>
+              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600'}`}>Jours<br/>consécutifs</p>
             </div>
             <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
               <p className="text-3xl font-bold text-blue-600 mb-1">{stats.totalSessions}</p>
               <p className="text-xs text-gray-600">Sessions<br/>totales</p>
             </div>
           </div>
+
+          {/* Badges et progression */}
+          {(earnedBadges.length > 0 || nextBadge) && (
+            <div className="bg-white rounded-3xl shadow-lg p-5">
+              {earnedBadges.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Badges obtenus</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {earnedBadges.map(badge => (
+                      <div
+                        key={badge.id}
+                        className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl px-3 py-2 flex items-center gap-2"
+                        title={badge.description}
+                      >
+                        <span className="text-lg">{badge.icon}</span>
+                        <span className="text-xs font-medium text-yellow-800">{badge.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {nextBadge && (
+                <div className={earnedBadges.length > 0 ? 'pt-3 border-t border-gray-100' : ''}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg opacity-40">{nextBadge.icon}</span>
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Prochain badge</p>
+                        <p className="text-sm font-bold text-gray-700">{nextBadge.name}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">{nextBadge.description}</p>
+                      <p className="text-sm font-bold text-purple-600">
+                        {nextBadge.type === 'streak'
+                          ? `${stats.streak}/${nextBadge.threshold} jours`
+                          : `${stats.totalSessions}/${nextBadge.threshold} sessions`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  {/* Barre de progression */}
+                  <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(100, (nextBadge.type === 'streak'
+                          ? (stats.streak / nextBadge.threshold)
+                          : (stats.totalSessions / nextBadge.threshold)) * 100)}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Tous les workouts disponibles */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
@@ -2291,13 +2387,47 @@ const MyMusicCoach = () => {
               <p className="text-3xl font-bold text-purple-700 mb-1">{stats.thisWeek}</p>
               <p className="text-xs text-purple-800">Sessions<br/>cette semaine</p>
             </div>
-            <div className="bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-orange-700 mb-1">{stats.streak}</p>
-              <p className="text-xs text-orange-800">Série<br/>actuelle</p>
+            <div className={`rounded-2xl p-5 text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-gradient-to-br from-orange-100 to-orange-200'}`}>
+              <div className="flex items-center justify-center gap-1">
+                {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
+                <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-700'}`}>{stats.streak}</p>
+              </div>
+              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-orange-800'}`}>Série<br/>actuelle</p>
             </div>
             <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-5 text-center">
               <p className="text-3xl font-bold text-blue-700 mb-1">{stats.totalSessions}</p>
               <p className="text-xs text-blue-800">Sessions<br/>totales</p>
+            </div>
+          </div>
+
+          {/* Section Badges */}
+          <div className="bg-white rounded-3xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">🏆 Mes badges</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {BADGES.map(badge => {
+                const isEarned = earnedBadges.some(b => b.id === badge.id);
+                return (
+                  <div
+                    key={badge.id}
+                    className={`rounded-xl p-3 flex items-center gap-3 transition-all ${
+                      isEarned
+                        ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-md'
+                        : 'bg-gray-100 opacity-50'
+                    }`}
+                  >
+                    <span className={`text-2xl ${isEarned ? '' : 'grayscale'}`}>{badge.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-bold truncate ${isEarned ? 'text-yellow-800' : 'text-gray-500'}`}>
+                        {badge.name}
+                      </p>
+                      <p className={`text-xs truncate ${isEarned ? 'text-yellow-700' : 'text-gray-400'}`}>
+                        {badge.description}
+                      </p>
+                    </div>
+                    {isEarned && <Check className="w-5 h-5 text-green-600 flex-shrink-0" />}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
