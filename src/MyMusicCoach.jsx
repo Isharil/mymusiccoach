@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
 import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence } from './hooks/useIndexedDB';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -55,9 +55,15 @@ const MyMusicCoach = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [timerActive, setTimerActive] = useState(false);
+  const [timerPaused, setTimerPaused] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [timerInterval, setTimerInterval] = useState(null);
   const [showMetronome, setShowMetronome] = useState(false);
+
+  // Refs pour le chrono basé sur timestamps (résistant à la mise en veille)
+  const timerEndTimeRef = useRef(null);
+  const timerAnimationRef = useRef(null);
+  const wakeLockRef = useRef(null);
+  const pausedRemainingRef = useRef(null);
 
   // Catégories d'exercices disponibles
   const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation"];
@@ -992,56 +998,160 @@ const MyMusicCoach = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const startTimer = (exercise) => {
+  // Demander le Wake Lock pour empêcher la mise en veille
+  const requestWakeLock = useCallback(async () => {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activé');
+      } catch (err) {
+        console.log('Wake Lock non disponible:', err);
+      }
+    }
+  }, []);
+
+  // Libérer le Wake Lock
+  const releaseWakeLock = useCallback(() => {
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release();
+      wakeLockRef.current = null;
+      console.log('Wake Lock libéré');
+    }
+  }, []);
+
+  // Boucle de mise à jour du timer basée sur timestamps
+  const updateTimer = useCallback(() => {
+    if (!timerEndTimeRef.current) return;
+
+    const now = Date.now();
+    const remaining = Math.max(0, Math.ceil((timerEndTimeRef.current - now) / 1000));
+
+    if (remaining <= 0) {
+      // Temps écoulé
+      setTimerSeconds(0);
+      setTimerActive(false);
+      timerEndTimeRef.current = null;
+      releaseWakeLock();
+      // Notification de fin
+      alert('⏰ Temps écoulé ! Bien joué ! 🎵');
+      return;
+    }
+
+    setTimerSeconds(remaining);
+    timerAnimationRef.current = requestAnimationFrame(updateTimer);
+  }, [releaseWakeLock]);
+
+  const startTimer = useCallback((exercise) => {
     // Arrêter le timer précédent s'il existe
-    if (timerInterval) {
-      clearInterval(timerInterval);
+    if (timerAnimationRef.current) {
+      cancelAnimationFrame(timerAnimationRef.current);
     }
 
     const totalSeconds = parseDuration(exercise.duration);
+
+    // Stocker l'heure de fin (timestamp)
+    timerEndTimeRef.current = Date.now() + (totalSeconds * 1000);
     setTimerSeconds(totalSeconds);
     setTimerActive(true);
+    setTimerPaused(false);
+    pausedRemainingRef.current = null;
 
-    const interval = setInterval(() => {
-      setTimerSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setTimerActive(false);
-          setTimerInterval(null);
-          // Notification de fin
-          alert('⏰ Temps écoulé ! Bien joué ! 🎵');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Activer le Wake Lock pour empêcher la mise en veille
+    requestWakeLock();
 
-    setTimerInterval(interval);
-  };
+    // Démarrer la boucle de mise à jour
+    timerAnimationRef.current = requestAnimationFrame(updateTimer);
+  }, [requestWakeLock, updateTimer]);
 
-  const stopTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
+  const pauseTimer = useCallback(() => {
+    if (timerAnimationRef.current) {
+      cancelAnimationFrame(timerAnimationRef.current);
+      timerAnimationRef.current = null;
     }
+    // Sauvegarder le temps restant
+    if (timerEndTimeRef.current) {
+      const now = Date.now();
+      pausedRemainingRef.current = Math.max(0, Math.ceil((timerEndTimeRef.current - now) / 1000));
+    }
+    timerEndTimeRef.current = null;
     setTimerActive(false);
-    setTimerSeconds(0);
-  };
+    setTimerPaused(true);
+    releaseWakeLock();
+  }, [releaseWakeLock]);
 
-  const resetTimer = (exercise) => {
+  const resumeTimer = useCallback(() => {
+    if (pausedRemainingRef.current && pausedRemainingRef.current > 0) {
+      // Reprendre avec le temps restant
+      timerEndTimeRef.current = Date.now() + (pausedRemainingRef.current * 1000);
+      setTimerActive(true);
+      setTimerPaused(false);
+      pausedRemainingRef.current = null;
+
+      // Activer le Wake Lock
+      requestWakeLock();
+
+      // Démarrer la boucle de mise à jour
+      timerAnimationRef.current = requestAnimationFrame(updateTimer);
+    }
+  }, [requestWakeLock, updateTimer]);
+
+  const stopTimer = useCallback(() => {
+    if (timerAnimationRef.current) {
+      cancelAnimationFrame(timerAnimationRef.current);
+      timerAnimationRef.current = null;
+    }
+    timerEndTimeRef.current = null;
+    pausedRemainingRef.current = null;
+    setTimerActive(false);
+    setTimerPaused(false);
+    setTimerSeconds(0);
+    releaseWakeLock();
+  }, [releaseWakeLock]);
+
+  const resetTimer = useCallback((exercise) => {
     stopTimer();
     const totalSeconds = parseDuration(exercise.duration);
     setTimerSeconds(totalSeconds);
-  };
+  }, [stopTimer]);
+
+  // Reprendre le timer quand l'app redevient visible (après mise en veille)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && timerEndTimeRef.current) {
+        // Recalculer le temps restant et relancer la boucle
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((timerEndTimeRef.current - now) / 1000));
+
+        if (remaining <= 0) {
+          setTimerSeconds(0);
+          setTimerActive(false);
+          timerEndTimeRef.current = null;
+          releaseWakeLock();
+          alert('⏰ Temps écoulé ! Bien joué ! 🎵');
+        } else {
+          setTimerSeconds(remaining);
+          // Re-demander le Wake Lock (il peut avoir été perdu)
+          requestWakeLock();
+          timerAnimationRef.current = requestAnimationFrame(updateTimer);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [releaseWakeLock, requestWakeLock, updateTimer]);
 
   // Nettoyer le timer quand on quitte la page
   useEffect(() => {
     return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
+      if (timerAnimationRef.current) {
+        cancelAnimationFrame(timerAnimationRef.current);
       }
+      releaseWakeLock();
     };
-  }, [timerInterval]);
+  }, [releaseWakeLock]);
 
   // ===== GÉNÉRATION DU RAPPORT PDF =====
   const generateProgressReport = async () => {
@@ -3077,7 +3187,7 @@ const MyMusicCoach = () => {
                     <Clock className="w-6 h-6 text-purple-600 mb-3" />
                     <p className="text-sm text-gray-600 mb-1">Durée</p>
                     
-                    {timerActive || timerSeconds > 0 ? (
+                    {timerActive || timerPaused || timerSeconds > 0 ? (
                       <>
                         <p className="font-bold text-purple-600 text-3xl mb-2">
                           {formatTime(timerSeconds)}
@@ -3085,24 +3195,24 @@ const MyMusicCoach = () => {
                         <div className="flex gap-2">
                           {timerActive ? (
                             <button
-                              onClick={() => stopTimer()}
-                              className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-red-600 transition-colors"
+                              onClick={() => pauseTimer()}
+                              className="flex-1 bg-yellow-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-yellow-600 transition-colors"
                             >
-                              ⏸ Stop
+                              ⏸ Pause
                             </button>
                           ) : (
                             <button
-                              onClick={() => startTimer(selectedExercise)}
+                              onClick={() => resumeTimer()}
                               className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-green-600 transition-colors"
                             >
                               ▶️ Reprendre
                             </button>
                           )}
                           <button
-                            onClick={() => resetTimer(selectedExercise)}
+                            onClick={() => stopTimer()}
                             className="flex-1 bg-gray-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-gray-600 transition-colors"
                           >
-                            🔄 Reset
+                            ⏹ Stop
                           </button>
                         </div>
                       </>

@@ -6,7 +6,8 @@
       "Bash(tree:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npx eslint:*)"
     ]
   }
 }
