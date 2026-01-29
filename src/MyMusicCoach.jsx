@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
-import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence } from './hooks/useIndexedDB';
+import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence, clearAppStorage } from './hooks/useIndexedDB';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
@@ -40,7 +40,6 @@ const MyMusicCoach = () => {
     practiceReminder: "18:00",
     reminderEnabled: true,
     theme: "light",
-    defaultTempo: 60,
     userName: "Musicien"
   });
   const [notificationPermission, setNotificationPermission] = useState(
@@ -620,8 +619,8 @@ const MyMusicCoach = () => {
 
   const saveTempo = (exerciseId) => {
     const tempo = parseInt(currentTempo[exerciseId]);
-    if (!tempo || tempo <= 0) {
-      alert('Veuillez entrer un tempo valide');
+    if (!tempo || tempo < 20 || tempo > 300) {
+      alert('Veuillez entrer un tempo valide (entre 20 et 300 BPM)');
       return;
     }
 
@@ -812,29 +811,35 @@ const MyMusicCoach = () => {
 
   // Helper pour normaliser les champs durée et séries
   const normalizeExerciseFields = (data) => {
-    let { duration, sets, ...rest } = data;
+    let { duration, sets, baseTempo, ...rest } = data;
 
-    // Normaliser la durée: si c'est juste un nombre, ajouter "min"
+    // Normaliser la durée: extraire le nombre, limiter à 60 min, ajouter "min"
     if (duration) {
       const durationTrimmed = duration.trim();
-      if (/^\d+$/.test(durationTrimmed)) {
-        duration = `${durationTrimmed} min`;
-      } else if (/^\d+\s*(minutes?|mins?)$/i.test(durationTrimmed)) {
-        // Normaliser les variations de "minutes" en "min"
-        duration = durationTrimmed.replace(/\s*(minutes?|mins?)$/i, ' min');
+      const durationMatch = durationTrimmed.match(/^(\d+)/);
+      if (durationMatch) {
+        const minutes = Math.min(60, Math.max(1, parseInt(durationMatch[1])));
+        duration = `${minutes} min`;
       }
     }
 
-    // Normaliser les séries: extraire le nombre et toujours afficher "séries"
+    // Normaliser les séries: extraire le nombre, limiter à 20, afficher "séries"
     if (sets) {
       const setsTrimmed = sets.trim();
-      const match = setsTrimmed.match(/^(\d+)/);
-      if (match) {
-        sets = `${match[1]} séries`;
+      const setsMatch = setsTrimmed.match(/^(\d+)/);
+      if (setsMatch) {
+        const numSets = Math.min(20, Math.max(1, parseInt(setsMatch[1])));
+        sets = `${numSets} séries`;
       }
     }
 
-    return { ...rest, duration, sets };
+    // Normaliser le tempo: limiter entre 0 et 300 BPM (0 = non applicable)
+    if (baseTempo !== undefined) {
+      const tempoValue = parseInt(baseTempo);
+      baseTempo = isNaN(tempoValue) ? 0 : Math.min(300, Math.max(0, tempoValue));
+    }
+
+    return { ...rest, duration, sets, baseTempo };
   };
 
   const createExercise = (formData) => {
@@ -2468,16 +2473,6 @@ const MyMusicCoach = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tempo par défaut (BPM)</label>
-              <input
-                type="number"
-                value={settings.defaultTempo}
-                onChange={(e) => setSettings({...settings, defaultTempo: parseInt(e.target.value)})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-
-            <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700">Rappel quotidien</label>
                 <button
@@ -2610,6 +2605,30 @@ const MyMusicCoach = () => {
               </p>
             </div>
           </div>
+
+          {/* Zone de réinitialisation */}
+          <div className="bg-white rounded-3xl shadow-lg p-6 border-2 border-red-200">
+            <h3 className="text-lg font-bold text-red-600 mb-4">Réinitialiser l'application</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Cette action supprimera définitivement toutes vos données : exercices, sessions, historique et réglages. Cette action est irréversible.
+            </p>
+            <button
+              onClick={async () => {
+                if (window.confirm('Êtes-vous sûr de vouloir réinitialiser l\'application ?\n\nToutes vos données seront supprimées définitivement.')) {
+                  if (window.confirm('Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVoulez-vous vraiment tout supprimer ?')) {
+                    // Supprimer toutes les données de l'application
+                    await clearAppStorage();
+                    // Recharger la page pour réinitialiser l'état
+                    window.location.reload();
+                  }
+                }
+              }}
+              className="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Trash2 className="w-5 h-5" />
+              Réinitialiser l'application
+            </button>
+          </div>
         </div>
       )}
 
@@ -2708,7 +2727,7 @@ const MyMusicCoach = () => {
                   ].map(type => (
                     <button
                       key={type.value}
-                      
+                      type="button"
                       onClick={() => {
                         setNewExerciseType(type.value);
                         setUploadedFile(null); // Réinitialiser le fichier lors du changement de type
@@ -2795,8 +2814,10 @@ const MyMusicCoach = () => {
                 <input
                   type="number"
                   name="baseTempo"
+                  min="0"
+                  max="300"
                   required
-                  defaultValue={editingExercise?.baseTempo ?? settings.defaultTempo}
+                  defaultValue={editingExercise?.baseTempo ?? 60}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
                   placeholder="60"
                 />
@@ -3252,8 +3273,15 @@ const MyMusicCoach = () => {
                       <div className="flex gap-3 mb-3">
                         <input
                           type="number"
+                          min="20"
+                          max="300"
                           value={currentTempo[selectedExercise.id] || ''}
-                          onChange={(e) => setCurrentTempo({...currentTempo, [selectedExercise.id]: e.target.value})}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 300)) {
+                              setCurrentTempo({...currentTempo, [selectedExercise.id]: value});
+                            }
+                          }}
                           placeholder={`${selectedExercise.baseTempo}`}
                           className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
