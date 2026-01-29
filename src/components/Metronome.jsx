@@ -18,9 +18,9 @@ const TIME_SIGNATURES = [
   { id: '3/4', beats: 3, name: '3/4' },
   { id: '4/4', beats: 4, name: '4/4' },
   { id: '5/4', beats: 5, name: '5/4' },
-  { id: '5/8', beats: 5, name: '5/8', grouping: [3, 2] }, // 3+2
-  { id: '6/8', beats: 2, name: '6/8', grouping: [3, 3] }, // 2 temps, chacun divisé en 3
-  { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2] }, // 3+2+2 (ou 2+2+3 selon style)
+  { id: '5/8', beats: 5, name: '5/8', grouping: [3, 2], groupingOptions: [[3, 2], [2, 3]] },
+  { id: '6/8', beats: 2, name: '6/8', grouping: [3, 3] },
+  { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2], groupingOptions: [[3, 2, 2], [2, 2, 3], [2, 3, 2]] },
 ];
 
 const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
@@ -443,10 +443,33 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
           >
             {TIME_SIGNATURES.map(ts => (
-              <option key={ts.id} value={ts.id}>{ts.name}{ts.grouping ? ` (${ts.grouping.join('+')})` : ts.displayGrouping ? ` (${ts.displayGrouping})` : ''}</option>
+              <option key={ts.id} value={ts.id}>{ts.name}</option>
             ))}
           </select>
         </div>
+
+        {/* Sélecteur de grouping compact */}
+        {timeSignature.groupingOptions && (
+          <div className="flex gap-1 mt-3">
+            {timeSignature.groupingOptions.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setTimeSignature({ ...timeSignature, grouping: option });
+                  currentBeatRef.current = 0;
+                  setCurrentBeat(0);
+                }}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                  JSON.stringify(timeSignature.grouping) === JSON.stringify(option)
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                {option.join('+')}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -561,9 +584,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
               className="w-full px-3 py-2.5 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
             >
               {TIME_SIGNATURES.map(ts => (
-                <option key={ts.id} value={ts.id}>
-                  {ts.name}{ts.grouping ? ` (${ts.grouping.join('+')})` : ''}
-                </option>
+                <option key={ts.id} value={ts.id}>{ts.name}</option>
               ))}
             </select>
           </div>
@@ -580,6 +601,32 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             </select>
           </div>
         </div>
+
+        {/* Sélecteur de grouping pour signatures asymétriques */}
+        {timeSignature.groupingOptions && (
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Grouping</label>
+            <div className="flex gap-2">
+              {timeSignature.groupingOptions.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setTimeSignature({ ...timeSignature, grouping: option });
+                    currentBeatRef.current = 0;
+                    setCurrentBeat(0);
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                    JSON.stringify(timeSignature.grouping) === JSON.stringify(option)
+                      ? 'bg-indigo-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {option.join('+')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Volume compact */}
         <div className="flex items-center gap-3">
