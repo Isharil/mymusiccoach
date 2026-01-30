@@ -38,8 +38,8 @@ const MyMusicCoach = () => {
     practiceReminder: "18:00",
     reminderEnabled: true,
     theme: "light",
-    userName: "Musicien",
-    language: "fr"
+    userName: "Musician",
+    language: "en"
   });
 
   // Hook de traduction
@@ -265,19 +265,33 @@ const MyMusicCoach = () => {
 
   // Définition des badges (les noms/descriptions sont traduits via les clés)
   const BADGES = [
-    // Badges de streak
+    // Badges de streak (jours consécutifs de pratique)
     { id: 'streak_3', nameKey: 'badges.firstFlame', icon: '🔥', type: 'streak', threshold: 3 },
     { id: 'streak_7', nameKey: 'badges.perfectWeek', icon: '🔥🔥', type: 'streak', threshold: 7 },
     { id: 'streak_14', nameKey: 'badges.twoWeeks', icon: '💪', type: 'streak', threshold: 14 },
+    { id: 'streak_21', nameKey: 'badges.threeWeeks', icon: '💪💪', type: 'streak', threshold: 21 },
     { id: 'streak_30', nameKey: 'badges.oneMonth', icon: '⭐', type: 'streak', threshold: 30 },
+    { id: 'streak_45', nameKey: 'badges.fortyFiveDays', icon: '✨', type: 'streak', threshold: 45 },
     { id: 'streak_60', nameKey: 'badges.unstoppable', icon: '🌟', type: 'streak', threshold: 60 },
+    { id: 'streak_90', nameKey: 'badges.threeMonths', icon: '💎', type: 'streak', threshold: 90 },
     { id: 'streak_100', nameKey: 'badges.legend', icon: '👑', type: 'streak', threshold: 100 },
+    { id: 'streak_125', nameKey: 'badges.master', icon: '🎖️', type: 'streak', threshold: 125 },
+    { id: 'streak_150', nameKey: 'badges.grandMaster', icon: '🏅', type: 'streak', threshold: 150 },
+    { id: 'streak_175', nameKey: 'badges.virtuoso', icon: '🎯', type: 'streak', threshold: 175 },
+    { id: 'streak_200', nameKey: 'badges.immortal', icon: '💫', type: 'streak', threshold: 200 },
     // Badges de sessions totales
     { id: 'sessions_5', nameKey: 'badges.firstSteps', icon: '🎵', type: 'sessions', threshold: 5 },
     { id: 'sessions_10', nameKey: 'badges.neverGiveUp', icon: '🎸', type: 'sessions', threshold: 10 },
+    { id: 'sessions_15', nameKey: 'badges.onTrack', icon: '🎼', type: 'sessions', threshold: 15 },
     { id: 'sessions_25', nameKey: 'badges.dedicatedMusician', icon: '🎹', type: 'sessions', threshold: 25 },
+    { id: 'sessions_35', nameKey: 'badges.regular', icon: '🎺', type: 'sessions', threshold: 35 },
     { id: 'sessions_50', nameKey: 'badges.halfHundred', icon: '🏆', type: 'sessions', threshold: 50 },
+    { id: 'sessions_75', nameKey: 'badges.threeQuarters', icon: '🎻', type: 'sessions', threshold: 75 },
     { id: 'sessions_100', nameKey: 'badges.centurion', icon: '🥇', type: 'sessions', threshold: 100 },
+    { id: 'sessions_125', nameKey: 'badges.sessionMaster', icon: '🎖️', type: 'sessions', threshold: 125 },
+    { id: 'sessions_150', nameKey: 'badges.sessionGrandMaster', icon: '🏅', type: 'sessions', threshold: 150 },
+    { id: 'sessions_175', nameKey: 'badges.sessionVirtuoso', icon: '🎯', type: 'sessions', threshold: 175 },
+    { id: 'sessions_200', nameKey: 'badges.bicentennial', icon: '💫', type: 'sessions', threshold: 200 },
   ];
 
   // Helper pour obtenir le nom et la description traduits d'un badge
@@ -2637,7 +2651,7 @@ const MyMusicCoach = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language')}</label>
               <select
-                value={settings.language || 'fr'}
+                value={settings.language || 'en'}
                 onChange={(e) => setSettings({...settings, language: e.target.value})}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
               >

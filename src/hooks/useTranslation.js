@@ -12,7 +12,7 @@ import { translations } from '../locales';
  *   t('nav.home') => "Accueil" ou "Home"
  *   t('home.greeting', { name: 'Jean' }) => "Bonjour, Jean"
  */
-export const useTranslation = (language = 'fr') => {
+export const useTranslation = (language = 'en') => {
   /**
    * Fonction de traduction
    * @param {string} key - Clé de traduction (ex: 'nav.home', 'messages.loading')
@@ -21,7 +21,7 @@ export const useTranslation = (language = 'fr') => {
    */
   const t = useCallback((key, params = {}) => {
     // Utiliser le français comme langue par défaut si la langue n'existe pas
-    const lang = translations[language] ? language : 'fr';
+    const lang = translations[language] ? language : 'en';
     const keys = key.split('.');
 
     // Naviguer dans l'objet de traduction
