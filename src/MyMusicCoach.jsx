@@ -6,6 +6,8 @@ import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import Metronome from './components/Metronome';
+import { useTranslation } from './hooks/useTranslation';
+import { availableLanguages } from './locales';
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -40,8 +42,33 @@ const MyMusicCoach = () => {
     practiceReminder: "18:00",
     reminderEnabled: true,
     theme: "light",
-    userName: "Musicien"
+    userName: "Musicien",
+    language: "fr"
   });
+
+  // Hook de traduction
+  const { t } = useTranslation(settings.language);
+
+  // Helper pour traduire les catégories
+  const categoryKeys = {
+    'Tous': 'all',
+    'Technique': 'technique',
+    'Gammes': 'scales',
+    'Rythme': 'rhythm',
+    'Théorie': 'theory',
+    'Morceaux': 'pieces',
+    'Improvisation': 'improvisation'
+  };
+  const translateCategory = (cat) => t(`categories.${categoryKeys[cat] || cat.toLowerCase()}`);
+
+  // Helper pour traduire les difficultés
+  const difficultyKeys = {
+    'Débutant': 'beginner',
+    'Intermédiaire': 'intermediate',
+    'Avancé': 'advanced'
+  };
+  const translateDifficulty = (diff) => t(`difficulties.${difficultyKeys[diff] || diff.toLowerCase()}`);
+
   const [notificationPermission, setNotificationPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
@@ -240,22 +267,31 @@ const MyMusicCoach = () => {
 
   const stats = calculateStats();
 
-  // Définition des badges
+  // Définition des badges (les noms/descriptions sont traduits via les clés)
   const BADGES = [
     // Badges de streak
-    { id: 'streak_3', name: 'Première flamme', icon: '🔥', description: '3 jours consécutifs', type: 'streak', threshold: 3 },
-    { id: 'streak_7', name: 'Semaine parfaite', icon: '🔥🔥', description: '7 jours consécutifs', type: 'streak', threshold: 7 },
-    { id: 'streak_14', name: 'Deux semaines', icon: '💪', description: '14 jours consécutifs', type: 'streak', threshold: 14 },
-    { id: 'streak_30', name: 'Un mois !', icon: '⭐', description: '30 jours consécutifs', type: 'streak', threshold: 30 },
-    { id: 'streak_60', name: 'Imparable', icon: '🌟', description: '60 jours consécutifs', type: 'streak', threshold: 60 },
-    { id: 'streak_100', name: 'Légende', icon: '👑', description: '100 jours consécutifs', type: 'streak', threshold: 100 },
+    { id: 'streak_3', nameKey: 'badges.firstFlame', icon: '🔥', type: 'streak', threshold: 3 },
+    { id: 'streak_7', nameKey: 'badges.perfectWeek', icon: '🔥🔥', type: 'streak', threshold: 7 },
+    { id: 'streak_14', nameKey: 'badges.twoWeeks', icon: '💪', type: 'streak', threshold: 14 },
+    { id: 'streak_30', nameKey: 'badges.oneMonth', icon: '⭐', type: 'streak', threshold: 30 },
+    { id: 'streak_60', nameKey: 'badges.unstoppable', icon: '🌟', type: 'streak', threshold: 60 },
+    { id: 'streak_100', nameKey: 'badges.legend', icon: '👑', type: 'streak', threshold: 100 },
     // Badges de sessions totales
-    { id: 'sessions_5', name: 'Premiers pas', icon: '🎵', description: '5 sessions complétées', type: 'sessions', threshold: 5 },
-    { id: 'sessions_10', name: 'On lâche rien !', icon: '🎸', description: '10 sessions complétées', type: 'sessions', threshold: 10 },
-    { id: 'sessions_25', name: 'Musicien assidu', icon: '🎹', description: '25 sessions complétées', type: 'sessions', threshold: 25 },
-    { id: 'sessions_50', name: 'Demi-centaine', icon: '🏆', description: '50 sessions complétées', type: 'sessions', threshold: 50 },
-    { id: 'sessions_100', name: 'Centurion', icon: '🥇', description: '100 sessions complétées', type: 'sessions', threshold: 100 },
+    { id: 'sessions_5', nameKey: 'badges.firstSteps', icon: '🎵', type: 'sessions', threshold: 5 },
+    { id: 'sessions_10', nameKey: 'badges.neverGiveUp', icon: '🎸', type: 'sessions', threshold: 10 },
+    { id: 'sessions_25', nameKey: 'badges.dedicatedMusician', icon: '🎹', type: 'sessions', threshold: 25 },
+    { id: 'sessions_50', nameKey: 'badges.halfHundred', icon: '🏆', type: 'sessions', threshold: 50 },
+    { id: 'sessions_100', nameKey: 'badges.centurion', icon: '🥇', type: 'sessions', threshold: 100 },
   ];
+
+  // Helper pour obtenir le nom et la description traduits d'un badge
+  const getBadgeName = (badge) => t(badge.nameKey);
+  const getBadgeDescription = (badge) => {
+    if (badge.type === 'streak') {
+      return t('badges.consecutiveDays', { count: badge.threshold });
+    }
+    return t('badges.sessionsCompleted', { count: badge.threshold });
+  };
 
   // Calculer les badges obtenus
   const getEarnedBadges = () => {
@@ -1498,7 +1534,7 @@ const MyMusicCoach = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Chargement...</p>
+          <p className="text-gray-600 font-medium">{t('messages.loading')}</p>
         </div>
       </div>
     );
@@ -1511,11 +1547,11 @@ const MyMusicCoach = () => {
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Bonjour, {settings.userName} 👋
+              {t('home.greeting', { name: settings.userName })} 👋
             </h1>
             <p className="text-gray-600 flex items-center justify-center gap-2">
               <span className="text-2xl">🎵</span>
-              Prêt pour ta session de musique ?
+              {t('home.ready')}
             </p>
           </div>
 
@@ -1523,7 +1559,7 @@ const MyMusicCoach = () => {
           <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xl font-bold">Session du Jour</h2>
+                <h2 className="text-xl font-bold">{t('home.todaySession')}</h2>
                 <Calendar className="w-6 h-6" />
               </div>
               <p className="text-purple-100 text-sm capitalize">
@@ -1546,9 +1582,9 @@ const MyMusicCoach = () => {
                           <Check className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-bold text-green-900">Session complétée !</p>
+                          <p className="font-bold text-green-900">{t('home.sessionCompleted')}</p>
                           <p className="text-sm text-green-700 flex items-center gap-1">
-                            Excellent travail aujourd'hui 🎵
+                            {t('home.excellentWork')} 🎵
                           </p>
                         </div>
                       </div>
@@ -1573,7 +1609,7 @@ const MyMusicCoach = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Activity className="w-4 h-4" />
-                        <span>{getTodayWorkout().exercises.length} exercices</span>
+                        <span>{getTodayWorkout().exercises.length} {t('home.exercises')}</span>
                       </div>
                     </div>
                     <button
@@ -1590,12 +1626,12 @@ const MyMusicCoach = () => {
                       {isTodaySessionCompleted() ? (
                         <>
                           <Check className="w-5 h-5" />
-                          Session terminée - Modifier
+                          {t('home.completedEdit')}
                         </>
                       ) : (
                         <>
                           <Play className="w-5 h-5" />
-                          Commencer la session
+                          {t('home.startSession')}
                         </>
                       )}
                     </button>
@@ -1603,7 +1639,7 @@ const MyMusicCoach = () => {
 
                   {/* Aperçu des exercices */}
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-gray-700">Exercices de la session :</p>
+                    <p className="text-sm font-semibold text-gray-700">{t('home.sessionExercises')}</p>
                     {getTodayWorkout().exercises.map((exId) => {
                       const exercise = exercises.find(e => e.id === exId);
                       return exercise ? (
@@ -1621,7 +1657,7 @@ const MyMusicCoach = () => {
                             exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
                           }`}>
-                            {exercise.difficulty}
+                            {translateDifficulty(exercise.difficulty)}
                           </span>
                         </div>
                       ) : null;
@@ -1631,13 +1667,13 @@ const MyMusicCoach = () => {
               ) : (
                 <div className="text-center py-8">
                   <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600 font-medium mb-2">Pas de session programmée</p>
-                  <p className="text-sm text-gray-500 mb-4">Profites-en pour te reposer ou personnalise ton planning</p>
+                  <p className="text-gray-600 font-medium mb-2">{t('home.noSession')}</p>
+                  <p className="text-sm text-gray-500 mb-4">{t('home.restOrCustomize')}</p>
                   <button
                     onClick={() => setShowSchedule(true)}
                     className="bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors"
                   >
-                    Voir le planning
+                    {t('home.viewSchedule')}
                   </button>
                 </div>
               )}
@@ -1648,16 +1684,16 @@ const MyMusicCoach = () => {
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">
-                Semaine {getCurrentWeekNumber()}/4
+                {t('home.weekOf', { current: getCurrentWeekNumber() })}
               </h2>
-              <button 
+              <button
                 onClick={() => {
                   setViewingWeek(getCurrentWeekNumber());
                   setShowSchedule(true);
                 }}
                 className="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
               >
-                Modifier
+                {t('home.edit')}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -1691,7 +1727,7 @@ const MyMusicCoach = () => {
 
           {/* Outils */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Outils</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('home.tools')}</h2>
             <button
               onClick={() => setShowMetronome(true)}
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
@@ -1700,8 +1736,8 @@ const MyMusicCoach = () => {
                 <span className="text-2xl">🎵</span>
               </div>
               <div className="text-left">
-                <p className="font-bold text-lg">Métronome</p>
-                <p className="text-sm text-white/80">Tempo, subdivisions, signatures</p>
+                <p className="font-bold text-lg">{t('metronome.title')}</p>
+                <p className="text-sm text-white/80">{t('home.metronomeDesc')}</p>
               </div>
               <ChevronRight className="w-6 h-6 ml-auto" />
             </button>
@@ -1711,18 +1747,18 @@ const MyMusicCoach = () => {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
               <p className="text-3xl font-bold text-purple-600 mb-1">{stats.thisWeek}</p>
-              <p className="text-xs text-gray-600">Sessions<br/>cette semaine</p>
+              <p className="text-xs text-gray-600">{t('home.sessionsThisWeek')}</p>
             </div>
             <div className={`rounded-2xl p-5 shadow-lg text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white'}`}>
               <div className="flex items-center justify-center gap-1">
                 {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
                 <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-500'}`}>{stats.streak}</p>
               </div>
-              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600'}`}>Jours<br/>consécutifs</p>
+              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600'}`}>{t('home.consecutiveDays')}</p>
             </div>
             <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
               <p className="text-3xl font-bold text-blue-600 mb-1">{stats.totalSessions}</p>
-              <p className="text-xs text-gray-600">Sessions<br/>totales</p>
+              <p className="text-xs text-gray-600">{t('home.totalSessions')}</p>
             </div>
           </div>
 
@@ -1731,16 +1767,16 @@ const MyMusicCoach = () => {
             <div className="bg-white rounded-3xl shadow-lg p-5">
               {earnedBadges.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-gray-700 mb-3">Badges obtenus</h3>
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">{t('home.earnedBadges')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {earnedBadges.map(badge => (
                       <div
                         key={badge.id}
                         className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl px-3 py-2 flex items-center gap-2"
-                        title={badge.description}
+                        title={getBadgeDescription(badge)}
                       >
                         <span className="text-lg">{badge.icon}</span>
-                        <span className="text-xs font-medium text-yellow-800">{badge.name}</span>
+                        <span className="text-xs font-medium text-yellow-800">{getBadgeName(badge)}</span>
                       </div>
                     ))}
                   </div>
@@ -1752,16 +1788,16 @@ const MyMusicCoach = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-lg opacity-40">{nextBadge.icon}</span>
                       <div>
-                        <p className="text-xs font-medium text-gray-500">Prochain badge</p>
-                        <p className="text-sm font-bold text-gray-700">{nextBadge.name}</p>
+                        <p className="text-xs font-medium text-gray-500">{t('home.nextBadge')}</p>
+                        <p className="text-sm font-bold text-gray-700">{getBadgeName(nextBadge)}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">{nextBadge.description}</p>
+                      <p className="text-xs text-gray-500">{getBadgeDescription(nextBadge)}</p>
                       <p className="text-sm font-bold text-purple-600">
                         {nextBadge.type === 'streak'
-                          ? `${stats.streak}/${nextBadge.threshold} jours`
-                          : `${stats.totalSessions}/${nextBadge.threshold} sessions`
+                          ? `${stats.streak}/${nextBadge.threshold} ${t('home.days')}`
+                          : `${stats.totalSessions}/${nextBadge.threshold} ${t('home.sessions')}`
                         }
                       </p>
                     </div>
@@ -1786,7 +1822,7 @@ const MyMusicCoach = () => {
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">
-                {showArchive ? 'Archive des sessions' : 'Toutes mes sessions'}
+                {showArchive ? t('home.archivedSessions') : t('home.allMySessions')}
               </h2>
               <div className="flex items-center gap-2">
                 {!showArchive && (
@@ -1796,7 +1832,7 @@ const MyMusicCoach = () => {
                       className="text-gray-600 text-sm font-medium hover:text-gray-700 flex items-center gap-1 relative"
                     >
                       <Archive className="w-4 h-4" />
-                      <span>Archive</span>
+                      <span>{t('home.archive')}</span>
                       {archivedWorkouts.length > 0 && (
                         <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                           {archivedWorkouts.length}
@@ -1808,7 +1844,7 @@ const MyMusicCoach = () => {
                       className="text-blue-600 text-sm font-medium hover:text-blue-700 flex items-center gap-1"
                     >
                       <FileText className="w-4 h-4" />
-                      Importer
+                      {t('home.import')}
                     </button>
                   </>
                 )}
@@ -1817,7 +1853,7 @@ const MyMusicCoach = () => {
                     onClick={() => setShowArchive(false)}
                     className="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
                   >
-                    ← Retour
+                    ← {t('home.back')}
                   </button>
                 ) : (
                   <button
@@ -1828,7 +1864,7 @@ const MyMusicCoach = () => {
                     className="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
                   >
                     <Plus className="w-4 h-4" />
-                    Créer
+                    {t('home.create')}
                   </button>
                 )}
               </div>
@@ -1874,7 +1910,7 @@ const MyMusicCoach = () => {
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all border border-blue-200"
                       >
                         <FileText className="w-3.5 h-3.5" />
-                        <span>Exporter</span>
+                        <span>{t('home.export')}</span>
                       </button>
                       <button
                         onClick={(e) => {
@@ -1884,7 +1920,7 @@ const MyMusicCoach = () => {
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all border border-orange-200"
                       >
                         <Archive className="w-3.5 h-3.5" />
-                        <span>Archiver</span>
+                        <span>{t('home.archiveAction')}</span>
                       </button>
                     </div>
                   </div>
@@ -1898,8 +1934,8 @@ const MyMusicCoach = () => {
                 {archivedWorkouts.length === 0 ? (
                   <div className="text-center py-12">
                     <Archive className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium">L'archive est vide</p>
-                    <p className="text-sm text-gray-400 mt-2">Les sessions archivées apparaîtront ici</p>
+                    <p className="text-gray-500 font-medium">{t('home.emptyArchive')}</p>
+                    <p className="text-sm text-gray-400 mt-2">{t('home.archivedAppearHere')}</p>
                   </div>
                 ) : (
                   archivedWorkouts.map(workout => (
@@ -1928,13 +1964,13 @@ const MyMusicCoach = () => {
                           onClick={() => restoreWorkout(workout.id)}
                           className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium hover:bg-green-600 transition-colors"
                         >
-                          ↺ Restaurer
+                          ↺ {t('home.restore')}
                         </button>
                         <button
                           onClick={() => permanentlyDeleteWorkout(workout.id)}
                           className="flex-1 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
                         >
-                          Supprimer définitivement
+                          {t('home.deletePermanently')}
                         </button>
                       </div>
                     </div>
@@ -2192,7 +2228,7 @@ const MyMusicCoach = () => {
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">
-              {showTrash ? 'Corbeille' : 'Mes exercices'}
+              {showTrash ? t('library.trash') : t('library.title')}
             </h1>
             <div className="flex items-center gap-2">
               {!showTrash && (
@@ -2213,7 +2249,7 @@ const MyMusicCoach = () => {
                   onClick={() => setShowTrash(false)}
                   className="bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
                 >
-                  ← Retour
+                  ← {t('common.back')}
                 </button>
               ) : (
                 <button
@@ -2237,7 +2273,7 @@ const MyMusicCoach = () => {
                     : 'bg-white text-gray-700 border border-gray-300'
                 }`}
               >
-                {cat}
+                {translateCategory(cat)}
               </button>
             ))}
           </div>
@@ -2263,9 +2299,9 @@ const MyMusicCoach = () => {
                             exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
                           }`}>
-                            {exercise.difficulty}
+                            {translateDifficulty(exercise.difficulty)}
                           </span>
-                          <span className="text-xs text-gray-500">{exercise.category}</span>
+                          <span className="text-xs text-gray-500">{translateCategory(exercise.category)}</span>
                         </div>
                       </div>
                     </div>
@@ -2274,13 +2310,13 @@ const MyMusicCoach = () => {
                       {exercise.type === 'video' && (
                         <span className="flex items-center gap-1 text-purple-600">
                           <Video className="w-4 h-4" />
-                          <span className="text-xs">Vidéo</span>
+                          <span className="text-xs">{t('exercise.video')}</span>
                         </span>
                       )}
                       {exercise.type === 'file' && (
                         <span className="flex items-center gap-1 text-blue-600">
                           <FileText className="w-4 h-4" />
-                          <span className="text-xs">Fichier</span>
+                          <span className="text-xs">{t('exercise.file')}</span>
                         </span>
                       )}
                       <span className="flex items-center gap-1">
@@ -2307,8 +2343,8 @@ const MyMusicCoach = () => {
               {deletedExercises.length === 0 ? (
                 <div className="text-center py-12">
                   <Trash2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">La corbeille est vide</p>
-                  <p className="text-sm text-gray-400 mt-2">Les exercices supprimés apparaîtront ici</p>
+                  <p className="text-gray-500 font-medium">{t('library.emptyTrash')}</p>
+                  <p className="text-sm text-gray-400 mt-2">{t('library.deletedAppearHere')}</p>
                 </div>
               ) : (
                 deletedExercises.map(exercise => (
@@ -2325,9 +2361,9 @@ const MyMusicCoach = () => {
                             exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
                           }`}>
-                            {exercise.difficulty}
+                            {translateDifficulty(exercise.difficulty)}
                           </span>
-                          <span className="text-xs text-gray-500">{exercise.category}</span>
+                          <span className="text-xs text-gray-500">{translateCategory(exercise.category)}</span>
                         </div>
                       </div>
                     </div>
@@ -2336,13 +2372,13 @@ const MyMusicCoach = () => {
                         onClick={() => restoreExercise(exercise.id)}
                         className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium hover:bg-green-600 transition-colors"
                       >
-                        ↺ Restaurer
+                        ↺ {t('library.restoreExercise')}
                       </button>
                       <button
                         onClick={() => permanentlyDeleteExercise(exercise.id)}
                         className="flex-1 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
                       >
-                        Supprimer définitivement
+                        {t('library.deleteForever')}
                       </button>
                     </div>
                   </div>
@@ -2357,13 +2393,13 @@ const MyMusicCoach = () => {
       {activeTab === 'stats' && (
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Statistiques</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('stats.title')}</h1>
             <button
               onClick={generateProgressReport}
               className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
-              Exporter mon rapport
+              {t('stats.exportReport')}
             </button>
           </div>
 
@@ -2373,10 +2409,10 @@ const MyMusicCoach = () => {
               <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-blue-900 mb-1">
-                  📊 Partage ta progression avec ton prof !
+                  📊 {t('stats.shareWithTeacher')}
                 </p>
                 <p className="text-xs text-blue-700">
-                  Clique sur "Exporter mon rapport" pour générer un PDF professionnel avec tes statistiques, sessions et progression. Parfait pour montrer tes résultats à ton professeur !
+                  {t('stats.shareDescription')}
                 </p>
               </div>
             </div>
@@ -2385,24 +2421,24 @@ const MyMusicCoach = () => {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-5 text-center">
               <p className="text-3xl font-bold text-purple-700 mb-1">{stats.thisWeek}</p>
-              <p className="text-xs text-purple-800">Sessions<br/>cette semaine</p>
+              <p className="text-xs text-purple-800">{t('stats.sessionsThisWeek')}</p>
             </div>
             <div className={`rounded-2xl p-5 text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-gradient-to-br from-orange-100 to-orange-200'}`}>
               <div className="flex items-center justify-center gap-1">
                 {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
                 <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-700'}`}>{stats.streak}</p>
               </div>
-              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-orange-800'}`}>Série<br/>actuelle</p>
+              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-orange-800'}`}>{t('stats.currentStreak')}</p>
             </div>
             <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-5 text-center">
               <p className="text-3xl font-bold text-blue-700 mb-1">{stats.totalSessions}</p>
-              <p className="text-xs text-blue-800">Sessions<br/>totales</p>
+              <p className="text-xs text-blue-800">{t('stats.totalSessions')}</p>
             </div>
           </div>
 
           {/* Section Badges */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">🏆 Mes badges</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">🏆 {t('stats.myBadges')}</h2>
             <div className="grid grid-cols-2 gap-3">
               {BADGES.map(badge => {
                 const isEarned = earnedBadges.some(b => b.id === badge.id);
@@ -2418,10 +2454,10 @@ const MyMusicCoach = () => {
                     <span className={`text-2xl ${isEarned ? '' : 'grayscale'}`}>{badge.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-bold truncate ${isEarned ? 'text-yellow-800' : 'text-gray-500'}`}>
-                        {badge.name}
+                        {getBadgeName(badge)}
                       </p>
                       <p className={`text-xs truncate ${isEarned ? 'text-yellow-700' : 'text-gray-400'}`}>
-                        {badge.description}
+                        {getBadgeDescription(badge)}
                       </p>
                     </div>
                     {isEarned && <Check className="w-5 h-5 text-green-600 flex-shrink-0" />}
@@ -2432,7 +2468,7 @@ const MyMusicCoach = () => {
           </div>
 
           <div className="bg-white rounded-3xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Historique récent des sessions</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('stats.recentHistory')}</h2>
             <div className="space-y-3">
               {sessionHistory.slice().reverse().map(session => (
                 <div key={session.id} className="border border-gray-200 rounded-xl p-4">
@@ -2454,11 +2490,11 @@ const MyMusicCoach = () => {
                   </div>
                   <div className="flex gap-4 text-sm">
                     <span className="text-green-600 font-medium">
-                      ✓ {session.completed} exercice{session.completed > 1 ? 's' : ''} complété{session.completed > 1 ? 's' : ''}
+                      ✓ {session.completed} {session.completed > 1 ? t('stats.exercisesCompleted') : t('stats.exerciseCompleted')}
                     </span>
                     {session.skipped > 0 && (
                       <span className="text-gray-500">
-                        × {session.skipped} exercice{session.skipped > 1 ? 's' : ''} sauté{session.skipped > 1 ? 's' : ''}
+                        × {session.skipped} {session.skipped > 1 ? t('stats.exercisesSkipped') : t('stats.exerciseSkipped')}
                       </span>
                     )}
                   </div>
@@ -2469,14 +2505,14 @@ const MyMusicCoach = () => {
 
           {/* Graphiques de progression des tempos */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">📈 Progression des tempos</h2>
-            
+            <h2 className="text-lg font-bold text-gray-900 mb-4">📈 {t('stats.tempoProgress')}</h2>
+
             {exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0).length === 0 ? (
               <div className="text-center py-12">
                 <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 font-medium">Aucune progression enregistrée</p>
+                <p className="text-gray-500 font-medium">{t('stats.noProgress')}</p>
                 <p className="text-sm text-gray-400 mt-2">
-                  Enregistre tes tempos dans les exercices pour voir ton évolution !
+                  {t('stats.recordTempos')}
                 </p>
               </div>
             ) : (
@@ -2495,7 +2531,7 @@ const MyMusicCoach = () => {
                           <h3 className="font-bold text-gray-900 mb-1">{exercise.name}</h3>
                           <div className="flex items-center gap-3 text-sm">
                             <span className="text-gray-600">
-                              Base: {exercise.baseTempo} BPM
+                              {t('stats.base')}: {exercise.baseTempo} BPM
                             </span>
                             {progression > 0 && (
                               <span className="text-green-600 font-medium flex items-center gap-1">
@@ -2589,11 +2625,11 @@ const MyMusicCoach = () => {
       {/* Page Réglages */}
       {activeTab === 'settings' && (
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900">Réglages</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
 
           <div className="bg-white rounded-3xl shadow-lg p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Ton prénom</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.yourName')}</label>
               <input
                 type="text"
                 value={settings.userName}
@@ -2603,8 +2639,23 @@ const MyMusicCoach = () => {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language')}</label>
+              <select
+                value={settings.language || 'fr'}
+                onChange={(e) => setSettings({...settings, language: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white"
+              >
+                {availableLanguages.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">Rappel quotidien</label>
+                <label className="text-sm font-medium text-gray-700">{t('settings.dailyReminder')}</label>
                 <button
                   onClick={() => setSettings({...settings, reminderEnabled: !settings.reminderEnabled})}
                   className={`w-12 h-6 rounded-full transition-colors ${
@@ -2627,7 +2678,7 @@ const MyMusicCoach = () => {
               />
               {settings.reminderEnabled && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Tu recevras un rappel chaque jour à cette heure
+                  {t('settings.reminderTime')}
                 </p>
               )}
             </div>
@@ -2637,11 +2688,11 @@ const MyMusicCoach = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm font-medium text-gray-700 block">Notifications</span>
+                    <span className="text-sm font-medium text-gray-700 block">{t('settings.notifications')}</span>
                     <span className="text-xs text-gray-500">
-                      {notificationPermission === 'granted' ? '✅ Autorisées' :
-                       notificationPermission === 'denied' ? '❌ Bloquées' :
-                       '⚠️ Non configurées'}
+                      {notificationPermission === 'granted' ? `✅ ${t('settings.allowed')}` :
+                       notificationPermission === 'denied' ? `❌ ${t('settings.blocked')}` :
+                       `⚠️ ${t('settings.notConfigured')}`}
                     </span>
                   </div>
                   <button
@@ -2663,7 +2714,7 @@ const MyMusicCoach = () => {
                     className="w-full bg-purple-100 text-purple-700 py-3 rounded-xl font-medium hover:bg-purple-200 transition-colors flex items-center justify-center gap-2"
                   >
                     <Bell className="w-5 h-5" />
-                    Activer les notifications
+                    {t('settings.enableNotifications')}
                   </button>
                 )}
 
@@ -2673,7 +2724,7 @@ const MyMusicCoach = () => {
                     onClick={sendTestNotification}
                     className="w-full bg-green-100 text-green-700 py-2 rounded-xl font-medium hover:bg-green-200 transition-colors text-sm"
                   >
-                    📢 Tester les notifications
+                    📢 {t('settings.testNotifications')}
                   </button>
                 )}
 
@@ -2693,10 +2744,12 @@ const MyMusicCoach = () => {
                   <Bell className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-blue-900 mb-1">
-                      Notifications disponibles sur Android uniquement
+                      {t('settings.mobileOnly')}
                     </p>
                     <p className="text-xs text-blue-700">
-                      Les notifications et rappels quotidiens sont disponibles uniquement sur l'application Android (APK). Cette fonctionnalité n'est pas disponible sur iOS ou en version web.
+                      {settings.language === 'fr'
+                        ? "Les notifications et rappels quotidiens sont disponibles uniquement sur l'application Android (APK). Cette fonctionnalité n'est pas disponible sur iOS ou en version web."
+                        : "Notifications and daily reminders are only available on the Android app (APK). This feature is not available on iOS or web version."}
                     </p>
                   </div>
                 </div>
@@ -2706,9 +2759,9 @@ const MyMusicCoach = () => {
 
           {/* Section Sauvegarde et Restauration */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Sauvegarde des données</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('settings.dataBackup')}</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Exportez vos données pour créer une sauvegarde ou importez une sauvegarde précédente.
+              {t('settings.exportDescription')}
             </p>
             <div className="space-y-3">
               <button
@@ -2716,11 +2769,11 @@ const MyMusicCoach = () => {
                 className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
               >
                 <Download className="w-5 h-5" />
-                Exporter mes données
+                {t('settings.exportData')}
               </button>
               <label className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 cursor-pointer">
                 <Upload className="w-5 h-5" />
-                Importer une sauvegarde
+                {t('settings.importBackup')}
                 <input
                   type="file"
                   accept=".json"
@@ -2731,24 +2784,24 @@ const MyMusicCoach = () => {
             </div>
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-3">
               <p className="text-xs text-blue-800">
-                💡 Vos données sont automatiquement sauvegardées localement sur votre appareil. L'export permet de créer une copie de secours que vous pouvez conserver ailleurs.
+                💡 {t('settings.autoSaveInfo')}
               </p>
             </div>
           </div>
 
           {/* Zone de réinitialisation */}
           <div className="bg-white rounded-3xl shadow-lg p-6 border-2 border-red-200">
-            <h3 className="text-lg font-bold text-red-600 mb-4">Réinitialiser l'application</h3>
+            <h3 className="text-lg font-bold text-red-600 mb-4">{t('settings.resetApp')}</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Cette action supprimera définitivement toutes vos données : exercices, sessions, historique et réglages. Cette action est irréversible.
+              {t('settings.resetWarning')}
             </p>
             <button
               onClick={async () => {
-                if (window.confirm('Êtes-vous sûr de vouloir réinitialiser l\'application ?\n\nToutes vos données seront supprimées définitivement.')) {
-                  if (window.confirm('Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVoulez-vous vraiment tout supprimer ?')) {
-                    // Supprimer toutes les données de l'application
+                if (window.confirm(t('settings.resetConfirm'))) {
+                  if (window.confirm(settings.language === 'fr'
+                    ? 'Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVoulez-vous vraiment tout supprimer ?'
+                    : 'Final confirmation: this action is IRREVERSIBLE.\n\nDo you really want to delete everything?')) {
                     await clearAppStorage();
-                    // Recharger la page pour réinitialiser l'état
                     window.location.reload();
                   }
                 }
@@ -2756,7 +2809,7 @@ const MyMusicCoach = () => {
               className="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
             >
               <Trash2 className="w-5 h-5" />
-              Réinitialiser l'application
+              {t('settings.resetApp')}
             </button>
           </div>
         </div>
@@ -3394,6 +3447,7 @@ const MyMusicCoach = () => {
                 <Metronome
                   initialTempo={selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120}
                   compact={true}
+                  t={t}
                 />
 
                 {selectedExercise.baseTempo > 0 && (
@@ -3619,7 +3673,7 @@ const MyMusicCoach = () => {
           onClick={() => setShowMetronome(false)}
         >
           <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <Metronome onClose={() => setShowMetronome(false)} />
+            <Metronome onClose={() => setShowMetronome(false)} t={t} />
           </div>
         </div>
       )}
@@ -3844,41 +3898,41 @@ const MyMusicCoach = () => {
       {!selectedExercise && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto z-40">
         <div className="flex justify-around">
-          <button 
+          <button
             onClick={() => { setActiveTab('home'); setActiveWorkout(null); setSelectedExercise(null); }}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'home' ? 'text-purple-600' : 'text-gray-400'
             }`}
           >
             <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Accueil</span>
+            <span className="text-xs font-medium">{t('nav.home')}</span>
           </button>
-          <button 
+          <button
             onClick={() => { setActiveTab('library'); setActiveWorkout(null); setSelectedExercise(null); }}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'library' ? 'text-purple-600' : 'text-gray-400'
             }`}
           >
             <Book className="w-6 h-6" />
-            <span className="text-xs font-medium">Exercices</span>
+            <span className="text-xs font-medium">{t('nav.exercises')}</span>
           </button>
-          <button 
+          <button
             onClick={() => { setActiveTab('stats'); setActiveWorkout(null); setSelectedExercise(null); }}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'stats' ? 'text-purple-600' : 'text-gray-400'
             }`}
           >
             <BarChart3 className="w-6 h-6" />
-            <span className="text-xs font-medium">Stats</span>
+            <span className="text-xs font-medium">{t('nav.stats')}</span>
           </button>
-          <button 
+          <button
             onClick={() => { setActiveTab('settings'); setActiveWorkout(null); setSelectedExercise(null); }}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'settings' ? 'text-purple-600' : 'text-gray-400'
             }`}
           >
             <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">Réglages</span>
+            <span className="text-xs font-medium">{t('nav.settings')}</span>
           </button>
         </div>
       </div>

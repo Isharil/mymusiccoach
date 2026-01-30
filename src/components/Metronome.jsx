@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
-// Subdivisions disponibles
+// Subdivisions disponibles (les noms seront traduits via la fonction t)
 const SUBDIVISIONS = [
-  { id: 'quarter', name: 'Noires', symbol: '♩', divisor: 1 },
-  { id: 'eighth', name: 'Croches', symbol: '♫', divisor: 2 },
-  { id: 'triplet', name: 'Triolets', symbol: '♬3', divisor: 3 },
-  { id: 'sixteenth', name: 'Doubles', symbol: '♬♬', divisor: 4 },
+  { id: 'quarter', nameKey: 'metronome.quarters', symbol: '♩', divisor: 1 },
+  { id: 'eighth', nameKey: 'metronome.eighths', symbol: '♫', divisor: 2 },
+  { id: 'triplet', nameKey: 'metronome.triplets', symbol: '♬3', divisor: 3 },
+  { id: 'sixteenth', nameKey: 'metronome.sixteenths', symbol: '♬♬', divisor: 4 },
 ];
 
 // Signatures rythmiques courantes
@@ -23,7 +23,7 @@ const TIME_SIGNATURES = [
   { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2], groupingOptions: [[3, 2, 2], [2, 2, 3], [2, 3, 2]] },
 ];
 
-const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
+const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [tempo, setTempo] = useState(initialTempo);
   const [currentBeat, setCurrentBeat] = useState(0);
@@ -347,7 +347,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 border-2 border-indigo-200">
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-bold text-indigo-900 flex items-center gap-2">
-            <span className="text-lg">🎵</span> Métronome
+            <span className="text-lg">🎵</span> {t('metronome.title')}
           </h4>
           <button
             onClick={() => setIsMuted(!isMuted)}
@@ -419,7 +419,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             }`}
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            {isPlaying ? 'Stop' : 'Démarrer'}
+            {isPlaying ? t('metronome.stop') : t('metronome.start')}
           </button>
 
           <select
@@ -428,7 +428,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
           >
             {SUBDIVISIONS.map(sub => (
-              <option key={sub.id} value={sub.id}>{sub.symbol} {sub.name}</option>
+              <option key={sub.id} value={sub.id}>{sub.symbol} {t(sub.nameKey)}</option>
             ))}
           </select>
 
@@ -481,14 +481,14 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold flex items-center gap-2">
-            🎵 Métronome
+            🎵 {t('metronome.title')}
           </h2>
           {onClose && (
             <button
               onClick={onClose}
               className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-medium transition-colors text-sm"
             >
-              ✕ Fermer
+              ✕ {t('common.close')}
             </button>
           )}
         </div>
@@ -572,7 +572,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
         {/* Signature + Subdivision en grille compacte */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Signature</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">{t('metronome.timeSignature')}</label>
             <select
               value={timeSignature.id}
               onChange={(e) => {
@@ -589,14 +589,14 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose }) => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Subdivision</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">{t('metronome.subdivision')}</label>
             <select
               value={subdivision.id}
               onChange={(e) => setSubdivision(SUBDIVISIONS.find(s => s.id === e.target.value))}
               className="w-full px-3 py-2.5 border-2 border-purple-300 rounded-xl text-sm bg-white font-medium"
             >
               {SUBDIVISIONS.map(sub => (
-                <option key={sub.id} value={sub.id}>{sub.symbol} {sub.name}</option>
+                <option key={sub.id} value={sub.id}>{sub.symbol} {t(sub.nameKey)}</option>
               ))}
             </select>
           </div>
