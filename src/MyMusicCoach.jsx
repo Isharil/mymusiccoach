@@ -20,11 +20,7 @@ const MyMusicCoach = () => {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [currentTempo, setCurrentTempo] = useState({});
   const [showSchedule, setShowSchedule] = useState(false);
-  const [sessionHistory, setSessionHistory, sessionHistoryLoading] = useIndexedDB('mmc_sessionHistory', [
-    { id: 1, date: "2026-01-10", time: "18:30", workoutId: 1, workoutName: "Routine Débutant", completed: 3, skipped: 0, total: 3 },
-    { id: 2, date: "2026-01-12", time: "19:00", workoutId: 2, workoutName: "Improvisation Blues", completed: 2, skipped: 0, total: 2 },
-    { id: 3, date: "2026-01-13", time: "17:45", workoutId: 1, workoutName: "Routine Débutant", completed: 2, skipped: 1, total: 3 }
-  ]);
+  const [sessionHistory, setSessionHistory, sessionHistoryLoading] = useIndexedDB('mmc_sessionHistory', []);
   const [libraryFilter, setLibraryFilter] = useState('Tous');
   const [showCreateExercise, setShowCreateExercise] = useState(false);
   const [showCreateWorkout, setShowCreateWorkout] = useState(false);
