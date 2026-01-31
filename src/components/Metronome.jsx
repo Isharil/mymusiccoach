@@ -27,6 +27,7 @@ const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
     return {
       id,
       name,
+      denominator,
       beats: numerator / 3, // Nombre de temps principaux
       isCompound: true,
       compoundSubdiv: 3,
@@ -40,6 +41,7 @@ const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
     return {
       id,
       name,
+      denominator,
       beats: numerator,
       grouping: customGrouping || asymmetric.default,
       groupingOptions: asymmetric.options,
@@ -50,6 +52,7 @@ const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
   return {
     id,
     name,
+    denominator,
     beats: numerator,
   };
 };
@@ -199,7 +202,8 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
     const audioContext = getAudioContext();
     const totalSubdivs = getTotalSubdivisions();
 
-    // BPM = noire pour toutes les signatures
+    // BPM = noire (quarter note) comme référence universelle
+    // Pour les autres dénominateurs: noteDuration = quarterDuration × (4 / denominator)
     const secondsPerQuarter = 60.0 / tempo;
     const secondsPerEighth = secondsPerQuarter / 2; // Croche = moitié de la noire
 
@@ -242,8 +246,11 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
           nextInterval = secondsPerEighth / subMultiplier;
         }
       } else {
-        // Mesures simples: BPM = noire
-        nextInterval = secondsPerQuarter / subdivision.divisor;
+        // Mesures simples: durée du temps selon le dénominateur
+        // Formule: noteDuration = quarterNoteDuration × (4 / denominator)
+        // /1 = 4 noires, /2 = 2 noires, /4 = 1 noire, /8 = 0.5 noire
+        const secondsPerBeat = secondsPerQuarter * (4 / timeSignature.denominator);
+        nextInterval = secondsPerBeat / subdivision.divisor;
       }
 
       // Avancer à la prochaine position
@@ -520,7 +527,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
               }}
               className="bg-transparent font-bold text-lg text-center focus:outline-none"
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+              {Array.from({length: 32}, (_, i) => i + 1).map(n => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
@@ -535,7 +542,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
               }}
               className="bg-transparent font-bold text-lg text-center focus:outline-none"
             >
-              {[1, 2, 4, 8].map(n => (
+              {[1, 2, 4, 8, 16, 32].map(n => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
@@ -583,7 +590,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
               }`}
             >
               <span
-                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                className={`absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
                   autoTempoEnabled ? 'translate-x-4' : 'translate-x-0.5'
                 }`}
               />
@@ -616,7 +623,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 type="number"
                 value={autoTempoMin}
                 onChange={(e) => setAutoTempoMin(Math.max(20, parseInt(e.target.value) || 20))}
-                className="w-12 px-1 py-1 border border-green-300 rounded text-xs text-center bg-white"
+                className="w-14 px-1 py-1 border border-green-300 rounded text-xs text-center bg-white"
                 min="20"
                 max="300"
               />
@@ -625,7 +632,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 type="number"
                 value={autoTempoMax}
                 onChange={(e) => setAutoTempoMax(Math.min(300, parseInt(e.target.value) || 300))}
-                className="w-12 px-1 py-1 border border-green-300 rounded text-xs text-center bg-white"
+                className="w-14 px-1 py-1 border border-green-300 rounded text-xs text-center bg-white"
                 min="20"
                 max="300"
               />
@@ -746,7 +753,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 }}
                 className="bg-transparent font-bold text-xl text-center focus:outline-none cursor-pointer"
               >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                {Array.from({length: 32}, (_, i) => i + 1).map(n => (
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
@@ -761,7 +768,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 }}
                 className="bg-transparent font-bold text-xl text-center focus:outline-none cursor-pointer"
               >
-                {[1, 2, 4, 8].map(n => (
+                {[1, 2, 4, 8, 16, 32].map(n => (
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
@@ -818,7 +825,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
               }`}
             >
               <span
-                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                className={`absolute left-0 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
                   autoTempoEnabled ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
               />
@@ -854,7 +861,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                   type="number"
                   value={autoTempoMin}
                   onChange={(e) => setAutoTempoMin(Math.max(20, parseInt(e.target.value) || 20))}
-                  className="w-14 px-1 py-0.5 border border-green-300 rounded text-center bg-white"
+                  className="w-16 px-1 py-0.5 border border-green-300 rounded text-center bg-white"
                   min="20"
                   max="300"
                 />
@@ -863,7 +870,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                   type="number"
                   value={autoTempoMax}
                   onChange={(e) => setAutoTempoMax(Math.min(300, parseInt(e.target.value) || 300))}
-                  className="w-14 px-1 py-0.5 border border-green-300 rounded text-center bg-white"
+                  className="w-16 px-1 py-0.5 border border-green-300 rounded text-center bg-white"
                   min="20"
                   max="300"
                 />
