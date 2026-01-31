@@ -80,6 +80,7 @@ const MyMusicCoach = () => {
   const [timerPaused, setTimerPaused] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showMetronome, setShowMetronome] = useState(false);
+  const [showAllBadges, setShowAllBadges] = useState(false);
 
   // Refs pour le chrono basé sur timestamps (résistant à la mise en veille)
   const timerEndTimeRef = useRef(null);
@@ -2449,32 +2450,64 @@ const MyMusicCoach = () => {
           {/* Section Badges */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">🏆 {t('stats.myBadges')}</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {BADGES.map(badge => {
-                const isEarned = earnedBadges.some(b => b.id === badge.id);
-                return (
-                  <div
-                    key={badge.id}
-                    className={`rounded-xl p-3 flex items-center gap-3 transition-all ${
-                      isEarned
-                        ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-md'
-                        : 'bg-gray-100 opacity-50'
-                    }`}
-                  >
-                    <span className={`text-2xl ${isEarned ? '' : 'grayscale'}`}>{badge.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold truncate ${isEarned ? 'text-yellow-800' : 'text-gray-500'}`}>
-                        {getBadgeName(badge)}
-                      </p>
-                      <p className={`text-xs truncate ${isEarned ? 'text-yellow-700' : 'text-gray-400'}`}>
-                        {getBadgeDescription(badge)}
-                      </p>
+
+            {/* Derniers badges obtenus */}
+            {earnedBadges.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">{t('stats.unlockedBadges')} ({earnedBadges.length})</p>
+                <div className="flex flex-wrap gap-2">
+                  {earnedBadges.slice(-4).reverse().map(badge => (
+                    <div
+                      key={badge.id}
+                      className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm"
+                    >
+                      <span className="text-xl">{badge.icon}</span>
+                      <span className="text-sm font-medium text-yellow-800">{getBadgeName(badge)}</span>
                     </div>
-                    {isEarned && <Check className="w-5 h-5 text-green-600 flex-shrink-0" />}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Prochains badges à débloquer */}
+            {(() => {
+              const notEarnedBadges = BADGES.filter(b => !earnedBadges.some(e => e.id === b.id));
+              const nextTwoBadges = notEarnedBadges.slice(0, 2);
+              if (nextTwoBadges.length === 0) return null;
+              return (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">{t('stats.nextBadges')}</p>
+                  <div className="space-y-2">
+                    {nextTwoBadges.map(badge => (
+                      <div
+                        key={badge.id}
+                        className="bg-gray-100 rounded-xl p-3 flex items-center gap-3"
+                      >
+                        <span className="text-2xl grayscale opacity-50">{badge.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-600">{getBadgeName(badge)}</p>
+                          <p className="text-xs text-gray-400">{getBadgeDescription(badge)}</p>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {badge.type === 'streak'
+                            ? `${stats.streak}/${badge.threshold}`
+                            : `${stats.totalSessions}/${badge.threshold}`
+                          }
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })()}
+
+            {/* Bouton voir plus */}
+            <button
+              onClick={() => setShowAllBadges(true)}
+              className="w-full py-3 text-purple-600 font-medium text-sm hover:bg-purple-50 rounded-xl transition-colors"
+            >
+              {t('stats.seeAllBadges')} →
+            </button>
           </div>
 
           <div className="bg-white rounded-3xl shadow-lg p-6">
@@ -3684,6 +3717,69 @@ const MyMusicCoach = () => {
         >
           <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" onClick={(e) => e.stopPropagation()}>
             <Metronome onClose={() => setShowMetronome(false)} t={t} />
+          </div>
+        </div>
+      )}
+
+      {/* Modal Tous les Badges */}
+      {showAllBadges && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowAllBadges(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full max-h-[85vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-6 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">🏆 {t('stats.allBadges')}</h2>
+                <button
+                  onClick={() => setShowAllBadges(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-yellow-100 text-sm mt-1">
+                {earnedBadges.length} / {BADGES.length} {t('stats.badgesUnlocked')}
+              </p>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              <div className="space-y-2">
+                {BADGES.map(badge => {
+                  const isEarned = earnedBadges.some(b => b.id === badge.id);
+                  const progress = badge.type === 'streak' ? stats.streak : stats.totalSessions;
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`rounded-xl p-3 flex items-center gap-3 transition-all ${
+                        isEarned
+                          ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-sm'
+                          : 'bg-gray-50'
+                      }`}
+                    >
+                      <span className={`text-2xl ${isEarned ? '' : 'grayscale opacity-50'}`}>{badge.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-bold ${isEarned ? 'text-yellow-800' : 'text-gray-500'}`}>
+                          {getBadgeName(badge)}
+                        </p>
+                        <p className={`text-xs ${isEarned ? 'text-yellow-700' : 'text-gray-400'}`}>
+                          {getBadgeDescription(badge)}
+                        </p>
+                      </div>
+                      {isEarned ? (
+                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <span className="text-xs text-gray-400 flex-shrink-0">
+                          {progress}/{badge.threshold}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
