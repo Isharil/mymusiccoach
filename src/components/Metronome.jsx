@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 // Subdivisions disponibles (les noms seront traduits via la fonction t)
@@ -364,6 +364,68 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
     setTempoInput(String(clampedValue));
   };
 
+  // Seuil pour passer en mode compteur (au lieu de cercles individuels)
+  const COUNTER_MODE_THRESHOLD = 8;
+
+  // Vérifie si on doit utiliser le mode compteur numérique
+  const useCounterMode = useMemo(() => {
+    // Pour mesures composées (6/8, 12/8, 30/8...): vérifier le nombre de temps principaux
+    if (timeSignature.isCompound) {
+      return timeSignature.beats > COUNTER_MODE_THRESHOLD;
+    }
+    // Pour mesures avec grouping (5/8, 7/8...): vérifier le nombre de groupes
+    if (timeSignature.grouping) {
+      return timeSignature.grouping.length > COUNTER_MODE_THRESHOLD;
+    }
+    // Pour mesures simples: vérifier le nombre de temps
+    return timeSignature.beats > COUNTER_MODE_THRESHOLD;
+  }, [timeSignature]);
+
+  // Nombre total de temps à afficher dans le compteur
+  const counterModeTotal = useMemo(() => {
+    if (timeSignature.grouping) {
+      return timeSignature.grouping.length;
+    }
+    return timeSignature.beats;
+  }, [timeSignature]);
+
+  // Obtenir le numéro du temps actuel (1-indexed) pour le mode compteur
+  const getCurrentBeatNumber = useMemo(() => {
+    if (!useCounterMode) return 0;
+
+    // Pour mesures composées (6/8, 12/8, 30/8...)
+    if (timeSignature.isCompound) {
+      if (subdivision.divisor === 1) {
+        return (currentBeat % timeSignature.beats) + 1;
+      }
+      const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+      const subdivsPerBeat = timeSignature.compoundSubdiv * subMultiplier;
+      return Math.floor(currentBeat / subdivsPerBeat) + 1;
+    }
+
+    // Pour mesures avec grouping
+    if (timeSignature.grouping) {
+      if (subdivision.divisor === 1) {
+        return (currentBeat % timeSignature.grouping.length) + 1;
+      }
+      const subMultiplier = subdivision.divisor === 2 ? 1 : subdivision.divisor / 2;
+      let accumulatedPosition = 0;
+      for (let i = 0; i < timeSignature.grouping.length; i++) {
+        const groupSize = timeSignature.grouping[i];
+        const groupEnd = (accumulatedPosition + groupSize) * subMultiplier;
+        if (currentBeat < groupEnd) {
+          return i + 1;
+        }
+        accumulatedPosition += groupSize;
+      }
+      return 1;
+    }
+
+    // Pour mesures simples
+    const beatNumber = Math.floor(currentBeat / subdivision.divisor) + 1;
+    return Math.min(beatNumber, timeSignature.beats);
+  }, [useCounterMode, currentBeat, subdivision, timeSignature]);
+
   // Obtenir les indicateurs visuels pour la signature actuelle
   const getVisualBeats = useCallback(() => {
     if (timeSignature.grouping) {
@@ -442,24 +504,48 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
 
         {/* Indicateur de beat visuel */}
         <div className="flex justify-center gap-2 mb-4">
-          {getVisualBeats().map((beat, i) => (
-            <div
-              key={i}
-              className={`rounded-full transition-all duration-75 flex items-center justify-center text-xs font-bold ${
-                (timeSignature.grouping || timeSignature.isCompound) ? 'px-2 py-1' : 'w-6 h-6'
-              } ${
-                isPlaying && getActiveVisualBeat() === i
-                  ? i === 0
-                    ? 'bg-red-500 text-white scale-125 shadow-lg shadow-red-300'
-                    : 'bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-300'
-                  : 'bg-gray-300 text-gray-500'
-              }`}
-            >
-              {(timeSignature.grouping || timeSignature.isCompound) ? beat.size : beat.label}
+          {useCounterMode ? (
+            /* Mode compteur pour les longues mesures */
+            <div className={`flex items-center gap-1 px-3 py-2 rounded-xl transition-all ${
+              isPlaying
+                ? getCurrentBeatNumber === 1
+                  ? 'bg-red-500 shadow-lg shadow-red-300'
+                  : 'bg-indigo-500 shadow-lg shadow-indigo-300'
+                : 'bg-gray-200'
+            }`}>
+              <span className={`text-2xl font-mono font-bold min-w-[2ch] text-center ${
+                isPlaying ? 'text-white' : 'text-gray-500'
+              }`}>
+                {isPlaying ? String(getCurrentBeatNumber).padStart(2, '0') : '--'}
+              </span>
+              <span className={`text-lg ${isPlaying ? 'text-white/70' : 'text-gray-400'}`}>/</span>
+              <span className={`text-lg font-mono ${isPlaying ? 'text-white/70' : 'text-gray-400'}`}>
+                {String(counterModeTotal).padStart(2, '0')}
+              </span>
             </div>
-          ))}
-          {timeSignature.grouping && (
-            <span className="text-xs text-gray-400 ml-1">({timeSignature.name})</span>
+          ) : (
+            /* Mode cercles pour les mesures courtes */
+            <>
+              {getVisualBeats().map((beat, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-75 flex items-center justify-center text-xs font-bold ${
+                    (timeSignature.grouping || timeSignature.isCompound) ? 'px-2 py-1' : 'w-6 h-6'
+                  } ${
+                    isPlaying && getActiveVisualBeat() === i
+                      ? i === 0
+                        ? 'bg-red-500 text-white scale-125 shadow-lg shadow-red-300'
+                        : 'bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-300'
+                      : 'bg-gray-300 text-gray-500'
+                  }`}
+                >
+                  {(timeSignature.grouping || timeSignature.isCompound) ? beat.size : beat.label}
+                </div>
+              ))}
+              {timeSignature.grouping && (
+                <span className="text-xs text-gray-400 ml-1">({timeSignature.name})</span>
+              )}
+            </>
           )}
         </div>
 
@@ -495,14 +581,13 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         <div className="flex items-center gap-2">
           <button
             onClick={togglePlay}
-            className={`flex-1 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
+            className={`w-12 h-12 rounded-xl shadow-lg transition-all flex items-center justify-center flex-shrink-0 ${
               isPlaying
                 ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
             }`}
           >
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            {isPlaying ? t('metronome.stop') : t('metronome.start')}
+            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
           </button>
 
           <select
@@ -666,24 +751,48 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       <div className="p-4 space-y-4 overflow-y-auto flex-1">
         {/* Indicateur de beat visuel */}
         <div className="flex justify-center items-center gap-2">
-          {getVisualBeats().map((beat, i) => (
-            <div
-              key={i}
-              className={`rounded-full flex items-center justify-center font-bold transition-all duration-75 ${
-                (timeSignature.grouping || timeSignature.isCompound) ? 'px-3 py-1.5 text-base' : 'w-10 h-10 text-lg'
-              } ${
-                isPlaying && getActiveVisualBeat() === i
-                  ? i === 0
-                    ? 'bg-red-500 text-white scale-110 shadow-lg shadow-red-300'
-                    : 'bg-indigo-500 text-white scale-105 shadow-lg shadow-indigo-300'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              {(timeSignature.grouping || timeSignature.isCompound) ? beat.size : beat.label}
+          {useCounterMode ? (
+            /* Mode compteur pour les longues mesures */
+            <div className={`flex items-center gap-2 px-5 py-3 rounded-2xl transition-all ${
+              isPlaying
+                ? getCurrentBeatNumber === 1
+                  ? 'bg-red-500 shadow-lg shadow-red-300'
+                  : 'bg-indigo-500 shadow-lg shadow-indigo-300'
+                : 'bg-gray-200'
+            }`}>
+              <span className={`text-4xl font-mono font-bold min-w-[2ch] text-center ${
+                isPlaying ? 'text-white' : 'text-gray-500'
+              }`}>
+                {isPlaying ? String(getCurrentBeatNumber).padStart(2, '0') : '--'}
+              </span>
+              <span className={`text-2xl ${isPlaying ? 'text-white/70' : 'text-gray-400'}`}>/</span>
+              <span className={`text-2xl font-mono ${isPlaying ? 'text-white/70' : 'text-gray-400'}`}>
+                {String(counterModeTotal).padStart(2, '0')}
+              </span>
             </div>
-          ))}
-          {timeSignature.grouping && (
-            <span className="text-xs text-gray-400 ml-1">({timeSignature.name})</span>
+          ) : (
+            /* Mode cercles pour les mesures courtes */
+            <>
+              {getVisualBeats().map((beat, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full flex items-center justify-center font-bold transition-all duration-75 ${
+                    (timeSignature.grouping || timeSignature.isCompound) ? 'px-3 py-1.5 text-base' : 'w-10 h-10 text-lg'
+                  } ${
+                    isPlaying && getActiveVisualBeat() === i
+                      ? i === 0
+                        ? 'bg-red-500 text-white scale-110 shadow-lg shadow-red-300'
+                        : 'bg-indigo-500 text-white scale-105 shadow-lg shadow-indigo-300'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  {(timeSignature.grouping || timeSignature.isCompound) ? beat.size : beat.label}
+                </div>
+              ))}
+              {timeSignature.grouping && (
+                <span className="text-xs text-gray-400 ml-1">({timeSignature.name})</span>
+              )}
+            </>
           )}
         </div>
 
