@@ -194,10 +194,14 @@
     "triplets": "Terzine",
     "sixteenths": "Sedicesimi",
     "timeSignature": "Indicazione di tempo",
+    "grouping": "Raggruppamento",
     "accent": "Accento",
     "start": "Avvia",
     "stop": "Stop",
-    "tap": "Tap Tempo"
+    "tap": "Tap Tempo",
+    "autoTempo": "Tempo automatico",
+    "every": "ogni",
+    "range": "Intervallo"
   },
   "badges": {
     "firstFlame": "Prima fiamma",

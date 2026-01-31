@@ -194,10 +194,14 @@
     "triplets": "Triplets",
     "sixteenths": "Sixteenths",
     "timeSignature": "Time signature",
+    "grouping": "Grouping",
     "accent": "Accent",
     "start": "Start",
     "stop": "Stop",
-    "tap": "Tap Tempo"
+    "tap": "Tap Tempo",
+    "autoTempo": "Auto tempo",
+    "every": "every",
+    "range": "Range"
   },
   "badges": {
     "firstFlame": "First flame",

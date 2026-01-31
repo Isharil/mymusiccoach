@@ -9,19 +9,50 @@ const SUBDIVISIONS = [
   { id: 'sixteenth', nameKey: 'metronome.sixteenths', symbol: '♬♬', divisor: 4 },
 ];
 
-// Signatures rythmiques courantes
-// Pour les mesures composées (6/8, 12/8), beats = nombre de temps principaux
-// Pour les mesures asymétriques (7/8, 5/8), grouping définit les accents
-const TIME_SIGNATURES = [
-  { id: '1/4', beats: 1, name: '1/4' },
-  { id: '2/4', beats: 2, name: '2/4' },
-  { id: '3/4', beats: 3, name: '3/4' },
-  { id: '4/4', beats: 4, name: '4/4' },
-  { id: '5/4', beats: 5, name: '5/4' },
-  { id: '5/8', beats: 5, name: '5/8', grouping: [3, 2], groupingOptions: [[3, 2], [2, 3]] },
-  { id: '6/8', beats: 2, name: '6/8', grouping: [3, 3] },
-  { id: '7/8', beats: 7, name: '7/8', grouping: [3, 2, 2], groupingOptions: [[3, 2, 2], [2, 2, 3], [2, 3, 2]] },
-];
+// Groupings prédéfinis pour les mesures asymétriques
+const ASYMMETRIC_GROUPINGS = {
+  5: { default: [3, 2], options: [[3, 2], [2, 3]] },
+  7: { default: [3, 2, 2], options: [[3, 2, 2], [2, 2, 3], [2, 3, 2]] },
+  9: { default: [3, 3, 3], options: [[3, 3, 3], [2, 2, 2, 3], [3, 2, 2, 2]] },
+  11: { default: [3, 3, 3, 2], options: [[3, 3, 3, 2], [3, 3, 2, 3], [2, 3, 3, 3]] },
+};
+
+// Génère un objet timeSignature à partir du numérateur et dénominateur
+const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
+  const name = `${numerator}/${denominator}`;
+  const id = name;
+
+  // Mesures composées (x/8 où x est divisible par 3, comme 6/8, 9/8, 12/8)
+  if (denominator === 8 && numerator % 3 === 0 && numerator >= 6) {
+    return {
+      id,
+      name,
+      beats: numerator / 3, // Nombre de temps principaux
+      isCompound: true,
+      compoundSubdiv: 3,
+      grouping: Array(numerator / 3).fill(3),
+    };
+  }
+
+  // Mesures asymétriques (5/8, 7/8, 9/8 non composé, 11/8, etc.)
+  if (denominator === 8 && ASYMMETRIC_GROUPINGS[numerator]) {
+    const asymmetric = ASYMMETRIC_GROUPINGS[numerator];
+    return {
+      id,
+      name,
+      beats: numerator,
+      grouping: customGrouping || asymmetric.default,
+      groupingOptions: asymmetric.options,
+    };
+  }
+
+  // Mesures simples
+  return {
+    id,
+    name,
+    beats: numerator,
+  };
+};
 
 const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,15 +60,28 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
   const [currentBeat, setCurrentBeat] = useState(0);
   const [currentSubBeat, setCurrentSubBeat] = useState(0);
   const [subdivision, setSubdivision] = useState(SUBDIVISIONS[0]);
-  const [timeSignature, setTimeSignature] = useState(TIME_SIGNATURES[0]);
+  const [beatsPerMeasure, setBeatsPerMeasure] = useState(4);
+  const [beatUnit, setBeatUnit] = useState(4);
+  const [customGrouping, setCustomGrouping] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.7);
+
+  // Auto-tempo (changement automatique de tempo)
+  const [autoTempoEnabled, setAutoTempoEnabled] = useState(false);
+  const [autoTempoChange, setAutoTempoChange] = useState(5); // +5 BPM par défaut
+  const [autoTempoInterval, setAutoTempoInterval] = useState(30); // toutes les 30 secondes
+  const [autoTempoMin, setAutoTempoMin] = useState(60);
+  const [autoTempoMax, setAutoTempoMax] = useState(200);
+
+  // Générer la signature rythmique à partir des sélections
+  const timeSignature = buildTimeSignature(beatsPerMeasure, beatUnit, customGrouping);
 
   const audioContextRef = useRef(null);
   const nextNoteTimeRef = useRef(0);
   const timerIdRef = useRef(null);
   const currentBeatRef = useRef(0);
   const currentSubBeatRef = useRef(0);
+  const autoTempoTimerRef = useRef(null);
 
   // Créer l'AudioContext
   const getAudioContext = useCallback(() => {
@@ -254,11 +298,43 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       if (timerIdRef.current) {
         clearInterval(timerIdRef.current);
       }
+      if (autoTempoTimerRef.current) {
+        clearInterval(autoTempoTimerRef.current);
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
     };
   }, []);
+
+  // Auto-tempo: changement automatique du tempo
+  useEffect(() => {
+    if (isPlaying && autoTempoEnabled) {
+      autoTempoTimerRef.current = setInterval(() => {
+        setTempo(prevTempo => {
+          const newTempo = prevTempo + autoTempoChange;
+          // Respecter les limites min/max
+          if (autoTempoChange > 0) {
+            return Math.min(newTempo, autoTempoMax);
+          } else {
+            return Math.max(newTempo, autoTempoMin);
+          }
+        });
+      }, autoTempoInterval * 1000);
+    } else {
+      if (autoTempoTimerRef.current) {
+        clearInterval(autoTempoTimerRef.current);
+        autoTempoTimerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (autoTempoTimerRef.current) {
+        clearInterval(autoTempoTimerRef.current);
+        autoTempoTimerRef.current = null;
+      }
+    };
+  }, [isPlaying, autoTempoEnabled, autoTempoChange, autoTempoInterval, autoTempoMin, autoTempoMax]);
 
   // Gestion du tempo via input
   const [tempoInput, setTempoInput] = useState(String(tempo));
@@ -432,20 +508,38 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
             ))}
           </select>
 
-          <select
-            value={timeSignature.id}
-            onChange={(e) => {
-              const ts = TIME_SIGNATURES.find(t => t.id === e.target.value);
-              setTimeSignature(ts);
-              currentBeatRef.current = 0;
-              setCurrentBeat(0);
-            }}
-            className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
-          >
-            {TIME_SIGNATURES.map(ts => (
-              <option key={ts.id} value={ts.id}>{ts.name}</option>
-            ))}
-          </select>
+          {/* Sélecteur de signature: numérateur / dénominateur */}
+          <div className="flex items-center gap-1 bg-white border-2 border-indigo-300 rounded-xl px-2 py-1">
+            <select
+              value={beatsPerMeasure}
+              onChange={(e) => {
+                setBeatsPerMeasure(parseInt(e.target.value));
+                setCustomGrouping(null);
+                currentBeatRef.current = 0;
+                setCurrentBeat(0);
+              }}
+              className="bg-transparent font-bold text-lg text-center focus:outline-none"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+            <span className="text-lg font-bold text-gray-400">/</span>
+            <select
+              value={beatUnit}
+              onChange={(e) => {
+                setBeatUnit(parseInt(e.target.value));
+                setCustomGrouping(null);
+                currentBeatRef.current = 0;
+                setCurrentBeat(0);
+              }}
+              className="bg-transparent font-bold text-lg text-center focus:outline-none"
+            >
+              {[1, 2, 4, 8].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Sélecteur de grouping compact */}
@@ -455,7 +549,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
               <button
                 key={idx}
                 onClick={() => {
-                  setTimeSignature({ ...timeSignature, grouping: option });
+                  setCustomGrouping(option);
                   currentBeatRef.current = 0;
                   setCurrentBeat(0);
                 }}
@@ -470,6 +564,74 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
             ))}
           </div>
         )}
+
+        {/* Auto-tempo compact */}
+        <div className="mt-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 border border-green-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-green-800">{t('metronome.autoTempo')}</span>
+              {autoTempoEnabled && (
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                  {autoTempoChange > 0 ? '+' : ''}{autoTempoChange} / {autoTempoInterval}s
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setAutoTempoEnabled(!autoTempoEnabled)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${
+                autoTempoEnabled ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  autoTempoEnabled ? 'translate-x-4' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+
+          {autoTempoEnabled && (
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <select
+                value={autoTempoChange}
+                onChange={(e) => setAutoTempoChange(parseInt(e.target.value))}
+                className="px-2 py-1 border border-green-300 rounded-lg text-xs bg-white"
+              >
+                {[-10, -5, -2, -1, 1, 2, 5, 10].map(n => (
+                  <option key={n} value={n}>{n > 0 ? `+${n}` : n} BPM</option>
+                ))}
+              </select>
+              <span className="text-xs text-green-700">{t('metronome.every')}</span>
+              <select
+                value={autoTempoInterval}
+                onChange={(e) => setAutoTempoInterval(parseInt(e.target.value))}
+                className="px-2 py-1 border border-green-300 rounded-lg text-xs bg-white"
+              >
+                {[10, 15, 20, 30, 45, 60, 90, 120].map(n => (
+                  <option key={n} value={n}>{n}s</option>
+                ))}
+              </select>
+              <span className="text-xs text-green-700">{t('metronome.range')}:</span>
+              <input
+                type="number"
+                value={autoTempoMin}
+                onChange={(e) => setAutoTempoMin(Math.max(20, parseInt(e.target.value) || 20))}
+                className="w-12 px-1 py-1 border border-green-300 rounded text-xs text-center bg-white"
+                min="20"
+                max="300"
+              />
+              <span className="text-xs text-green-700">-</span>
+              <input
+                type="number"
+                value={autoTempoMax}
+                onChange={(e) => setAutoTempoMax(Math.min(300, parseInt(e.target.value) || 300))}
+                className="w-12 px-1 py-1 border border-green-300 rounded text-xs text-center bg-white"
+                min="20"
+                max="300"
+              />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -573,20 +735,37 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1.5">{t('metronome.timeSignature')}</label>
-            <select
-              value={timeSignature.id}
-              onChange={(e) => {
-                const ts = TIME_SIGNATURES.find(t => t.id === e.target.value);
-                setTimeSignature(ts);
-                currentBeatRef.current = 0;
-                setCurrentBeat(0);
-              }}
-              className="w-full px-3 py-2.5 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
-            >
-              {TIME_SIGNATURES.map(ts => (
-                <option key={ts.id} value={ts.id}>{ts.name}</option>
-              ))}
-            </select>
+            <div className="flex items-center justify-center gap-2 bg-white border-2 border-indigo-300 rounded-xl px-3 py-2">
+              <select
+                value={beatsPerMeasure}
+                onChange={(e) => {
+                  setBeatsPerMeasure(parseInt(e.target.value));
+                  setCustomGrouping(null);
+                  currentBeatRef.current = 0;
+                  setCurrentBeat(0);
+                }}
+                className="bg-transparent font-bold text-xl text-center focus:outline-none cursor-pointer"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+              <span className="text-xl font-bold text-gray-400">/</span>
+              <select
+                value={beatUnit}
+                onChange={(e) => {
+                  setBeatUnit(parseInt(e.target.value));
+                  setCustomGrouping(null);
+                  currentBeatRef.current = 0;
+                  setCurrentBeat(0);
+                }}
+                className="bg-transparent font-bold text-xl text-center focus:outline-none cursor-pointer"
+              >
+                {[1, 2, 4, 8].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1.5">{t('metronome.subdivision')}</label>
@@ -605,13 +784,13 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         {/* Sélecteur de grouping pour signatures asymétriques */}
         {timeSignature.groupingOptions && (
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Grouping</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">{t('metronome.grouping')}</label>
             <div className="flex gap-2">
               {timeSignature.groupingOptions.map((option, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
-                    setTimeSignature({ ...timeSignature, grouping: option });
+                    setCustomGrouping(option);
                     currentBeatRef.current = 0;
                     setCurrentBeat(0);
                   }}
@@ -627,6 +806,72 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
             </div>
           </div>
         )}
+
+        {/* Auto-tempo: changement automatique de tempo */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 border border-green-200">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-medium text-green-800">{t('metronome.autoTempo')}</label>
+            <button
+              onClick={() => setAutoTempoEnabled(!autoTempoEnabled)}
+              className={`relative w-10 h-5 rounded-full transition-colors ${
+                autoTempoEnabled ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  autoTempoEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+
+          {autoTempoEnabled && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <select
+                  value={autoTempoChange}
+                  onChange={(e) => setAutoTempoChange(parseInt(e.target.value))}
+                  className="flex-1 px-2 py-1.5 border border-green-300 rounded-lg text-sm bg-white"
+                >
+                  {[-10, -5, -2, -1, 1, 2, 5, 10].map(n => (
+                    <option key={n} value={n}>{n > 0 ? `+${n}` : n} BPM</option>
+                  ))}
+                </select>
+                <span className="text-xs text-green-700">{t('metronome.every')}</span>
+                <select
+                  value={autoTempoInterval}
+                  onChange={(e) => setAutoTempoInterval(parseInt(e.target.value))}
+                  className="flex-1 px-2 py-1.5 border border-green-300 rounded-lg text-sm bg-white"
+                >
+                  {[10, 15, 20, 30, 45, 60, 90, 120].map(n => (
+                    <option key={n} value={n}>{n}s</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-green-700">
+                <span>{t('metronome.range')}:</span>
+                <input
+                  type="number"
+                  value={autoTempoMin}
+                  onChange={(e) => setAutoTempoMin(Math.max(20, parseInt(e.target.value) || 20))}
+                  className="w-14 px-1 py-0.5 border border-green-300 rounded text-center bg-white"
+                  min="20"
+                  max="300"
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  value={autoTempoMax}
+                  onChange={(e) => setAutoTempoMax(Math.min(300, parseInt(e.target.value) || 300))}
+                  className="w-14 px-1 py-0.5 border border-green-300 rounded text-center bg-white"
+                  min="20"
+                  max="300"
+                />
+                <span>BPM</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Volume compact */}
         <div className="flex items-center gap-3">

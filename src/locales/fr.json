@@ -194,10 +194,14 @@
     "triplets": "Triolets",
     "sixteenths": "Doubles",
     "timeSignature": "Signature",
+    "grouping": "Groupement",
     "accent": "Accent",
     "start": "Démarrer",
     "stop": "Arrêter",
-    "tap": "Tap Tempo"
+    "tap": "Tap Tempo",
+    "autoTempo": "Tempo progressif",
+    "every": "toutes les",
+    "range": "Plage"
   },
   "badges": {
     "firstFlame": "Première flamme",

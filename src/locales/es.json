@@ -194,10 +194,14 @@
     "triplets": "Tresillos",
     "sixteenths": "Semicorcheas",
     "timeSignature": "Compás",
+    "grouping": "Agrupación",
     "accent": "Acento",
     "start": "Iniciar",
     "stop": "Parar",
-    "tap": "Tap Tempo"
+    "tap": "Tap Tempo",
+    "autoTempo": "Tempo automático",
+    "every": "cada",
+    "range": "Rango"
   },
   "badges": {
     "firstFlame": "Primera llama",

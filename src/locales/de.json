@@ -194,10 +194,14 @@
     "triplets": "Triolen",
     "sixteenths": "Sechzehntel",
     "timeSignature": "Taktart",
+    "grouping": "Gruppierung",
     "accent": "Akzent",
     "start": "Start",
     "stop": "Stopp",
-    "tap": "Tap Tempo"
+    "tap": "Tap Tempo",
+    "autoTempo": "Auto-Tempo",
+    "every": "alle",
+    "range": "Bereich"
   },
   "badges": {
     "firstFlame": "Erste Flamme",
