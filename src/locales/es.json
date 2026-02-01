@@ -113,7 +113,10 @@
     "tempoProgress": "Progreso de tempo",
     "noProgress": "Sin progreso registrado",
     "saveTempo": "Guardar tempo",
-    "currentTempo": "Tempo actual"
+    "currentTempo": "Tempo actual",
+    "notes": "Observaciones",
+    "notesPlaceholder": "Escribe tus observaciones, dificultades encontradas, puntos a mejorar...",
+    "notesHint": "Estas notas se guardarán con tu sesión"
   },
   "library": {
     "title": "Mis ejercicios",

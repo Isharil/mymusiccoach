@@ -113,7 +113,10 @@
     "tempoProgress": "Tempo progress",
     "noProgress": "No progress recorded",
     "saveTempo": "Save tempo",
-    "currentTempo": "Current tempo"
+    "currentTempo": "Current tempo",
+    "notes": "Notes",
+    "notesPlaceholder": "Write your observations, difficulties encountered, points to improve...",
+    "notesHint": "These notes will be saved with your session"
   },
   "library": {
     "title": "My exercises",

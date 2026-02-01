@@ -113,7 +113,10 @@
     "tempoProgress": "Progresso tempo",
     "noProgress": "Nessun progresso registrato",
     "saveTempo": "Salva tempo",
-    "currentTempo": "Tempo attuale"
+    "currentTempo": "Tempo attuale",
+    "notes": "Osservazioni",
+    "notesPlaceholder": "Scrivi le tue osservazioni, difficoltà incontrate, punti da migliorare...",
+    "notesHint": "Queste note saranno salvate con la tua sessione"
   },
   "library": {
     "title": "I miei esercizi",

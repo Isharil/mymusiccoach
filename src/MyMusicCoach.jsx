@@ -19,6 +19,7 @@ const MyMusicCoach = () => {
   const [workoutProgress, setWorkoutProgress] = useState({});
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [currentTempo, setCurrentTempo] = useState({});
+  const [exerciseNotes, setExerciseNotes] = useState({}); // Notes/commentaires par exercice
   const [showSchedule, setShowSchedule] = useState(false);
   const [sessionHistory, setSessionHistory, sessionHistoryLoading] = useIndexedDB('mmc_sessionHistory', []);
   const [libraryFilter, setLibraryFilter] = useState('Tous');
@@ -746,6 +747,14 @@ const MyMusicCoach = () => {
       if (workoutProgress[key] === 'skipped') skipped++;
     });
     
+    // Collecter les notes pour cette session
+    const sessionNotes = {};
+    workoutExercises.forEach(exId => {
+      if (exerciseNotes[exId]) {
+        sessionNotes[exId] = exerciseNotes[exId];
+      }
+    });
+
     const newSession = {
       id: sessionHistory.length + 1,
       date: dateStr,
@@ -754,12 +763,14 @@ const MyMusicCoach = () => {
       workoutName: workout.name,
       completed,
       skipped,
-      total: workoutExercises.length
+      total: workoutExercises.length,
+      notes: sessionNotes // Notes/observations de l'élève
     };
-    
+
     setSessionHistory([...sessionHistory, newSession]);
     setActiveWorkout(null);
     setWorkoutProgress({});
+    setExerciseNotes({}); // Réinitialiser les notes
 
     // Notification de félicitations (uniquement sur mobile natif)
     sendImmediateNotification(
@@ -3593,8 +3604,12 @@ const MyMusicCoach = () => {
 
                 {selectedExercise.baseTempo > 0 && (
                   <>
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 shadow-lg">
-                      <h4 className="font-bold text-gray-900 mb-4">Enregistrer ton tempo</h4>
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 shadow-lg border-2 border-blue-200">
+                      <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <span className="text-xl">🎯</span>
+                        Enregistrer ton tempo
+                      </h4>
+                      <p className="text-xs text-blue-700 mb-4">Avant de valider, note le tempo que tu as atteint</p>
                       <div className="flex gap-3 mb-3">
                         <input
                           type="number"
@@ -3608,15 +3623,21 @@ const MyMusicCoach = () => {
                             }
                           }}
                           placeholder={`${selectedExercise.baseTempo}`}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-lg font-bold text-center"
                         />
-                        <span className="text-gray-600 font-medium flex items-center px-3">BPM</span>
+                        <span className="text-blue-700 font-bold flex items-center px-3">BPM</span>
                       </div>
                       <button
                         onClick={() => saveTempo(selectedExercise.id)}
-                        className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-shadow"
+                        disabled={!currentTempo[selectedExercise.id]}
+                        className={`w-full py-3 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 ${
+                          currentTempo[selectedExercise.id]
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
                       >
-                        Enregistrer
+                        <TrendingUp className="w-5 h-5" />
+                        Enregistrer mon tempo
                       </button>
                     </div>
 
@@ -3624,23 +3645,48 @@ const MyMusicCoach = () => {
                       <h4 className="font-bold text-gray-900 mb-4">Historique de progression</h4>
                       {selectedExercise.tempoHistory.length > 0 ? (
                         <div className="space-y-3">
-                          {selectedExercise.tempoHistory.map((entry, idx) => (
-                            <div key={idx} className="flex justify-between items-center bg-gray-50 rounded-xl p-4">
-                              <span className="text-sm text-gray-600 font-medium">{entry.date}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-gray-900">{entry.tempo} BPM</span>
-                                {idx > 0 && entry.tempo > selectedExercise.tempoHistory[idx - 1].tempo && (
-                                  <TrendingUp className="w-5 h-5 text-green-600" />
-                                )}
+                          {selectedExercise.tempoHistory.slice().reverse().map((entry, idx, reversedArray) => {
+                            // Comparer avec l'entrée suivante (plus ancienne) dans l'ordre inversé
+                            const olderEntry = reversedArray[idx + 1];
+                            const isImprovement = olderEntry && entry.tempo > olderEntry.tempo;
+                            return (
+                              <div key={idx} className="flex justify-between items-center bg-gray-50 rounded-xl p-4">
+                                <span className="text-sm text-gray-600 font-medium">{entry.date}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-gray-900">{entry.tempo} BPM</span>
+                                  {isImprovement && (
+                                    <TrendingUp className="w-5 h-5 text-green-600" />
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <p className="text-center text-gray-500 py-8">Aucun tempo enregistré pour le moment</p>
                       )}
                     </div>
                   </>
+                )}
+
+                {/* Zone de notes/observations - uniquement pendant une session active */}
+                {(activeWorkout && activeWorkout.exercises.includes(selectedExercise.id)) && (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-lg border border-amber-200">
+                    <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <span className="text-xl">📝</span>
+                      {t('exercise.notes')}
+                    </h4>
+                    <textarea
+                      value={exerciseNotes[selectedExercise.id] || ''}
+                      onChange={(e) => setExerciseNotes({...exerciseNotes, [selectedExercise.id]: e.target.value})}
+                      placeholder={t('exercise.notesPlaceholder')}
+                      className="w-full px-4 py-3 border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none bg-white"
+                      rows={3}
+                    />
+                    <p className="text-xs text-amber-700 mt-2">
+                      {t('exercise.notesHint')}
+                    </p>
+                  </div>
                 )}
 
               </div>
@@ -3699,26 +3745,47 @@ const MyMusicCoach = () => {
                     );
                   }
 
+                  // Vérifier si un tempo est saisi mais non enregistré
+                  const hasUnsavedTempo = selectedExercise.baseTempo > 0 && currentTempo[selectedExercise.id];
+
                   return (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => {
-                          setWorkoutProgress({...workoutProgress, [key]: 'skipped'});
-                        }}
-                        className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <X className="w-5 h-5" />
-                        Sauter
-                      </button>
-                      <button
-                        onClick={() => {
-                          setWorkoutProgress({...workoutProgress, [key]: 'completed'});
-                        }}
-                        className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                      >
-                        <Check className="w-6 h-6" />
-                        Valider
-                      </button>
+                    <div className="space-y-3">
+                      {/* Rappel si tempo non enregistré */}
+                      {hasUnsavedTempo && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2">
+                          <span className="text-blue-600">💡</span>
+                          <span className="text-sm text-blue-800">
+                            Tempo saisi : <strong>{currentTempo[selectedExercise.id]} BPM</strong> — Il sera enregistré automatiquement
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            setWorkoutProgress({...workoutProgress, [key]: 'skipped'});
+                          }}
+                          className="flex-1 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <X className="w-5 h-5" />
+                          Sauter
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Auto-enregistrer le tempo si saisi
+                            if (hasUnsavedTempo) {
+                              saveTempo(selectedExercise.id);
+                            }
+                            setWorkoutProgress({...workoutProgress, [key]: 'completed'});
+                            // Fermer l'exercice
+                            stopTimer();
+                            setSelectedExercise(null);
+                          }}
+                          className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-6 h-6" />
+                          Valider l'exercice
+                        </button>
+                      </div>
                     </div>
                   );
                 })()}
