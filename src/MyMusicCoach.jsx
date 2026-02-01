@@ -84,6 +84,7 @@ const MyMusicCoach = () => {
   const [timerFinished, setTimerFinished] = useState(false); // Notification de fin de chrono
   const [showMetronome, setShowMetronome] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Refs pour le chrono basé sur timestamps (résistant à la mise en veille)
   const timerEndTimeRef = useRef(null);
@@ -1301,24 +1302,49 @@ const MyMusicCoach = () => {
   }, [releaseWakeLock]);
 
   // ===== GÉNÉRATION DU RAPPORT PDF =====
-  const generateProgressReport = async () => {
+  const generateProgressReport = async (weeks) => {
+    // Calculer la date limite selon la période choisie
+    const now = new Date();
+    const cutoffDate = new Date(now);
+    cutoffDate.setDate(cutoffDate.getDate() - (weeks * 7));
+
+    // Filtrer les sessions par période
+    const filteredSessions = sessionHistory.filter(session => {
+      // Parser la date de la session (format: "01/02/2024")
+      const parts = session.date.split('/');
+      if (parts.length === 3) {
+        const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        return sessionDate >= cutoffDate;
+      }
+      return false;
+    }).reverse();
+
+    // Libellé de la période
+    const periodLabel = weeks === 1 ? 'la dernière semaine' :
+                        weeks === 2 ? 'les 2 dernières semaines' :
+                        weeks === 3 ? 'les 3 dernières semaines' :
+                        'le dernier mois';
+
     // Créer le contenu du rapport
     const reportData = {
       userName: settings.userName,
-      date: new Date().toLocaleDateString('fr-FR', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      date: new Date().toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       }),
+      periodLabel,
       stats: {
         thisWeek: stats.thisWeek,
         streak: stats.streak,
-        totalSessions: stats.totalSessions
+        totalSessions: filteredSessions.length
       },
-      recentSessions: sessionHistory.slice(-10).reverse(),
+      recentSessions: filteredSessions,
       exercisesWithProgress: exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0)
     };
+
+    setShowExportModal(false);
 
     // Créer le document HTML pour le PDF
     const htmlContent = `
@@ -1449,6 +1475,31 @@ const MyMusicCoach = () => {
             background: #FEF3C7;
             color: #92400E;
           }
+          .observation-card {
+            background: #FFFBEB;
+            border: 1px solid #F59E0B;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+          }
+          .observation-card .date {
+            font-size: 12px;
+            color: #92400E;
+            margin-bottom: 5px;
+          }
+          .observation-card .exercise-name {
+            font-weight: bold;
+            color: #9333EA;
+            margin-bottom: 8px;
+          }
+          .observation-card .note-text {
+            color: #333;
+            font-style: italic;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #F59E0B;
+          }
           .footer {
             margin-top: 40px;
             text-align: center;
@@ -1494,6 +1545,7 @@ const MyMusicCoach = () => {
           <h1>📊 Rapport de Progression</h1>
           <p><strong>${reportData.userName}</strong></p>
           <p>${reportData.date}</p>
+          <p style="color: #9333EA; font-weight: bold;">Période : ${reportData.periodLabel}</p>
         </div>
 
         <div class="section">
@@ -1515,7 +1567,7 @@ const MyMusicCoach = () => {
         </div>
 
         <div class="section">
-          <h2>📅 Historique des Sessions (10 dernières)</h2>
+          <h2>📅 Historique des Sessions (${reportData.periodLabel})</h2>
           <table>
             <thead>
               <tr>
@@ -1539,6 +1591,30 @@ const MyMusicCoach = () => {
             </tbody>
           </table>
         </div>
+
+        ${(() => {
+          const sessionsWithNotes = reportData.recentSessions.filter(s => s.notes && Object.keys(s.notes).length > 0);
+          if (sessionsWithNotes.length === 0) return '';
+          return `
+        <div class="section">
+          <h2>📝 Observations de l'élève</h2>
+          ${sessionsWithNotes.map(session => {
+            const noteEntries = Object.entries(session.notes);
+            return noteEntries.map(([exId, note]) => {
+              const exercise = exercises.find(e => e.id === parseInt(exId));
+              const exerciseName = exercise ? exercise.name : 'Exercice inconnu';
+              return `
+              <div class="observation-card">
+                <div class="date">📅 ${session.date} ${session.time} — ${session.workoutName}</div>
+                <div class="exercise-name">🎵 ${exerciseName}</div>
+                <div class="note-text">${note}</div>
+              </div>
+              `;
+            }).join('');
+          }).join('')}
+        </div>
+          `;
+        })()}
 
         ${reportData.exercisesWithProgress.length > 0 ? `
         <div class="section">
@@ -2464,7 +2540,7 @@ const MyMusicCoach = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">{t('stats.title')}</h1>
             <button
-              onClick={generateProgressReport}
+              onClick={() => setShowExportModal(true)}
               className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
@@ -3941,6 +4017,64 @@ const MyMusicCoach = () => {
         </div>
       )}
 
+      {/* Modal Sélection Période Export */}
+      {showExportModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowExportModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">📊 Exporter le rapport</h2>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-blue-100 text-sm mt-1">
+                Choisis la période à inclure
+              </p>
+            </div>
+            <div className="p-4 space-y-3">
+              <button
+                onClick={() => generateProgressReport(1)}
+                className="w-full py-4 px-4 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl font-medium text-purple-800 transition-all flex items-center justify-between"
+              >
+                <span>📅 Dernière semaine</span>
+                <span className="text-purple-500 text-sm">7 jours</span>
+              </button>
+              <button
+                onClick={() => generateProgressReport(2)}
+                className="w-full py-4 px-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl font-medium text-blue-800 transition-all flex items-center justify-between"
+              >
+                <span>📅 2 dernières semaines</span>
+                <span className="text-blue-500 text-sm">14 jours</span>
+              </button>
+              <button
+                onClick={() => generateProgressReport(3)}
+                className="w-full py-4 px-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl font-medium text-green-800 transition-all flex items-center justify-between"
+              >
+                <span>📅 3 dernières semaines</span>
+                <span className="text-green-500 text-sm">21 jours</span>
+              </button>
+              <button
+                onClick={() => generateProgressReport(4)}
+                className="w-full py-4 px-4 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-xl font-medium text-orange-800 transition-all flex items-center justify-between"
+              >
+                <span>📅 Dernier mois</span>
+                <span className="text-orange-500 text-sm">30 jours</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Import Session */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -3948,7 +4082,7 @@ const MyMusicCoach = () => {
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-3xl">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold">Importer une session</h2>
-                <button 
+                <button
                   onClick={() => {
                     setShowImportModal(false);
                     setImportFile(null);
