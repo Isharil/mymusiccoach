@@ -57,7 +57,7 @@ const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
   };
 };
 
-const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key }) => {
+const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key, soundType = 'click' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [tempo, setTempo] = useState(initialTempo);
   const [currentBeat, setCurrentBeat] = useState(0);
@@ -94,40 +94,153 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
     return audioContextRef.current;
   }, []);
 
-  // Générer un son de click
+  // Générer un son selon le type sélectionné
   const playClick = useCallback((isDownbeat, isSubBeat) => {
     if (isMuted) return;
 
     const audioContext = getAudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Fréquences différentes pour temps fort, temps faible, et subdivisions
-    if (isDownbeat) {
-      oscillator.frequency.value = 1200; // Temps fort (beat 1) - son aigu
-      gainNode.gain.value = volume;
-    } else if (isSubBeat) {
-      oscillator.frequency.value = 800; // Subdivision - son moyen
-      gainNode.gain.value = volume * 0.5;
-    } else {
-      oscillator.frequency.value = 1000; // Accent secondaire - son moyen-aigu
-      gainNode.gain.value = volume * 0.8;
-    }
-
-    oscillator.type = 'sine';
-
     const now = audioContext.currentTime;
-    oscillator.start(now);
 
-    // Envelope pour un son de click court
-    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    // Ajuster le volume selon le type de temps
+    const baseVolume = isDownbeat ? volume : isSubBeat ? volume * 0.5 : volume * 0.8;
 
-    oscillator.stop(now + 0.05);
-  }, [isMuted, volume, getAudioContext]);
+    // Paramètres de son selon le type
+    const soundParams = {
+      click: {
+        frequencies: isDownbeat ? [1200] : isSubBeat ? [800] : [1000],
+        type: 'sine',
+        duration: 0.05,
+        attack: 0,
+        decay: 0.05
+      },
+      claves: {
+        frequencies: isDownbeat ? [2500, 1800] : isSubBeat ? [2000, 1500] : [2200, 1600],
+        type: 'triangle',
+        duration: 0.08,
+        attack: 0,
+        decay: 0.08
+      },
+      woodblock: {
+        frequencies: isDownbeat ? [800, 1200] : isSubBeat ? [600, 900] : [700, 1000],
+        type: 'square',
+        duration: 0.06,
+        attack: 0,
+        decay: 0.06,
+        filter: 2000
+      },
+      cowbell: {
+        frequencies: isDownbeat ? [800, 540] : isSubBeat ? [700, 470] : [750, 500],
+        type: 'square',
+        duration: 0.15,
+        attack: 0,
+        decay: 0.15
+      },
+      hihat: {
+        noise: true,
+        frequencies: isDownbeat ? [10000] : isSubBeat ? [8000] : [9000],
+        duration: isDownbeat ? 0.1 : 0.05,
+        attack: 0,
+        decay: 0.1,
+        filter: isDownbeat ? 12000 : 10000
+      },
+      rimshot: {
+        frequencies: isDownbeat ? [1800, 900] : isSubBeat ? [1500, 750] : [1600, 800],
+        type: 'triangle',
+        duration: 0.04,
+        attack: 0,
+        decay: 0.04,
+        noise: true,
+        noiseVolume: 0.3
+      }
+    };
+
+    const params = soundParams[soundType] || soundParams.click;
+
+    // Créer le son principal
+    if (params.noise && !params.frequencies) {
+      // Son de bruit pur (hi-hat)
+      const bufferSize = audioContext.sampleRate * params.duration;
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noiseSource = audioContext.createBufferSource();
+      noiseSource.buffer = buffer;
+
+      const noiseGain = audioContext.createGain();
+      const noiseFilter = audioContext.createBiquadFilter();
+      noiseFilter.type = 'highpass';
+      noiseFilter.frequency.value = params.filter || 8000;
+
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(audioContext.destination);
+
+      noiseGain.gain.setValueAtTime(baseVolume, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + params.decay);
+
+      noiseSource.start(now);
+      noiseSource.stop(now + params.duration);
+    } else {
+      // Sons avec oscillateurs
+      params.frequencies.forEach((freq, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = params.type || 'sine';
+        oscillator.frequency.value = freq;
+
+        oscillator.connect(gainNode);
+
+        // Ajouter un filtre si spécifié
+        if (params.filter) {
+          const filter = audioContext.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.value = params.filter;
+          gainNode.connect(filter);
+          filter.connect(audioContext.destination);
+        } else {
+          gainNode.connect(audioContext.destination);
+        }
+
+        // Volume décroissant pour les harmoniques
+        const harmVolume = baseVolume / (index + 1);
+        gainNode.gain.setValueAtTime(harmVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + params.decay);
+
+        oscillator.start(now);
+        oscillator.stop(now + params.duration);
+      });
+
+      // Ajouter du bruit si spécifié (rimshot)
+      if (params.noise && params.noiseVolume) {
+        const bufferSize = audioContext.sampleRate * params.duration;
+        const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noiseSource = audioContext.createBufferSource();
+        noiseSource.buffer = buffer;
+
+        const noiseGain = audioContext.createGain();
+        const noiseFilter = audioContext.createBiquadFilter();
+        noiseFilter.type = 'highpass';
+        noiseFilter.frequency.value = 2000;
+
+        noiseSource.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(audioContext.destination);
+
+        noiseGain.gain.setValueAtTime(baseVolume * params.noiseVolume, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + params.decay);
+
+        noiseSource.start(now);
+        noiseSource.stop(now + params.duration);
+      }
+    }
+  }, [isMuted, volume, getAudioContext, soundType]);
 
   // Calculer le nombre total de subdivisions pour la mesure
   const getTotalSubdivisions = useCallback(() => {
@@ -578,22 +691,22 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         </div>
 
         {/* Contrôles play et options */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={togglePlay}
-            className={`w-12 h-12 rounded-xl shadow-lg transition-all flex items-center justify-center flex-shrink-0 ${
+            className={`w-11 h-11 rounded-xl shadow-lg transition-all flex items-center justify-center flex-shrink-0 ${
               isPlaying
                 ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
             }`}
           >
-            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
 
           <select
             value={subdivision.id}
             onChange={(e) => setSubdivision(SUBDIVISIONS.find(s => s.id === e.target.value))}
-            className="px-3 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
+            className="h-11 px-2 border-2 border-indigo-300 rounded-xl text-sm bg-white font-medium"
           >
             {SUBDIVISIONS.map(sub => (
               <option key={sub.id} value={sub.id}>{sub.symbol} {t(sub.nameKey)}</option>
@@ -601,7 +714,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
           </select>
 
           {/* Sélecteur de signature: numérateur / dénominateur */}
-          <div className="flex items-center gap-1 bg-white border-2 border-indigo-300 rounded-xl px-2 py-1">
+          <div className="flex items-center gap-1 bg-white border-2 border-indigo-300 rounded-xl h-11 px-2">
             <select
               value={beatsPerMeasure}
               onChange={(e) => {
@@ -610,13 +723,13 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 currentBeatRef.current = 0;
                 setCurrentBeat(0);
               }}
-              className="bg-transparent font-bold text-lg text-center focus:outline-none"
+              className="bg-transparent font-bold text-base text-center focus:outline-none w-8"
             >
               {Array.from({length: 32}, (_, i) => i + 1).map(n => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
-            <span className="text-lg font-bold text-gray-400">/</span>
+            <span className="text-base font-bold text-gray-400">/</span>
             <select
               value={beatUnit}
               onChange={(e) => {
@@ -625,7 +738,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 currentBeatRef.current = 0;
                 setCurrentBeat(0);
               }}
-              className="bg-transparent font-bold text-lg text-center focus:outline-none"
+              className="bg-transparent font-bold text-base text-center focus:outline-none w-8"
             >
               {[1, 2, 4, 8, 16, 32].map(n => (
                 <option key={n} value={n}>{n}</option>
@@ -694,15 +807,17 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                 ))}
               </select>
               <span className="text-xs text-green-700">{t('metronome.every')}</span>
-              <select
-                value={autoTempoInterval}
-                onChange={(e) => setAutoTempoInterval(parseInt(e.target.value))}
-                className="px-2 py-1 border border-green-300 rounded-lg text-xs bg-white"
-              >
-                {[10, 15, 20, 30, 45, 60, 90, 120].map(n => (
-                  <option key={n} value={n}>{n}s</option>
-                ))}
-              </select>
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  value={autoTempoInterval}
+                  onChange={(e) => setAutoTempoInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-12 px-1 py-1 border border-green-300 rounded-lg text-xs text-center bg-white"
+                  min="1"
+                  max="600"
+                />
+                <span className="text-xs text-green-700 ml-1">s</span>
+              </div>
               <span className="text-xs text-green-700">{t('metronome.range')}:</span>
               <input
                 type="number"
@@ -954,15 +1069,17 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
                   ))}
                 </select>
                 <span className="text-xs text-green-700">{t('metronome.every')}</span>
-                <select
-                  value={autoTempoInterval}
-                  onChange={(e) => setAutoTempoInterval(parseInt(e.target.value))}
-                  className="flex-1 px-2 py-1.5 border border-green-300 rounded-lg text-sm bg-white"
-                >
-                  {[10, 15, 20, 30, 45, 60, 90, 120].map(n => (
-                    <option key={n} value={n}>{n}s</option>
-                  ))}
-                </select>
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    value={autoTempoInterval}
+                    onChange={(e) => setAutoTempoInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-16 px-2 py-1.5 border border-green-300 rounded-lg text-sm text-center bg-white"
+                    min="1"
+                    max="600"
+                  />
+                  <span className="text-sm text-green-700 ml-1">s</span>
+                </div>
               </div>
               <div className="flex items-center gap-2 text-xs text-green-700">
                 <span>{t('metronome.range')}:</span>

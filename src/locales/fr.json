@@ -182,7 +182,16 @@
     "resetApp": "Réinitialiser l'application",
     "resetWarning": "Cette action supprimera définitivement toutes vos données : exercices, sessions, historique et réglages.",
     "resetButton": "Tout supprimer et réinitialiser",
-    "resetConfirm": "Êtes-vous sûr de vouloir supprimer TOUTES vos données ? Cette action est irréversible."
+    "resetConfirm": "Êtes-vous sûr de vouloir supprimer TOUTES vos données ? Cette action est irréversible.",
+    "metronomeSound": "Son du métronome",
+    "sounds": {
+      "click": "Click",
+      "claves": "Claves",
+      "woodblock": "Wood Block",
+      "cowbell": "Cowbell",
+      "hihat": "Hi-Hat",
+      "rimshot": "Rimshot"
+    }
   },
   "metronome": {
     "title": "Métronome",
@@ -318,5 +327,9 @@
     "next": "Suivant",
     "min": "min",
     "series": "séries"
+  },
+  "timer": {
+    "finished": "Temps écoulé !",
+    "wellDone": "Bien joué ! Continue ta pratique 🎵"
   }
 }

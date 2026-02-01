@@ -182,7 +182,16 @@
     "resetApp": "Reset application",
     "resetWarning": "This will permanently delete all your data: exercises, sessions, history, and settings.",
     "resetButton": "Delete all and reset",
-    "resetConfirm": "Are you sure you want to delete ALL your data? This action is irreversible."
+    "resetConfirm": "Are you sure you want to delete ALL your data? This action is irreversible.",
+    "metronomeSound": "Metronome sound",
+    "sounds": {
+      "click": "Click",
+      "claves": "Claves",
+      "woodblock": "Wood Block",
+      "cowbell": "Cowbell",
+      "hihat": "Hi-Hat",
+      "rimshot": "Rimshot"
+    }
   },
   "metronome": {
     "title": "Metronome",
@@ -318,5 +327,9 @@
     "next": "Next",
     "min": "min",
     "series": "sets"
+  },
+  "timer": {
+    "finished": "Time's up!",
+    "wellDone": "Well done! Keep practicing 🎵"
   }
 }

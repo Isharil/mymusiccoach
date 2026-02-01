@@ -39,7 +39,8 @@ const MyMusicCoach = () => {
     reminderEnabled: true,
     theme: "light",
     userName: "Musician",
-    language: "en"
+    language: "en",
+    metronomeSound: "click"
   });
 
   // Hook de traduction
@@ -79,6 +80,7 @@ const MyMusicCoach = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [timerPaused, setTimerPaused] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerFinished, setTimerFinished] = useState(false); // Notification de fin de chrono
   const [showMetronome, setShowMetronome] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
 
@@ -87,6 +89,7 @@ const MyMusicCoach = () => {
   const timerAnimationRef = useRef(null);
   const wakeLockRef = useRef(null);
   const pausedRemainingRef = useRef(null);
+  const timerFinishedAudioRef = useRef(null);
 
   // Catégories d'exercices disponibles
   const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation"];
@@ -1108,6 +1111,41 @@ const MyMusicCoach = () => {
     }
   }, []);
 
+  // Jouer un son de notification de fin de chrono
+  const playTimerFinishedSound = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Jouer 3 bips courts
+      const playBeep = (startTime, frequency) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.5, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.15);
+      };
+
+      const now = audioContext.currentTime;
+      playBeep(now, 880);       // La5
+      playBeep(now + 0.2, 880); // La5
+      playBeep(now + 0.4, 1760); // La6 (plus aigu pour la fin)
+
+      // Fermer le contexte après les sons
+      setTimeout(() => audioContext.close(), 1000);
+    } catch (e) {
+      console.log('Impossible de jouer le son de notification');
+    }
+  }, []);
+
   // Boucle de mise à jour du timer basée sur timestamps
   const updateTimer = useCallback(() => {
     if (!timerEndTimeRef.current) return;
@@ -1116,19 +1154,24 @@ const MyMusicCoach = () => {
     const remaining = Math.max(0, Math.ceil((timerEndTimeRef.current - now) / 1000));
 
     if (remaining <= 0) {
-      // Temps écoulé
+      // Temps écoulé - notification non-bloquante
       setTimerSeconds(0);
       setTimerActive(false);
       timerEndTimeRef.current = null;
       releaseWakeLock();
-      // Notification de fin
-      alert('⏰ Temps écoulé ! Bien joué ! 🎵');
+
+      // Afficher la notification visuelle et jouer le son
+      setTimerFinished(true);
+      playTimerFinishedSound();
+
+      // Masquer la notification après 5 secondes
+      setTimeout(() => setTimerFinished(false), 5000);
       return;
     }
 
     setTimerSeconds(remaining);
     timerAnimationRef.current = requestAnimationFrame(updateTimer);
-  }, [releaseWakeLock]);
+  }, [releaseWakeLock, playTimerFinishedSound]);
 
   const startTimer = useCallback((exercise) => {
     // Arrêter le timer précédent s'il existe
@@ -1216,7 +1259,10 @@ const MyMusicCoach = () => {
           setTimerActive(false);
           timerEndTimeRef.current = null;
           releaseWakeLock();
-          alert('⏰ Temps écoulé ! Bien joué ! 🎵');
+          // Notification non-bloquante
+          setTimerFinished(true);
+          playTimerFinishedSound();
+          setTimeout(() => setTimerFinished(false), 5000);
         } else {
           setTimerSeconds(remaining);
           // Re-demander le Wake Lock (il peut avoir été perdu)
@@ -2800,6 +2846,37 @@ const MyMusicCoach = () => {
             )}
           </div>
 
+          {/* Section Son du Métronome */}
+          <div className="bg-white rounded-3xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Music className="w-5 h-5 text-purple-600" />
+              {t('settings.metronomeSound')}
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: 'click', icon: '🔔', label: t('settings.sounds.click') },
+                { id: 'claves', icon: '🥢', label: t('settings.sounds.claves') },
+                { id: 'woodblock', icon: '🪵', label: t('settings.sounds.woodblock') },
+                { id: 'cowbell', icon: '🔔', label: t('settings.sounds.cowbell') },
+                { id: 'hihat', icon: '🥁', label: t('settings.sounds.hihat') },
+                { id: 'rimshot', icon: '🥁', label: t('settings.sounds.rimshot') },
+              ].map(sound => (
+                <button
+                  key={sound.id}
+                  onClick={() => setSettings({...settings, metronomeSound: sound.id})}
+                  className={`p-3 rounded-xl border-2 transition-all flex items-center gap-2 ${
+                    settings.metronomeSound === sound.id
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 hover:border-purple-300'
+                  }`}
+                >
+                  <span className="text-xl">{sound.icon}</span>
+                  <span className="text-sm font-medium">{sound.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Section Sauvegarde et Restauration */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">{t('settings.dataBackup')}</h2>
@@ -3428,12 +3505,32 @@ const MyMusicCoach = () => {
                   <p className="text-gray-600">{selectedExercise.description}</p>
                 </div>
 
+                {/* Notification de fin de chrono */}
+                {timerFinished && (
+                  <div className="mb-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-4 shadow-lg animate-pulse">
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-3xl">🎉</span>
+                      <div className="text-center">
+                        <p className="text-white font-bold text-lg">{t('timer.finished')}</p>
+                        <p className="text-white/80 text-sm">{t('timer.wellDone')}</p>
+                      </div>
+                      <span className="text-3xl">🎵</span>
+                    </div>
+                    <button
+                      onClick={() => setTimerFinished(false)}
+                      className="mt-2 w-full bg-white/20 hover:bg-white/30 text-white py-1 rounded-lg text-sm transition-colors"
+                    >
+                      {t('common.close')}
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   {/* Bloc Durée avec Chronomètre */}
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 shadow-md">
                     <Clock className="w-6 h-6 text-purple-600 mb-3" />
                     <p className="text-sm text-gray-600 mb-1">Durée</p>
-                    
+
                     {timerActive || timerPaused || timerSeconds > 0 ? (
                       <>
                         <p className="font-bold text-purple-600 text-3xl mb-2">
@@ -3491,6 +3588,7 @@ const MyMusicCoach = () => {
                   initialTempo={selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120}
                   compact={true}
                   t={t}
+                  soundType={settings.metronomeSound}
                 />
 
                 {selectedExercise.baseTempo > 0 && (
@@ -3716,7 +3814,7 @@ const MyMusicCoach = () => {
           onClick={() => setShowMetronome(false)}
         >
           <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <Metronome onClose={() => setShowMetronome(false)} t={t} />
+            <Metronome onClose={() => setShowMetronome(false)} t={t} soundType={settings.metronomeSound} />
           </div>
         </div>
       )}

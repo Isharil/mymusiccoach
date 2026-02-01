@@ -182,7 +182,16 @@
     "resetApp": "Anwendung zurücksetzen",
     "resetWarning": "Dies löscht dauerhaft alle deine Daten: Übungen, Sessions, Verlauf und Einstellungen.",
     "resetButton": "Alles löschen und zurücksetzen",
-    "resetConfirm": "Bist du sicher, dass du ALLE deine Daten löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden."
+    "resetConfirm": "Bist du sicher, dass du ALLE deine Daten löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "metronomeSound": "Metronom-Klang",
+    "sounds": {
+      "click": "Click",
+      "claves": "Claves",
+      "woodblock": "Holzblock",
+      "cowbell": "Kuhglocke",
+      "hihat": "Hi-Hat",
+      "rimshot": "Rimshot"
+    }
   },
   "metronome": {
     "title": "Metronom",
@@ -318,5 +327,9 @@
     "next": "Weiter",
     "min": "Min",
     "series": "Sätze"
+  },
+  "timer": {
+    "finished": "Zeit abgelaufen!",
+    "wellDone": "Gut gemacht! Übe weiter 🎵"
   }
 }
