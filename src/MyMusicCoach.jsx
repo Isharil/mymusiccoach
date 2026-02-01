@@ -15,11 +15,11 @@ const MyMusicCoach = () => {
   const [storagePersisted, setStoragePersisted] = useState(false);
 
   const [activeTab, setActiveTab] = useState('home');
-  const [activeWorkout, setActiveWorkout] = useState(null);
-  const [workoutProgress, setWorkoutProgress] = useState({});
+  const [activeWorkout, setActiveWorkout, activeWorkoutLoading] = useIndexedDB('mmc_activeWorkout', null);
+  const [workoutProgress, setWorkoutProgress, workoutProgressLoading] = useIndexedDB('mmc_workoutProgress', {});
   const [selectedExercise, setSelectedExercise] = useState(null);
-  const [currentTempo, setCurrentTempo] = useState({});
-  const [exerciseNotes, setExerciseNotes] = useState({}); // Notes/commentaires par exercice
+  const [currentTempo, setCurrentTempo, currentTempoLoading] = useIndexedDB('mmc_currentTempo', {});
+  const [exerciseNotes, setExerciseNotes, exerciseNotesLoading] = useIndexedDB('mmc_exerciseNotes', {}); // Notes/commentaires par exercice
   const [showSchedule, setShowSchedule] = useState(false);
   const [sessionHistory, setSessionHistory, sessionHistoryLoading] = useIndexedDB('mmc_sessionHistory', []);
   const [libraryFilter, setLibraryFilter] = useState('Tous');
@@ -188,7 +188,8 @@ const MyMusicCoach = () => {
   // Vérifier si toutes les données sont chargées
   const isDataLoading = sessionHistoryLoading || settingsLoading ||
     deletedExercisesLoading || archivedWorkoutsLoading || exercisesLoading ||
-    workoutsLoading || weeklyScheduleLoading;
+    workoutsLoading || weeklyScheduleLoading || activeWorkoutLoading ||
+    workoutProgressLoading || currentTempoLoading || exerciseNotesLoading;
 
   // Migration depuis localStorage et demande de persistance au démarrage
   useEffect(() => {
@@ -3750,15 +3751,6 @@ const MyMusicCoach = () => {
 
                   return (
                     <div className="space-y-3">
-                      {/* Rappel si tempo non enregistré */}
-                      {hasUnsavedTempo && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2">
-                          <span className="text-blue-600">💡</span>
-                          <span className="text-sm text-blue-800">
-                            Tempo saisi : <strong>{currentTempo[selectedExercise.id]} BPM</strong> — Il sera enregistré automatiquement
-                          </span>
-                        </div>
-                      )}
                       <div className="flex gap-3">
                         <button
                           onClick={() => {
