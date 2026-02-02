@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
 import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence, clearAppStorage } from './hooks/useIndexedDB';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -12,7 +12,7 @@ import { availableLanguages } from './locales';
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
   const [isAppReady, setIsAppReady] = useState(false);
-  const [storagePersisted, setStoragePersisted] = useState(false);
+  const [, setStoragePersisted] = useState(false);
 
   const [activeTab, setActiveTab] = useState('home');
   const [activeWorkout, setActiveWorkout, activeWorkoutLoading] = useIndexedDB('mmc_activeWorkout', null);
@@ -85,13 +85,23 @@ const MyMusicCoach = () => {
   const [showMetronome, setShowMetronome] = useState(false);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  // Fonction pour afficher un toast (remplace alert())
+  const showToast = useCallback((message, type = 'info', duration = 4000) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, duration);
+  }, []);
 
   // Refs pour le chrono basé sur timestamps (résistant à la mise en veille)
   const timerEndTimeRef = useRef(null);
   const timerAnimationRef = useRef(null);
   const wakeLockRef = useRef(null);
   const pausedRemainingRef = useRef(null);
-  const timerFinishedAudioRef = useRef(null);
 
   // Catégories d'exercices disponibles
   const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation"];
@@ -216,59 +226,115 @@ const MyMusicCoach = () => {
     initializeStorage();
   }, []);
 
-  // Calcul des statistiques réelles
-  const calculateStats = () => {
+  // Calcul des statistiques réelles (memoïsé pour éviter les recalculs)
+  const stats = useMemo(() => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-    // Sessions cette semaine (lundi à dimanche)
-    const startOfWeek = new Date(now);
-    const dayOfWeek = now.getDay();
-    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    startOfWeek.setDate(now.getDate() - diffToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
+    // Sessions des 7 derniers jours
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const sessionsThisWeek = sessionHistory.filter(session => {
-      const sessionDate = new Date(session.date);
-      return sessionDate >= startOfWeek;
+    // Sessions des 28 derniers jours
+    const twentyEightDaysAgo = new Date(now);
+    twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
+
+    // Fonction pour parser une date de session
+    const parseSessionDate = (dateStr) => {
+      if (dateStr.includes('-')) {
+        return new Date(dateStr);
+      } else if (dateStr.includes('/')) {
+        const [day, month, year] = dateStr.split('/');
+        return new Date(year, month - 1, day);
+      }
+      return new Date(dateStr);
+    };
+
+    const sessionsLast7Days = sessionHistory.filter(session => {
+      const sessionDate = parseSessionDate(session.date);
+      return sessionDate >= sevenDaysAgo;
     }).length;
 
-    // Calcul du streak (jours consécutifs)
-    let streak = 0;
+    const sessionsLast28Days = sessionHistory.filter(session => {
+      const sessionDate = parseSessionDate(session.date);
+      return sessionDate >= twentyEightDaysAgo;
+    }).length;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Obtenir les dates uniques triées (du plus récent au plus ancien)
-    const uniqueDates = [...new Set(sessionHistory.map(s => s.date))].sort().reverse();
+    // Fonction pour formater une date locale en YYYY-MM-DD (sans conversion UTC)
+    const toLocalDateStr = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
 
+    // Normaliser toutes les dates au format ISO (YYYY-MM-DD)
+    const normalizeDate = (dateStr) => {
+      if (dateStr.includes('-')) {
+        return dateStr; // Déjà en format ISO
+      } else if (dateStr.includes('/')) {
+        const [day, month, year] = dateStr.split('/');
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      return dateStr;
+    };
+
+    // Obtenir les dates uniques normalisées
+    const uniqueDates = [...new Set(sessionHistory.map(s => normalizeDate(s.date)))];
+
+    // Calcul du streak actuel (jours consécutifs depuis aujourd'hui/hier)
+    let currentStreak = 0;
     if (uniqueDates.length > 0) {
       let checkDate = new Date(today);
+      const todayStr = toLocalDateStr(today);
+      const yesterdayDate = new Date(today);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = toLocalDateStr(yesterdayDate);
 
-      // Si pas de session aujourd'hui, commencer à vérifier depuis hier
-      const todayStr = today.toISOString().split('T')[0];
-      if (!uniqueDates.includes(todayStr)) {
-        checkDate.setDate(checkDate.getDate() - 1);
-      }
-
-      // Compter les jours consécutifs
-      for (let i = 0; i < 365; i++) {
-        const dateStr = checkDate.toISOString().split('T')[0];
-        if (uniqueDates.includes(dateStr)) {
-          streak++;
+      // Si pas de session aujourd'hui ET pas hier, le streak est perdu
+      if (!uniqueDates.includes(todayStr) && !uniqueDates.includes(yesterdayStr)) {
+        currentStreak = 0;
+      } else {
+        // Si pas de session aujourd'hui, commencer à vérifier depuis hier
+        if (!uniqueDates.includes(todayStr)) {
           checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-          break;
+        }
+
+        // Compter les jours consécutifs
+        for (let i = 0; i < 365; i++) {
+          const dateStr = toLocalDateStr(checkDate);
+          if (uniqueDates.includes(dateStr)) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
         }
       }
     }
 
-    return {
-      thisWeek: sessionsThisWeek,
-      streak: streak,
-      totalSessions: sessionHistory.length
-    };
-  };
+    // Nombre de jours avec pratique sur les 7 derniers jours
+    let daysWithPractice = 0;
+    for (let i = 0; i < 7; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = toLocalDateStr(checkDate);
+      if (uniqueDates.includes(dateStr)) {
+        daysWithPractice++;
+      }
+    }
 
-  const stats = calculateStats();
+    return {
+      last7Days: sessionsLast7Days,
+      streak: currentStreak, // Streak actuel pour l'accueil
+      daysWithPractice: daysWithPractice, // Jours pratiqués sur 7 jours pour les stats
+      last28Days: sessionsLast28Days,
+      totalSessions: sessionHistory.length // Gardé pour les badges
+    };
+  }, [sessionHistory]);
 
   // Définition des badges (les noms/descriptions sont traduits via les clés)
   const BADGES = [
@@ -310,8 +376,8 @@ const MyMusicCoach = () => {
     return t('badges.sessionsCompleted', { count: badge.threshold });
   };
 
-  // Calculer les badges obtenus
-  const getEarnedBadges = () => {
+  // Calculer les badges obtenus (memoïsé)
+  const earnedBadges = useMemo(() => {
     return BADGES.filter(badge => {
       if (badge.type === 'streak') {
         return stats.streak >= badge.threshold;
@@ -320,23 +386,20 @@ const MyMusicCoach = () => {
       }
       return false;
     });
-  };
+  }, [stats.streak, stats.totalSessions]);
 
-  // Obtenir le prochain badge à débloquer
-  const getNextBadge = () => {
-    const earnedIds = getEarnedBadges().map(b => b.id);
+  // Obtenir le prochain badge à débloquer (memoïsé)
+  const nextBadge = useMemo(() => {
+    const earnedIds = earnedBadges.map(b => b.id);
     return BADGES.find(badge => !earnedIds.includes(badge.id));
-  };
-
-  const earnedBadges = getEarnedBadges();
-  const nextBadge = getNextBadge();
+  }, [earnedBadges]);
 
   // Fonctions de notification avec Capacitor LocalNotifications
   const isNativePlatform = Capacitor.isNativePlatform();
 
   const requestNotificationPermission = async () => {
     if (!isNativePlatform) {
-      alert('Les notifications sont disponibles uniquement sur l\'application mobile.');
+      showToast('Les notifications sont disponibles uniquement sur l\'application mobile.', 'warning');
       return;
     }
 
@@ -345,7 +408,7 @@ const MyMusicCoach = () => {
 
       if (permStatus.display === 'granted') {
         setNotificationPermission('granted');
-        alert('Les notifications sont déjà autorisées.');
+        showToast('Les notifications sont déjà autorisées.', 'success');
         return;
       }
 
@@ -359,7 +422,7 @@ const MyMusicCoach = () => {
       }
     } catch (error) {
       console.error('Erreur permissions notification:', error);
-      alert('Erreur lors de la demande de permission.');
+      showToast('Erreur lors de la demande de permission.', 'error');
     }
   };
 
@@ -506,7 +569,7 @@ const MyMusicCoach = () => {
         encoding: Encoding.UTF8,
         recursive: true
       });
-      alert(`Fichier sauvegardé dans Téléchargements :\n${fileName}`);
+      showToast(`Fichier sauvegardé : ${fileName}`, 'success');
       setExportModalData(null);
       return true;
     } catch (error) {
@@ -519,11 +582,11 @@ const MyMusicCoach = () => {
           directory: Directory.Documents,
           encoding: Encoding.UTF8
         });
-        alert(`Fichier sauvegardé dans Documents :\n${fileName}`);
+        showToast(`Fichier sauvegardé : ${fileName}`, 'success');
         setExportModalData(null);
         return true;
       } catch (err) {
-        alert('Erreur lors de la sauvegarde. Essayez l\'option Partager.');
+        showToast('Erreur lors de la sauvegarde. Essayez l\'option Partager.', 'error');
         return false;
       }
     }
@@ -552,7 +615,7 @@ const MyMusicCoach = () => {
         return true;
       }
       console.error('Erreur partage:', error);
-      alert('Erreur lors du partage.');
+      showToast('Erreur lors du partage.', 'error');
       return false;
     }
   };
@@ -586,7 +649,7 @@ const MyMusicCoach = () => {
       // Sur iOS PWA/Safari : copier dans le presse-papier (seule méthode fiable)
       try {
         await navigator.clipboard.writeText(dataStr);
-        alert(`Contenu copié dans le presse-papier !\n\nCollez-le dans l'app Fichiers ou Notes pour le sauvegarder sous le nom :\n${fileName}`);
+        showToast(`Contenu copié ! Collez-le dans Fichiers ou Notes sous le nom : ${fileName}`, 'success', 6000);
         return true;
       } catch (error) {
         console.error('Erreur clipboard:', error);
@@ -618,13 +681,13 @@ const MyMusicCoach = () => {
     try {
       const dataToExport = await exportAppData();
       if (!dataToExport) {
-        alert('Erreur lors de la préparation des données');
+        showToast('Erreur lors de la préparation des données', 'error');
         return;
       }
       const fileName = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
       await downloadFile(dataToExport, fileName, 'application/json');
     } catch (error) {
-      alert('Erreur lors de l\'export des données.');
+      showToast('Erreur lors de l\'export des données.', 'error');
       console.error(error);
     }
   };
@@ -638,13 +701,13 @@ const MyMusicCoach = () => {
       try {
         const result = await importAppData(e.target.result);
         if (result.success) {
-          alert('Données importées. La page va se recharger.');
-          window.location.reload();
+          showToast('Données importées. Rechargement...', 'success');
+          setTimeout(() => window.location.reload(), 1500);
         } else {
-          alert(result.message);
+          showToast(result.message, 'error');
         }
       } catch (error) {
-        alert('Fichier invalide.');
+        showToast('Fichier invalide.', 'error');
         console.error(error);
       }
     };
@@ -668,9 +731,10 @@ const MyMusicCoach = () => {
     return weekNumber + 1; // Retourne 1, 2, 3 ou 4
   };
 
-  // Fonction pour obtenir la date d'aujourd'hui au format ISO
+  // Fonction pour obtenir la date d'aujourd'hui au format ISO (heure locale, pas UTC)
   const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   };
 
   // Fonction pour vérifier si la session d'aujourd'hui a été faite (pour l'instrument actuel)
@@ -710,12 +774,13 @@ const MyMusicCoach = () => {
   const saveTempo = (exerciseId) => {
     const tempo = parseInt(currentTempo[exerciseId]);
     if (!tempo || tempo < 20 || tempo > 300) {
-      alert('Veuillez entrer un tempo valide (entre 20 et 300 BPM)');
+      showToast('Veuillez entrer un tempo valide (entre 20 et 300 BPM)', 'warning');
       return;
     }
 
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
+    // Utiliser la date locale (pas UTC)
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     const updatedExercises = exercises.map(ex => {
       if (ex.id === exerciseId) {
@@ -736,7 +801,8 @@ const MyMusicCoach = () => {
 
   const saveSession = (workout) => {
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
+    // Utiliser la date locale (pas UTC) pour éviter les décalages de fuseau horaire
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     
     const workoutExercises = workout.exercises;
@@ -786,7 +852,7 @@ const MyMusicCoach = () => {
   const startEditSession = (session) => {
     const workout = workouts.find(w => w.id === session.workoutId);
     if (!workout) {
-      alert('La session originale n\'existe plus.');
+      showToast('La session originale n\'existe plus.', 'error');
       return;
     }
 
@@ -982,7 +1048,7 @@ const MyMusicCoach = () => {
   const exportWorkout = async (workout) => {
     try {
       if (!workout || !workout.exercises) {
-        alert('Session invalide');
+        showToast('Session invalide', 'error');
         return;
       }
 
@@ -1014,7 +1080,7 @@ const MyMusicCoach = () => {
       const fileName = `mymusiccoach-session-${new Date().toISOString().split('T')[0]}.json`;
       await downloadFile(jsonContent, fileName, 'application/json');
     } catch (error) {
-      alert(`Erreur lors de l'export: ${error.message}`);
+      showToast(`Erreur lors de l'export: ${error.message}`, 'error');
       console.error('Export workout error:', error);
     }
   };
@@ -1024,7 +1090,7 @@ const MyMusicCoach = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.json')) {
-      alert('Le fichier doit être au format JSON');
+      showToast('Le fichier doit être au format JSON', 'error');
       return;
     }
 
@@ -1035,7 +1101,7 @@ const MyMusicCoach = () => {
 
         // Vérifier la structure du fichier
         if (!importData.version || !importData.workout || !importData.exercises) {
-          alert('Format de fichier invalide');
+          showToast('Format de fichier invalide', 'error');
           return;
         }
 
@@ -1081,7 +1147,7 @@ const MyMusicCoach = () => {
 
       } catch (error) {
         console.error('Erreur import:', error);
-        alert('Erreur lors de l\'importation du fichier');
+        showToast('Erreur lors de l\'importation du fichier', 'error');
       }
     };
     reader.readAsText(file);
@@ -1253,12 +1319,6 @@ const MyMusicCoach = () => {
     releaseWakeLock();
   }, [releaseWakeLock]);
 
-  const resetTimer = useCallback((exercise) => {
-    stopTimer();
-    const totalSeconds = parseDuration(exercise.duration);
-    setTimerSeconds(totalSeconds);
-  }, [stopTimer]);
-
   // Reprendre le timer quand l'app redevient visible (après mise en veille)
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -1303,29 +1363,87 @@ const MyMusicCoach = () => {
 
   // ===== GÉNÉRATION DU RAPPORT PDF =====
   const generateProgressReport = async (weeks) => {
-    // Calculer la date limite selon la période choisie
+    // Calculer la date limite selon la période choisie (X derniers jours)
     const now = new Date();
     const cutoffDate = new Date(now);
     cutoffDate.setDate(cutoffDate.getDate() - (weeks * 7));
+    cutoffDate.setHours(0, 0, 0, 0); // Début de journée pour inclure toute la journée
 
     // Filtrer les sessions par période
     const filteredSessions = sessionHistory.filter(session => {
-      // Parser la date de la session (format: "01/02/2024")
-      const parts = session.date.split('/');
-      if (parts.length === 3) {
-        const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
-        return sessionDate >= cutoffDate;
+      // Parser la date de la session (formats: "2025-02-02" ou "02/02/2025")
+      let sessionDate;
+      if (session.date.includes('-')) {
+        // Format ISO: YYYY-MM-DD
+        sessionDate = new Date(session.date);
+      } else if (session.date.includes('/')) {
+        // Format FR: DD/MM/YYYY
+        const parts = session.date.split('/');
+        if (parts.length === 3) {
+          sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        }
       }
-      return false;
+      return sessionDate && sessionDate >= cutoffDate;
     }).reverse();
 
     // Libellé de la période
-    const periodLabel = weeks === 1 ? 'la dernière semaine' :
-                        weeks === 2 ? 'les 2 dernières semaines' :
-                        weeks === 3 ? 'les 3 dernières semaines' :
-                        'le dernier mois';
+    const periodLabel = weeks === 1 ? 'les 7 derniers jours' :
+                        weeks === 2 ? 'les 14 derniers jours' :
+                        weeks === 3 ? 'les 21 derniers jours' :
+                        'les 28 derniers jours';
 
     // Créer le contenu du rapport
+    // Calculer les stats pour la période
+    const sessionsCount = filteredSessions.length;
+    const uniqueDaysWithPractice = new Set(filteredSessions.map(s => s.date)).size;
+
+    // Calculer le meilleur streak sur la période sélectionnée
+    const periodDays = weeks * 7;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const toLocalDateStr = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const normalizeDate = (dateStr) => {
+      if (dateStr.includes('-')) {
+        return dateStr;
+      } else if (dateStr.includes('/')) {
+        const [day, month, year] = dateStr.split('/');
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      return dateStr;
+    };
+
+    const uniqueDates = [...new Set(sessionHistory.map(s => normalizeDate(s.date)))];
+
+    // Créer un tableau des jours de la période avec un booléen pour chaque jour pratiqué
+    const periodDaysSessions = [];
+    for (let i = 0; i < periodDays; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = toLocalDateStr(checkDate);
+      periodDaysSessions.push(uniqueDates.includes(dateStr));
+    }
+
+    // Trouver le meilleur streak sur la période
+    let bestStreakInPeriod = 0;
+    let currentStreakCount = 0;
+    for (let i = 0; i < periodDaysSessions.length; i++) {
+      if (periodDaysSessions[i]) {
+        currentStreakCount++;
+        if (currentStreakCount > bestStreakInPeriod) {
+          bestStreakInPeriod = currentStreakCount;
+        }
+      } else {
+        currentStreakCount = 0;
+      }
+    }
+
     const reportData = {
       userName: settings.userName,
       date: new Date().toLocaleDateString('fr-FR', {
@@ -1336,15 +1454,25 @@ const MyMusicCoach = () => {
       }),
       periodLabel,
       stats: {
-        thisWeek: stats.thisWeek,
-        streak: stats.streak,
-        totalSessions: filteredSessions.length
+        sessionsCount,
+        streak: bestStreakInPeriod,
+        daysWithPractice: uniqueDaysWithPractice
       },
       recentSessions: filteredSessions,
       exercisesWithProgress: exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0)
     };
 
     setShowExportModal(false);
+
+    // Helper pour formater les dates
+    const formatDate = (dateStr) => {
+      if (dateStr.includes('-')) {
+        // Format ISO: YYYY-MM-DD -> DD/MM/YYYY
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      return dateStr; // Déjà au bon format
+    };
 
     // Créer le document HTML pour le PDF
     const htmlContent = `
@@ -1549,19 +1677,19 @@ const MyMusicCoach = () => {
         </div>
 
         <div class="section">
-          <h2>📈 Statistiques Globales</h2>
+          <h2>📈 Statistiques de la période</h2>
           <div class="stats-grid">
             <div class="stat-card">
-              <h3>${reportData.stats.thisWeek}</h3>
-              <p>Sessions<br/>cette semaine</p>
+              <h3>${reportData.stats.sessionsCount}</h3>
+              <p>Sessions<br/>pratiquées</p>
             </div>
             <div class="stat-card">
               <h3>${reportData.stats.streak}</h3>
-              <p>Jours<br/>consécutifs</p>
+              <p>Meilleur streak<br/>(jours d'affilée)</p>
             </div>
             <div class="stat-card">
-              <h3>${reportData.stats.totalSessions}</h3>
-              <p>Sessions<br/>totales</p>
+              <h3>${reportData.stats.daysWithPractice}</h3>
+              <p>Jours<br/>avec pratique</p>
             </div>
           </div>
         </div>
@@ -1581,7 +1709,7 @@ const MyMusicCoach = () => {
             <tbody>
               ${reportData.recentSessions.map(session => `
                 <tr>
-                  <td>${session.date} ${session.time}</td>
+                  <td>${formatDate(session.date)} ${session.time}</td>
                   <td><strong>${session.workoutName}</strong></td>
                   <td><span class="badge badge-success">${session.completed}</span></td>
                   <td>${session.skipped > 0 ? `<span class="badge badge-warning">${session.skipped}</span>` : '-'}</td>
@@ -1605,7 +1733,7 @@ const MyMusicCoach = () => {
               const exerciseName = exercise ? exercise.name : 'Exercice inconnu';
               return `
               <div class="observation-card">
-                <div class="date">📅 ${session.date} ${session.time} — ${session.workoutName}</div>
+                <div class="date">📅 ${formatDate(session.date)} ${session.time} — ${session.workoutName}</div>
                 <div class="exercise-name">🎵 ${exerciseName}</div>
                 <div class="note-text">${note}</div>
               </div>
@@ -1891,8 +2019,8 @@ const MyMusicCoach = () => {
           {/* Statistiques rapides avec flammes */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-              <p className="text-3xl font-bold text-purple-600 mb-1">{stats.thisWeek}</p>
-              <p className="text-xs text-gray-600">{t('home.sessionsThisWeek')}</p>
+              <p className="text-3xl font-bold text-purple-600 mb-1">{stats.last7Days}</p>
+              <p className="text-xs text-gray-600">{t('home.sessionsLast7Days')}</p>
             </div>
             <div className={`rounded-2xl p-5 shadow-lg text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white'}`}>
               <div className="flex items-center justify-center gap-1">
@@ -1902,8 +2030,8 @@ const MyMusicCoach = () => {
               <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600'}`}>{t('home.consecutiveDays')}</p>
             </div>
             <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">{stats.totalSessions}</p>
-              <p className="text-xs text-gray-600">{t('home.totalSessions')}</p>
+              <p className="text-3xl font-bold text-blue-600 mb-1">{stats.last28Days}</p>
+              <p className="text-xs text-gray-600">{t('home.sessionsLast28Days')}</p>
             </div>
           </div>
 
@@ -2565,19 +2693,16 @@ const MyMusicCoach = () => {
 
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-purple-700 mb-1">{stats.thisWeek}</p>
-              <p className="text-xs text-purple-800">{t('stats.sessionsThisWeek')}</p>
+              <p className="text-3xl font-bold text-purple-700 mb-1">{stats.last7Days}</p>
+              <p className="text-xs text-purple-800">{t('stats.sessionsLast7Days')}</p>
             </div>
-            <div className={`rounded-2xl p-5 text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-gradient-to-br from-orange-100 to-orange-200'}`}>
-              <div className="flex items-center justify-center gap-1">
-                {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
-                <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-700'}`}>{stats.streak}</p>
-              </div>
-              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-orange-800'}`}>{t('stats.currentStreak')}</p>
+            <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-5 text-center">
+              <p className="text-3xl font-bold text-green-700 mb-1">{stats.daysWithPractice}/7</p>
+              <p className="text-xs text-green-800">{t('stats.daysPracticed')}</p>
             </div>
             <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-blue-700 mb-1">{stats.totalSessions}</p>
-              <p className="text-xs text-blue-800">{t('stats.totalSessions')}</p>
+              <p className="text-3xl font-bold text-blue-700 mb-1">{stats.last28Days}</p>
+              <p className="text-xs text-blue-800">{t('stats.sessionsLast28Days')}</p>
             </div>
           </div>
 
@@ -2997,6 +3122,26 @@ const MyMusicCoach = () => {
             </div>
           </div>
 
+          {/* À propos */}
+          <div className="bg-white rounded-3xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">{settings.language === 'fr' ? 'À propos' : 'About'}</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2">
+                <span className="text-gray-600">{settings.language === 'fr' ? 'Version' : 'Version'}</span>
+                <span className="font-medium text-gray-900">1.0.0</span>
+              </div>
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="w-full flex items-center justify-between py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <span className="text-gray-700 font-medium">
+                  {settings.language === 'fr' ? 'Politique de confidentialité' : 'Privacy Policy'}
+                </span>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+          </div>
+
           {/* Zone de réinitialisation */}
           <div className="bg-white rounded-3xl shadow-lg p-6 border-2 border-red-200">
             <h3 className="text-lg font-bold text-red-600 mb-4">{t('settings.resetApp')}</h3>
@@ -3252,7 +3397,7 @@ const MyMusicCoach = () => {
                   };
 
                   if (!data.name || !data.duration || !data.sets) {
-                    alert('Veuillez remplir tous les champs obligatoires');
+                    showToast('Veuillez remplir tous les champs obligatoires', 'warning');
                     return;
                   }
 
@@ -3407,7 +3552,7 @@ const MyMusicCoach = () => {
                   };
 
                   if (!data.name || !data.duration || !data.category) {
-                    alert('Veuillez remplir tous les champs obligatoires');
+                    showToast('Veuillez remplir tous les champs obligatoires', 'warning');
                     return;
                   }
 
@@ -4046,30 +4191,122 @@ const MyMusicCoach = () => {
                 onClick={() => generateProgressReport(1)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl font-medium text-purple-800 transition-all flex items-center justify-between"
               >
-                <span>📅 Dernière semaine</span>
-                <span className="text-purple-500 text-sm">7 jours</span>
+                <span>📅 7 derniers jours</span>
+                <span className="text-purple-500 text-sm">1 semaine</span>
               </button>
               <button
                 onClick={() => generateProgressReport(2)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl font-medium text-blue-800 transition-all flex items-center justify-between"
               >
-                <span>📅 2 dernières semaines</span>
-                <span className="text-blue-500 text-sm">14 jours</span>
+                <span>📅 14 derniers jours</span>
+                <span className="text-blue-500 text-sm">2 semaines</span>
               </button>
               <button
                 onClick={() => generateProgressReport(3)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl font-medium text-green-800 transition-all flex items-center justify-between"
               >
-                <span>📅 3 dernières semaines</span>
-                <span className="text-green-500 text-sm">21 jours</span>
+                <span>📅 21 derniers jours</span>
+                <span className="text-green-500 text-sm">3 semaines</span>
               </button>
               <button
                 onClick={() => generateProgressReport(4)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-xl font-medium text-orange-800 transition-all flex items-center justify-between"
               >
-                <span>📅 Dernier mois</span>
-                <span className="text-orange-500 text-sm">30 jours</span>
+                <span>📅 28 derniers jours</span>
+                <span className="text-orange-500 text-sm">4 semaines</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Privacy Policy */}
+      {showPrivacyPolicy && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowPrivacyPolicy(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full max-h-[85vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-3xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">
+                  {settings.language === 'fr' ? '🔒 Politique de confidentialité' : '🔒 Privacy Policy'}
+                </h2>
+                <button
+                  onClick={() => setShowPrivacyPolicy(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4 text-sm text-gray-700">
+              {settings.language === 'fr' ? (
+                <>
+                  <p className="text-gray-500 text-xs">Dernière mise à jour : Février 2025</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">1. Données collectées</h3>
+                  <p>MyMusicCoach ne collecte <strong>aucune donnée personnelle</strong> et n'envoie aucune information à des serveurs externes.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">2. Stockage local</h3>
+                  <p>Toutes vos données (exercices, sessions, paramètres) sont stockées <strong>uniquement sur votre appareil</strong> dans la mémoire locale du navigateur (IndexedDB).</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">3. Données stockées</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Vos exercices personnalisés</li>
+                    <li>Vos sessions d'entraînement</li>
+                    <li>Votre historique de progression</li>
+                    <li>Vos préférences (nom, langue, rappels)</li>
+                    <li>Les tempos enregistrés</li>
+                  </ul>
+
+                  <h3 className="font-bold text-gray-900 text-base">4. Partage de données</h3>
+                  <p>Aucune donnée n'est partagée avec des tiers. La fonction d'export génère un fichier que <strong>vous seul contrôlez</strong>.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">5. Notifications</h3>
+                  <p>Les notifications de rappel sont gérées localement sur votre appareil. Aucune information n'est transmise.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">6. Suppression des données</h3>
+                  <p>Vous pouvez supprimer toutes vos données à tout moment via l'option "Réinitialiser l'application" dans les paramètres.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">7. Contact</h3>
+                  <p>Pour toute question concernant cette politique, contactez-nous à : <span className="text-purple-600">contact@mymusiccoach.app</span></p>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-500 text-xs">Last updated: February 2025</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">1. Data Collection</h3>
+                  <p>MyMusicCoach does <strong>not collect any personal data</strong> and does not send any information to external servers.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">2. Local Storage</h3>
+                  <p>All your data (exercises, sessions, settings) is stored <strong>only on your device</strong> in the browser's local storage (IndexedDB).</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">3. Stored Data</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Your custom exercises</li>
+                    <li>Your practice sessions</li>
+                    <li>Your progress history</li>
+                    <li>Your preferences (name, language, reminders)</li>
+                    <li>Recorded tempos</li>
+                  </ul>
+
+                  <h3 className="font-bold text-gray-900 text-base">4. Data Sharing</h3>
+                  <p>No data is shared with third parties. The export function generates a file that <strong>only you control</strong>.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">5. Notifications</h3>
+                  <p>Reminder notifications are handled locally on your device. No information is transmitted.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">6. Data Deletion</h3>
+                  <p>You can delete all your data at any time using the "Reset Application" option in settings.</p>
+
+                  <h3 className="font-bold text-gray-900 text-base">7. Contact</h3>
+                  <p>For any questions about this policy, contact us at: <span className="text-purple-600">contact@mymusiccoach.app</span></p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -4288,6 +4525,26 @@ const MyMusicCoach = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toasts */}
+      {toasts.length > 0 && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] space-y-2 max-w-sm w-full px-4">
+          {toasts.map(toast => (
+            <div
+              key={toast.id}
+              className={`px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-fade-in ${
+                toast.type === 'success' ? 'bg-green-500 text-white' :
+                toast.type === 'error' ? 'bg-red-500 text-white' :
+                toast.type === 'warning' ? 'bg-amber-500 text-white' :
+                'bg-gray-800 text-white'
+              }`}
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+            >
+              {toast.message}
+            </div>
+          ))}
         </div>
       )}
 

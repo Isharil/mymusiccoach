@@ -10,7 +10,11 @@ const APP_KEYS = [
   'mmc_settings',
   'mmc_weeklySchedule',
   'mmc_deletedExercises',
-  'mmc_archivedWorkouts'
+  'mmc_archivedWorkouts',
+  'mmc_activeWorkout',
+  'mmc_workoutProgress',
+  'mmc_currentTempo',
+  'mmc_exerciseNotes'
 ];
 
 /**

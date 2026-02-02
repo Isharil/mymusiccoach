@@ -56,7 +56,8 @@ src/
 ├── main.jsx            # Rendu ReactDOM
 ├── index.css           # Styles Tailwind
 └── hooks/
-    └── useLocalStorage.js  # Hook de persistance des données
+    ├── useIndexedDB.js     # Hook de persistance des données (IndexedDB)
+    └── useTranslation.js   # Hook de traduction multi-langues
 ```
 
 ## Technologies
@@ -65,7 +66,8 @@ src/
 - **Vite 7** - Build tool
 - **Tailwind CSS 3** - Styles
 - **Lucide React** - Icônes
-- **localStorage** - Persistance des données
+- **IndexedDB** - Persistance des données (via idb-keyval)
+- **Capacitor 6** - Application mobile native
 
 ## Installation
 
