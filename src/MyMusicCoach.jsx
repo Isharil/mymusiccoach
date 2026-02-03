@@ -2006,7 +2006,7 @@ const MyMusicCoach = () => {
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
             >
               <div className="bg-white/20 rounded-xl p-3">
-                <span className="text-2xl">🎵</span>
+                <img src="/metronome.svg" alt="Metronome" className="w-7 h-7 invert" />
               </div>
               <div className="text-left">
                 <p className="font-bold text-lg">{t('metronome.title')}</p>
@@ -3062,7 +3062,7 @@ const MyMusicCoach = () => {
           {/* Section Son du Métronome */}
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Music className="w-5 h-5 text-purple-600" />
+              <img src="/metronome.svg" alt="Metronome" className="w-5 h-5" style={{filter: 'invert(27%) sepia(95%) saturate(4925%) hue-rotate(258deg) brightness(87%) contrast(97%)'}} />
               {t('settings.metronomeSound')}
             </h2>
             <div className="grid grid-cols-2 gap-3">

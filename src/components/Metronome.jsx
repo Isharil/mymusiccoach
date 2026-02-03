@@ -605,7 +605,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 border-2 border-indigo-200">
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-bold text-indigo-900 flex items-center gap-2">
-            <span className="text-lg">🎵</span> {t('metronome.title')}
+            <img src="/metronome.svg" alt="" className="w-5 h-5" style={{filter: 'invert(17%) sepia(87%) saturate(2844%) hue-rotate(236deg) brightness(85%) contrast(102%)'}} /> {t('metronome.title')}
           </h4>
           <button
             onClick={() => setIsMuted(!isMuted)}
@@ -850,7 +850,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold flex items-center gap-2">
-            🎵 {t('metronome.title')}
+            <img src="/metronome.svg" alt="" className="w-6 h-6 invert" /> {t('metronome.title')}
           </h2>
           {onClose && (
             <button
