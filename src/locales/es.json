@@ -190,6 +190,9 @@
     "resetWarning": "Esto eliminará permanentemente todos tus datos: ejercicios, sesiones, historial y ajustes.",
     "resetButton": "Eliminar todo y restablecer",
     "resetConfirm": "¿Estás seguro de que quieres eliminar TODOS tus datos? Esta acción es irreversible.",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
     "metronomeSound": "Sonido del metrónomo",
     "sounds": {
       "click": "Click",
@@ -255,7 +258,8 @@
     "rhythm": "Ritmo",
     "theory": "Teoría",
     "pieces": "Piezas",
-    "improvisation": "Improvisación"
+    "improvisation": "Improvisación",
+    "earTraining": "Entrenamiento auditivo"
   },
   "difficulties": {
     "beginner": "Principiante",

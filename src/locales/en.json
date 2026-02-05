@@ -190,6 +190,9 @@
     "resetWarning": "This will permanently delete all your data: exercises, sessions, history, and settings.",
     "resetButton": "Delete all and reset",
     "resetConfirm": "Are you sure you want to delete ALL your data? This action is irreversible.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
     "metronomeSound": "Metronome sound",
     "sounds": {
       "click": "Click",
@@ -255,7 +258,8 @@
     "rhythm": "Rhythm",
     "theory": "Theory",
     "pieces": "Pieces",
-    "improvisation": "Improvisation"
+    "improvisation": "Improvisation",
+    "earTraining": "Ear Training"
   },
   "difficulties": {
     "beginner": "Beginner",

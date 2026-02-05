@@ -190,6 +190,9 @@
     "resetWarning": "Dies löscht dauerhaft alle deine Daten: Übungen, Sessions, Verlauf und Einstellungen.",
     "resetButton": "Alles löschen und zurücksetzen",
     "resetConfirm": "Bist du sicher, dass du ALLE deine Daten löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "theme": "Design",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
     "metronomeSound": "Metronom-Klang",
     "sounds": {
       "click": "Click",
@@ -255,7 +258,8 @@
     "rhythm": "Rhythmus",
     "theory": "Theorie",
     "pieces": "Stücke",
-    "improvisation": "Improvisation"
+    "improvisation": "Improvisation",
+    "earTraining": "Gehörbildung"
   },
   "difficulties": {
     "beginner": "Anfänger",

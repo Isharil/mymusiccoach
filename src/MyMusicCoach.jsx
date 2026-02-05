@@ -55,7 +55,8 @@ const MyMusicCoach = () => {
     'Rythme': 'rhythm',
     'Théorie': 'theory',
     'Morceaux': 'pieces',
-    'Improvisation': 'improvisation'
+    'Improvisation': 'improvisation',
+    'Oreille': 'earTraining'
   };
   const translateCategory = (cat) => t(`categories.${categoryKeys[cat] || cat.toLowerCase()}`);
 
@@ -104,7 +105,7 @@ const MyMusicCoach = () => {
   const pausedRemainingRef = useRef(null);
 
   // Catégories d'exercices disponibles
-  const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation"];
+  const exerciseCategories = ["Technique", "Gammes", "Rythme", "Théorie", "Morceaux", "Improvisation", "Oreille"];
 
   // Exercices par défaut
   const defaultExercises = [
@@ -558,6 +559,21 @@ const MyMusicCoach = () => {
 
     updateReminder();
   }, [settings.notifications, settings.practiceReminder, settings.reminderEnabled]);
+
+  // Appliquer le thème sombre
+  useEffect(() => {
+    const isDark = settings.theme === 'dark';
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', isDark ? '#1f2937' : '#7c3aed');
+    }
+    localStorage.setItem('mmc_theme', settings.theme);
+  }, [settings.theme]);
 
   // Sauvegarder dans le dossier Downloads (Android natif)
   const saveToDownloads = async (dataStr, fileName) => {
@@ -1804,32 +1820,32 @@ const MyMusicCoach = () => {
   // Écran de chargement pendant l'initialisation
   if (!isAppReady || isDataLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">{t('messages.loading')}</p>
+          <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">{t('messages.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 pb-20">
       {/* Page d'accueil */}
       {activeTab === 'home' && !activeWorkout && (
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               {t('home.greeting', { name: settings.userName })} 👋
             </h1>
-            <p className="text-gray-600 flex items-center justify-center gap-2">
+            <p className="text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
               <span className="text-2xl">🎵</span>
               {t('home.ready')}
             </p>
           </div>
 
           {/* Section Session du Jour */}
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xl font-bold">{t('home.todaySession')}</h2>
@@ -1849,21 +1865,21 @@ const MyMusicCoach = () => {
               {getTodayWorkout() ? (
                 <div className="space-y-4">
                   {isTodaySessionCompleted() && (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex items-center justify-between">
+                    <div className="bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700 rounded-xl p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="bg-green-500 rounded-full p-2">
                           <Check className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-bold text-green-900">{t('home.sessionCompleted')}</p>
-                          <p className="text-sm text-green-700 flex items-center gap-1">
+                          <p className="font-bold text-green-900 dark:text-green-200">{t('home.sessionCompleted')}</p>
+                          <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
                             {t('home.excellentWork')} 🎵
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => startEditSession(getTodayCompletedSession())}
-                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-lg transition-colors"
                         title="Modifier cette session"
                       >
                         <Edit2 className="w-5 h-5" />
@@ -1871,11 +1887,11 @@ const MyMusicCoach = () => {
                     </div>
                   )}
                   
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5">
-                    <h3 className="font-bold text-gray-900 text-lg mb-2">
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl p-5">
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg mb-2">
                       {getTodayWorkout().name}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         <span>{getTodayWorkout().duration}</span>
@@ -1912,23 +1928,23 @@ const MyMusicCoach = () => {
 
                   {/* Aperçu des exercices */}
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-gray-700">{t('home.sessionExercises')}</p>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('home.sessionExercises')}</p>
                     {getTodayWorkout().exercises.map((exId) => {
                       const exercise = exercises.find(e => e.id === exId);
                       return exercise ? (
-                        <div key={exId} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                        <div key={exId} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            {exercise.type === 'video' && <Video className="w-4 h-4 text-purple-600" />}
-                            {exercise.type === 'file' && <FileText className="w-4 h-4 text-blue-600" />}
+                            {exercise.type === 'video' && <Video className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                            {exercise.type === 'file' && <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{exercise.name}</p>
-                              <p className="text-xs text-gray-500">{exercise.duration}</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{exercise.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{exercise.duration}</p>
                             </div>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full ${
-                            exercise.difficulty === 'Débutant' ? 'bg-green-100 text-green-700' :
-                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
+                            exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
+                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' :
+                            'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
                           }`}>
                             {translateDifficulty(exercise.difficulty)}
                           </span>
@@ -1939,12 +1955,15 @@ const MyMusicCoach = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600 font-medium mb-2">{t('home.noSession')}</p>
-                  <p className="text-sm text-gray-500 mb-4">{t('home.restOrCustomize')}</p>
+                  <Calendar className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 font-medium mb-2">{t('home.noSession')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('home.restOrCustomize')}</p>
                   <button
-                    onClick={() => setShowSchedule(true)}
-                    className="bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors"
+                    onClick={() => {
+                      setViewingWeek(getCurrentWeekNumber());
+                      setShowSchedule(true);
+                    }}
+                    className="bg-purple-600 dark:bg-purple-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                   >
                     {t('home.viewSchedule')}
                   </button>
@@ -1954,9 +1973,9 @@ const MyMusicCoach = () => {
           </div>
 
           {/* Planning hebdomadaire compact */}
-          <div className="bg-white rounded-3xl shadow-lg p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 {t('home.weekOf', { current: getCurrentWeekNumber() })}
               </h2>
               <button
@@ -1964,7 +1983,7 @@ const MyMusicCoach = () => {
                   setViewingWeek(getCurrentWeekNumber());
                   setShowSchedule(true);
                 }}
-                className="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
+                className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:hover:text-purple-300 flex items-center gap-1"
               >
                 {t('home.edit')}
                 <ChevronRight className="w-4 h-4" />
@@ -1982,15 +2001,15 @@ const MyMusicCoach = () => {
                   <div key={idx} className="text-center">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mb-1 ${
                       isToday 
-                        ? 'bg-purple-600 text-white ring-4 ring-purple-200' 
-                        : hasWorkout 
-                          ? 'bg-purple-100 text-purple-700' 
-                          : 'bg-gray-100 text-gray-400'
+                        ? 'bg-purple-600 text-white ring-4 ring-purple-200 dark:ring-purple-700'
+                        : hasWorkout
+                          ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
                     }`}>
                       {day}
                     </div>
                     {hasWorkout && !isToday && (
-                      <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mx-auto"></div>
+                      <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-400 rounded-full mx-auto"></div>
                     )}
                   </div>
                 );
@@ -1999,8 +2018,8 @@ const MyMusicCoach = () => {
           </div>
 
           {/* Outils */}
-          <div className="bg-white rounded-3xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">{t('home.tools')}</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{t('home.tools')}</h2>
             <button
               onClick={() => setShowMetronome(true)}
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
@@ -2018,56 +2037,56 @@ const MyMusicCoach = () => {
 
           {/* Statistiques rapides avec flammes */}
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-              <p className="text-3xl font-bold text-purple-600 mb-1">{stats.last7Days}</p>
-              <p className="text-xs text-gray-600">{t('home.sessionsLast7Days')}</p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg text-center">
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{stats.last7Days}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">{t('home.sessionsLast7Days')}</p>
             </div>
-            <div className={`rounded-2xl p-5 shadow-lg text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white'}`}>
+            <div className={`rounded-2xl p-5 shadow-lg text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white dark:bg-gray-800'}`}>
               <div className="flex items-center justify-center gap-1">
                 {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
                 <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-500'}`}>{stats.streak}</p>
               </div>
-              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600'}`}>{t('home.consecutiveDays')}</p>
+              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600 dark:text-gray-400'}`}>{t('home.consecutiveDays')}</p>
             </div>
-            <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">{stats.last28Days}</p>
-              <p className="text-xs text-gray-600">{t('home.sessionsLast28Days')}</p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg text-center">
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{stats.last28Days}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">{t('home.sessionsLast28Days')}</p>
             </div>
           </div>
 
           {/* Badges et progression */}
           {(earnedBadges.length > 0 || nextBadge) && (
-            <div className="bg-white rounded-3xl shadow-lg p-5">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-5">
               {earnedBadges.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-gray-700 mb-3">{t('home.earnedBadges')}</h3>
+                  <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">{t('home.earnedBadges')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {earnedBadges.map(badge => (
                       <div
                         key={badge.id}
-                        className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl px-3 py-2 flex items-center gap-2"
+                        className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/40 dark:to-yellow-800/40 rounded-xl px-3 py-2 flex items-center gap-2"
                         title={getBadgeDescription(badge)}
                       >
                         <span className="text-lg">{badge.icon}</span>
-                        <span className="text-xs font-medium text-yellow-800">{getBadgeName(badge)}</span>
+                        <span className="text-xs font-medium text-yellow-800 dark:text-yellow-300">{getBadgeName(badge)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
               {nextBadge && (
-                <div className={earnedBadges.length > 0 ? 'pt-3 border-t border-gray-100' : ''}>
+                <div className={earnedBadges.length > 0 ? 'pt-3 border-t border-gray-100 dark:border-gray-700' : ''}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-lg opacity-40">{nextBadge.icon}</span>
                       <div>
-                        <p className="text-xs font-medium text-gray-500">{t('home.nextBadge')}</p>
-                        <p className="text-sm font-bold text-gray-700">{getBadgeName(nextBadge)}</p>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('home.nextBadge')}</p>
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{getBadgeName(nextBadge)}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">{getBadgeDescription(nextBadge)}</p>
-                      <p className="text-sm font-bold text-purple-600">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{getBadgeDescription(nextBadge)}</p>
+                      <p className="text-sm font-bold text-purple-600 dark:text-purple-400">
                         {nextBadge.type === 'streak'
                           ? `${stats.streak}/${nextBadge.threshold} ${t('home.days')}`
                           : `${stats.totalSessions}/${nextBadge.threshold} ${t('home.sessions')}`
@@ -2076,7 +2095,7 @@ const MyMusicCoach = () => {
                     </div>
                   </div>
                   {/* Barre de progression */}
-                  <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all"
                       style={{
@@ -2092,9 +2111,9 @@ const MyMusicCoach = () => {
           )}
 
           {/* Tous les workouts disponibles */}
-          <div className="bg-white rounded-3xl shadow-lg p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 {showArchive ? t('home.archivedSessions') : t('home.allMySessions')}
               </h2>
               <div className="flex items-center gap-2">
@@ -2102,7 +2121,7 @@ const MyMusicCoach = () => {
                   <>
                     <button
                       onClick={() => setShowArchive(true)}
-                      className="text-gray-600 text-sm font-medium hover:text-gray-700 flex items-center gap-1 relative"
+                      className="text-gray-600 dark:text-gray-400 text-sm font-medium hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 relative"
                     >
                       <Archive className="w-4 h-4" />
                       <span>{t('home.archive')}</span>
@@ -2114,7 +2133,7 @@ const MyMusicCoach = () => {
                     </button>
                     <button
                       onClick={() => setShowImportModal(true)}
-                      className="text-blue-600 text-sm font-medium hover:text-blue-700 flex items-center gap-1"
+                      className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
                     >
                       <FileText className="w-4 h-4" />
                       {t('home.import')}
@@ -2124,7 +2143,7 @@ const MyMusicCoach = () => {
                 {showArchive ? (
                   <button
                     onClick={() => setShowArchive(false)}
-                    className="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
+                    className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:hover:text-purple-300 flex items-center gap-1"
                   >
                     ← {t('home.back')}
                   </button>
@@ -2134,7 +2153,7 @@ const MyMusicCoach = () => {
                       setEditingWorkout(null);
                       setShowCreateWorkout(true);
                     }}
-                    className="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
+                    className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:hover:text-purple-300 flex items-center gap-1"
                   >
                     <Plus className="w-4 h-4" />
                     {t('home.create')}
@@ -2149,19 +2168,19 @@ const MyMusicCoach = () => {
                 {workouts.map(workout => (
                   <div 
                     key={workout.id}
-                    className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 hover:shadow-md transition-shadow relative"
+                    className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl p-4 hover:shadow-md transition-shadow relative"
                   >
                     <div 
                       onClick={() => startWorkout(workout)}
                       className="cursor-pointer"
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-gray-900">{workout.name}</h3>
-                        <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100">{workout.name}</h3>
+                        <span className="text-xs bg-purple-200 dark:bg-purple-800/40 text-purple-800 dark:text-purple-300 px-2 py-1 rounded-full">
                           {workout.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 pb-8">
+                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 pb-8">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           <span>{workout.duration}</span>
@@ -2180,7 +2199,7 @@ const MyMusicCoach = () => {
                           e.stopPropagation();
                           exportWorkout(workout);
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all border border-blue-200"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-all border border-blue-200 dark:border-blue-700"
                       >
                         <FileText className="w-3.5 h-3.5" />
                         <span>{t('home.export')}</span>
@@ -2190,7 +2209,7 @@ const MyMusicCoach = () => {
                           e.stopPropagation();
                           deleteWorkout(workout.id);
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all border border-orange-200"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-lg transition-all border border-orange-200 dark:border-orange-700"
                       >
                         <Archive className="w-3.5 h-3.5" />
                         <span>{t('home.archiveAction')}</span>
@@ -2206,23 +2225,23 @@ const MyMusicCoach = () => {
               <div className="space-y-3">
                 {archivedWorkouts.length === 0 ? (
                   <div className="text-center py-12">
-                    <Archive className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium">{t('home.emptyArchive')}</p>
-                    <p className="text-sm text-gray-400 mt-2">{t('home.archivedAppearHere')}</p>
+                    <Archive className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">{t('home.emptyArchive')}</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('home.archivedAppearHere')}</p>
                   </div>
                 ) : (
                   archivedWorkouts.map(workout => (
                     <div
                       key={workout.id}
-                      className="bg-gray-50 rounded-2xl p-5 shadow-md border-2 border-gray-200"
+                      className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-5 shadow-md border-2 border-gray-200 dark:border-gray-700"
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-gray-700">{workout.name}</h3>
-                        <span className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded-full">
+                        <h3 className="font-bold text-gray-700 dark:text-gray-300">{workout.name}</h3>
+                        <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full">
                           {workout.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           <span>{workout.duration}</span>
@@ -2257,7 +2276,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Planning */}
       {showSchedule && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
+        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <button 
@@ -2318,19 +2337,19 @@ const MyMusicCoach = () => {
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-br from-purple-50 to-blue-50" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
             {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map(day => {
               const isToday = getCurrentDay() === day && getCurrentWeekNumber() === viewingWeek;
               const weekKey = `semaine${viewingWeek}`;
               const workoutId = weeklySchedule[weekKey][day];
               
               return (
-                <div key={day} className={`border-2 rounded-2xl p-4 bg-white shadow-md ${
-                  isToday ? 'border-purple-600 ring-2 ring-purple-200' : 'border-gray-200'
+                <div key={day} className={`border-2 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-md ${
+                  isToday ? 'border-purple-600 ring-2 ring-purple-200 dark:ring-purple-700' : 'border-gray-200 dark:border-gray-700'
                 }`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className={`font-bold capitalize text-base ${isToday ? 'text-purple-600' : 'text-gray-900'}`}>
+                      <span className={`font-bold capitalize text-base ${isToday ? 'text-purple-600 dark:text-purple-400' : 'text-gray-900 dark:text-gray-100'}`}>
                         {day}
                       </span>
                       {isToday && (
@@ -2346,7 +2365,7 @@ const MyMusicCoach = () => {
                           newSchedule[weekKey][day] = null;
                           setWeeklySchedule(newSchedule);
                         }}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -2359,7 +2378,7 @@ const MyMusicCoach = () => {
                       newSchedule[weekKey][day] = e.target.value ? parseInt(e.target.value) : null;
                       setWeeklySchedule(newSchedule);
                     }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900 font-medium"
+                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium"
                   >
                     <option value="">🌙 Repos</option>
                     {workouts.map(w => (
@@ -2372,7 +2391,7 @@ const MyMusicCoach = () => {
             <div className="h-4"></div>
           </div>
           
-          <div className="flex-shrink-0 border-t-2 border-gray-200 p-4 bg-white shadow-2xl">
+          <div className="flex-shrink-0 border-t-2 border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800 shadow-2xl">
             <button
               onClick={() => setShowSchedule(false)}
               className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
@@ -2385,7 +2404,7 @@ const MyMusicCoach = () => {
 
       {/* Page Workout actif */}
       {activeWorkout && (
-        <div className="min-h-screen bg-white max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
+        <div className="min-h-screen bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6 pb-8">
             <button 
               onClick={() => setActiveWorkout(null)}
@@ -2418,18 +2437,18 @@ const MyMusicCoach = () => {
                 <div
                   key={exerciseId}
                   className={`border-2 rounded-2xl p-5 transition-all ${
-                    status === 'completed' ? 'border-green-500 bg-green-50' :
-                    status === 'skipped' ? 'border-gray-300 bg-gray-50' :
-                    'border-purple-200 bg-white'
+                    status === 'completed' ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30' :
+                    status === 'skipped' ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700' :
+                    'border-purple-200 dark:border-purple-700 bg-white dark:bg-gray-800'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-bold text-purple-600">#{index + 1}</span>
-                        <h3 className="font-bold text-gray-900">{exercise.name}</h3>
+                        <span className="text-sm font-bold text-purple-600 dark:text-purple-400">#{index + 1}</span>
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           {exercise.duration}
@@ -2440,8 +2459,8 @@ const MyMusicCoach = () => {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         status === 'completed' ? 'bg-green-500 text-white' :
-                        status === 'skipped' ? 'bg-gray-300 text-gray-600' :
-                        'bg-purple-100 text-purple-600'
+                        status === 'skipped' ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400' :
+                        'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
                       }`}
                     >
                       {status === 'completed' ? <Check className="w-5 h-5" /> :
@@ -2452,7 +2471,7 @@ const MyMusicCoach = () => {
 
                   <button
                     onClick={() => setSelectedExercise(exercise)}
-                    className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors"
+                    className="w-full bg-purple-600 dark:bg-purple-500 text-white py-3 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                   >
                     Voir les détails
                   </button>
@@ -2474,7 +2493,7 @@ const MyMusicCoach = () => {
               return (
                 <div className="mt-6 space-y-2">
                   {!allExercisesHandled && (
-                    <p className="text-center text-sm text-gray-500">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                       {handledCount}/{activeWorkout.exercises.length} exercices traités
                     </p>
                   )}
@@ -2484,7 +2503,7 @@ const MyMusicCoach = () => {
                     className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${
                       allExercisesHandled
                         ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-xl'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     Terminer la session
@@ -2500,14 +2519,14 @@ const MyMusicCoach = () => {
       {activeTab === 'library' && (
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {showTrash ? t('library.trash') : t('library.title')}
             </h1>
             <div className="flex items-center gap-2">
               {!showTrash && (
                 <button
                   onClick={() => setShowTrash(true)}
-                  className="bg-gray-100 text-gray-700 p-3 rounded-full shadow hover:bg-gray-200 transition-colors relative"
+                  className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 p-3 rounded-full shadow hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors relative"
                 >
                   <Archive className="w-5 h-5" />
                   {deletedExercises.length > 0 && (
@@ -2520,14 +2539,14 @@ const MyMusicCoach = () => {
               {showTrash ? (
                 <button
                   onClick={() => setShowTrash(false)}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+                  className="bg-purple-600 dark:bg-purple-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                 >
                   ← {t('common.back')}
                 </button>
               ) : (
                 <button
                   onClick={() => setShowCreateExercise(true)}
-                  className="bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+                  className="bg-purple-600 dark:bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -2543,7 +2562,7 @@ const MyMusicCoach = () => {
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   libraryFilter === cat
                     ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'
                 }`}
               >
                 {translateCategory(cat)}
@@ -2557,7 +2576,7 @@ const MyMusicCoach = () => {
               {filteredExercises.map(exercise => (
                 <div
                   key={exercise.id}
-                  className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-shadow relative"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md hover:shadow-lg transition-shadow relative"
                 >
                   <div
                     onClick={() => setSelectedExercise(exercise)}
@@ -2565,29 +2584,29 @@ const MyMusicCoach = () => {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 pr-2">
-                        <h3 className="font-bold text-gray-900 mb-1">{exercise.name}</h3>
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{exercise.name}</h3>
                         <div className="flex items-center gap-2 mb-2">
                           <span className={`text-xs px-2 py-1 rounded-full ${
-                            exercise.difficulty === 'Débutant' ? 'bg-green-100 text-green-700' :
-                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
+                            exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
+                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' :
+                            'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
                           }`}>
                             {translateDifficulty(exercise.difficulty)}
                           </span>
-                          <span className="text-xs text-gray-500">{translateCategory(exercise.category)}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{translateCategory(exercise.category)}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       {/* Icônes de type déplacées ici */}
                       {exercise.type === 'video' && (
-                        <span className="flex items-center gap-1 text-purple-600">
+                        <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
                           <Video className="w-4 h-4" />
                           <span className="text-xs">{t('exercise.video')}</span>
                         </span>
                       )}
                       {exercise.type === 'file' && (
-                        <span className="flex items-center gap-1 text-blue-600">
+                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
                           <FileText className="w-4 h-4" />
                           <span className="text-xs">{t('exercise.file')}</span>
                         </span>
@@ -2615,28 +2634,28 @@ const MyMusicCoach = () => {
             <div className="space-y-3">
               {deletedExercises.length === 0 ? (
                 <div className="text-center py-12">
-                  <Trash2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">{t('library.emptyTrash')}</p>
-                  <p className="text-sm text-gray-400 mt-2">{t('library.deletedAppearHere')}</p>
+                  <Trash2 className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">{t('library.emptyTrash')}</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('library.deletedAppearHere')}</p>
                 </div>
               ) : (
                 deletedExercises.map(exercise => (
                   <div
                     key={exercise.id}
-                    className="bg-gray-50 rounded-2xl p-5 shadow-md border-2 border-gray-200"
+                    className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-5 shadow-md border-2 border-gray-200 dark:border-gray-700"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-bold text-gray-700 mb-1">{exercise.name}</h3>
+                        <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1">{exercise.name}</h3>
                         <div className="flex items-center gap-2 mb-2">
                           <span className={`text-xs px-2 py-1 rounded-full ${
-                            exercise.difficulty === 'Débutant' ? 'bg-green-100 text-green-700' :
-                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
+                            exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
+                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' :
+                            'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
                           }`}>
                             {translateDifficulty(exercise.difficulty)}
                           </span>
-                          <span className="text-xs text-gray-500">{translateCategory(exercise.category)}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{translateCategory(exercise.category)}</span>
                         </div>
                       </div>
                     </div>
@@ -2953,6 +2972,25 @@ const MyMusicCoach = () => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.theme')}</label>
+                <button
+                  onClick={() => setSettings({...settings, theme: settings.theme === 'dark' ? 'light' : 'dark'})}
+                  className={`w-12 h-6 rounded-full transition-colors ${
+                    settings.theme === 'dark' ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    settings.theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {settings.theme === 'dark' ? t('settings.themeDark') : t('settings.themeLight')}
+              </p>
             </div>
 
             <div>
@@ -3822,6 +3860,7 @@ const MyMusicCoach = () => {
                   compact={true}
                   t={t}
                   soundType={settings.metronomeSound}
+                  theme={settings.theme}
                 />
 
                 {selectedExercise.baseTempo > 0 && (
@@ -4094,7 +4133,7 @@ const MyMusicCoach = () => {
           onClick={() => setShowMetronome(false)}
         >
           <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <Metronome onClose={() => setShowMetronome(false)} t={t} soundType={settings.metronomeSound} />
+            <Metronome onClose={() => setShowMetronome(false)} t={t} soundType={settings.metronomeSound} theme={settings.theme} />
           </div>
         </div>
       )}
