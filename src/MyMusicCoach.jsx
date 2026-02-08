@@ -158,40 +158,40 @@ const MyMusicCoach = () => {
 
   const [weeklySchedule, setWeeklySchedule, weeklyScheduleLoading] = useIndexedDB('mmc_weeklySchedule', {
     semaine1: {
-      lundi: 1,
-      mardi: null,
-      mercredi: 2,
-      jeudi: null,
-      vendredi: 1,
-      samedi: null,
-      dimanche: null
+      lundi: [1],
+      mardi: [],
+      mercredi: [2],
+      jeudi: [],
+      vendredi: [1],
+      samedi: [],
+      dimanche: []
     },
     semaine2: {
-      lundi: 2,
-      mardi: null,
-      mercredi: 1,
-      jeudi: null,
-      vendredi: null,
-      samedi: 2,
-      dimanche: null
+      lundi: [2],
+      mardi: [],
+      mercredi: [1],
+      jeudi: [],
+      vendredi: [],
+      samedi: [2],
+      dimanche: []
     },
     semaine3: {
-      lundi: 1,
-      mardi: 1,
-      mercredi: null,
-      jeudi: 2,
-      vendredi: null,
-      samedi: null,
-      dimanche: null
+      lundi: [1],
+      mardi: [1],
+      mercredi: [],
+      jeudi: [2],
+      vendredi: [],
+      samedi: [],
+      dimanche: []
     },
     semaine4: {
-      lundi: null,
-      mardi: 2,
-      mercredi: null,
-      jeudi: 1,
-      vendredi: 2,
-      samedi: null,
-      dimanche: 1
+      lundi: [],
+      mardi: [2],
+      mercredi: [],
+      jeudi: [1],
+      vendredi: [2],
+      samedi: [],
+      dimanche: [1]
     }
   });
 
@@ -202,6 +202,23 @@ const MyMusicCoach = () => {
     deletedExercisesLoading || archivedWorkoutsLoading || exercisesLoading ||
     workoutsLoading || weeklyScheduleLoading || activeWorkoutLoading ||
     workoutProgressLoading || currentTempoLoading || exerciseNotesLoading;
+
+  // Migration weeklySchedule : ancien format (number|null) → nouveau format (array)
+  useEffect(() => {
+    if (weeklyScheduleLoading) return;
+    let needsMigration = false;
+    const migrated = {};
+    for (const weekKey of Object.keys(weeklySchedule)) {
+      migrated[weekKey] = {};
+      for (const day of Object.keys(weeklySchedule[weekKey])) {
+        const val = weeklySchedule[weekKey][day];
+        if (val === null) { migrated[weekKey][day] = []; needsMigration = true; }
+        else if (typeof val === 'number') { migrated[weekKey][day] = [val]; needsMigration = true; }
+        else { migrated[weekKey][day] = val; }
+      }
+    }
+    if (needsMigration) setWeeklySchedule(migrated);
+  }, [weeklyScheduleLoading]);
 
   // Migration depuis localStorage et demande de persistance au démarrage
   useEffect(() => {
@@ -758,38 +775,33 @@ const MyMusicCoach = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   };
 
-  // Fonction pour vérifier si la session d'aujourd'hui a été faite (pour l'instrument actuel)
-  const isTodaySessionCompleted = () => {
-    const today = getTodayDate();
-    const todayWorkout = getTodayWorkout();
-    if (!todayWorkout) return false;
-    return sessionHistory.some(session =>
-      session.date === today &&
-      session.workoutId === todayWorkout.id
-    );
-  };
-
-  // Fonction pour récupérer la session terminée d'aujourd'hui (pour la modifier)
-  const getTodayCompletedSession = () => {
-    const today = getTodayDate();
-    const todayWorkout = getTodayWorkout();
-    if (!todayWorkout) return null;
-    return sessionHistory.find(session =>
-      session.date === today &&
-      session.workoutId === todayWorkout.id
-    );
-  };
-
-  // Fonction pour obtenir la session du jour
-  const getTodayWorkout = () => {
+  // Fonction pour obtenir les sessions du jour (tableau)
+  const getTodayWorkouts = () => {
     const currentDay = getCurrentDay();
     const currentWeek = getCurrentWeekNumber();
     const weekKey = `semaine${currentWeek}`;
-    const workoutId = weeklySchedule[weekKey][currentDay];
-    if (workoutId) {
-      return workouts.find(w => w.id === workoutId);
-    }
-    return null;
+    const workoutIds = weeklySchedule[weekKey]?.[currentDay] || [];
+    if (!Array.isArray(workoutIds)) return workoutIds ? [workouts.find(w => w.id === workoutIds)].filter(Boolean) : [];
+    return workoutIds.map(id => workouts.find(w => w.id === id)).filter(Boolean);
+  };
+
+  // Vérifier si une session spécifique est complétée aujourd'hui
+  const isWorkoutCompletedToday = (workoutId) => {
+    const today = getTodayDate();
+    return sessionHistory.some(s => s.date === today && s.workoutId === workoutId);
+  };
+
+  // Vérifier si TOUTES les sessions d'aujourd'hui ont été faites
+  const isTodaySessionCompleted = () => {
+    const todayWorkouts = getTodayWorkouts();
+    if (todayWorkouts.length === 0) return false;
+    return todayWorkouts.every(workout => isWorkoutCompletedToday(workout.id));
+  };
+
+  // Récupérer la session terminée pour un workout spécifique aujourd'hui
+  const getCompletedSessionForWorkout = (workoutId) => {
+    const today = getTodayDate();
+    return sessionHistory.find(s => s.date === today && s.workoutId === workoutId);
   };
 
   const saveTempo = (exerciseId) => {
@@ -1867,96 +1879,108 @@ const MyMusicCoach = () => {
             </div>
             
             <div className="p-6">
-              {getTodayWorkout() ? (
+              {getTodayWorkouts().length > 0 ? (
                 <div className="space-y-4">
                   {isTodaySessionCompleted() && (
-                    <div className="bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700 rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-green-500 rounded-full p-2">
-                          <Check className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-green-900 dark:text-green-200">{t('home.sessionCompleted')}</p>
-                          <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
-                            {t('home.excellentWork')} 🎵
-                          </p>
-                        </div>
+                    <div className="bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700 rounded-xl p-4 flex items-center gap-3">
+                      <div className="bg-green-500 rounded-full p-2">
+                        <Check className="w-5 h-5 text-white" />
                       </div>
-                      <button
-                        onClick={() => startEditSession(getTodayCompletedSession())}
-                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-100 dark:bg-green-900/40 dark:hover:bg-green-900/40 rounded-lg transition-colors"
-                        title="Modifier cette session"
-                      >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
+                      <div>
+                        <p className="font-bold text-green-900 dark:text-green-200">
+                          {getTodayWorkouts().length > 1 ? t('home.allSessionsCompleted') : t('home.sessionCompleted')}
+                        </p>
+                        <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
+                          {t('home.excellentWork')} 🎵
+                        </p>
+                      </div>
                     </div>
                   )}
-                  
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl p-5">
-                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg mb-2">
-                      {getTodayWorkout().name}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{getTodayWorkout().duration}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Activity className="w-4 h-4" />
-                        <span>{getTodayWorkout().exercises.length} {t('home.exercises')}</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => isTodaySessionCompleted()
-                        ? startEditSession(getTodayCompletedSession())
-                        : startWorkout(getTodayWorkout())
-                      }
-                      className={`w-full py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
-                        isTodaySessionCompleted()
-                          ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
-                          : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
-                      }`}
-                    >
-                      {isTodaySessionCompleted() ? (
-                        <>
-                          <Check className="w-5 h-5" />
-                          {t('home.completedEdit')}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-5 h-5" />
-                          {t('home.startSession')}
-                        </>
-                      )}
-                    </button>
-                  </div>
 
-                  {/* Aperçu des exercices */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('home.sessionExercises')}</p>
-                    {getTodayWorkout().exercises.map((exId) => {
-                      const exercise = exercises.find(e => e.id === exId);
-                      return exercise ? (
-                        <div key={exId} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {exercise.type === 'video' && <Video className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
-                            {exercise.type === 'file' && <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{exercise.name}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{exercise.duration}</p>
+                  {getTodayWorkouts().map((workout) => {
+                    const completed = isWorkoutCompletedToday(workout.id);
+                    const completedSession = getCompletedSessionForWorkout(workout.id);
+                    return (
+                      <div key={workout.id} className="space-y-3">
+                        <div className={`rounded-xl p-5 ${
+                          completed
+                            ? 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30'
+                            : 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30'
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">
+                              {workout.name}
+                            </h3>
+                            {completed && (
+                              <div className="bg-green-500 rounded-full p-1">
+                                <Check className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{workout.duration}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Activity className="w-4 h-4" />
+                              <span>{workout.exercises.length} {t('home.exercises')}</span>
                             </div>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
-                            exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' :
-                            'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
-                          }`}>
-                            {translateDifficulty(exercise.difficulty)}
-                          </span>
+                          <button
+                            onClick={() => completed
+                              ? startEditSession(completedSession)
+                              : startWorkout(workout)
+                            }
+                            className={`w-full py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 ${
+                              completed
+                                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
+                                : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
+                            }`}
+                          >
+                            {completed ? (
+                              <>
+                                <Check className="w-5 h-5" />
+                                {t('home.completedEdit')}
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-5 h-5" />
+                                {t('home.startSession')}
+                              </>
+                            )}
+                          </button>
                         </div>
-                      ) : null;
-                    })}
-                  </div>
+
+                        {/* Aperçu des exercices */}
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('home.sessionExercises')}</p>
+                          {workout.exercises.map((exId) => {
+                            const exercise = exercises.find(e => e.id === exId);
+                            return exercise ? (
+                              <div key={exId} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {exercise.type === 'video' && <Video className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                                  {exercise.type === 'file' && <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{exercise.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{exercise.duration}</p>
+                                  </div>
+                                </div>
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
+                                  exercise.difficulty === 'Intermédiaire' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300' :
+                                  'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+                                }`}>
+                                  {translateDifficulty(exercise.difficulty)}
+                                </span>
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -2006,7 +2030,9 @@ const MyMusicCoach = () => {
                 const isToday = getCurrentDay() === fullDay;
                 const currentWeek = getCurrentWeekNumber();
                 const weekKey = `semaine${currentWeek}`;
-                const hasWorkout = weeklySchedule[weekKey][fullDay] !== null;
+                const dayWorkouts = weeklySchedule[weekKey]?.[fullDay] || [];
+                const hasWorkout = Array.isArray(dayWorkouts) ? dayWorkouts.length > 0 : dayWorkouts !== null;
+                const workoutCount = Array.isArray(dayWorkouts) ? dayWorkouts.length : (dayWorkouts ? 1 : 0);
 
                 return (
                   <div key={idx} className="text-center">
@@ -2020,7 +2046,11 @@ const MyMusicCoach = () => {
                       {day}
                     </div>
                     {hasWorkout && !isToday && (
-                      <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-400 rounded-full mx-auto"></div>
+                      <div className="flex gap-0.5 justify-center">
+                        {Array.from({ length: Math.min(workoutCount, 3) }).map((_, i) => (
+                          <div key={i} className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-400 rounded-full"></div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
@@ -2364,8 +2394,9 @@ const MyMusicCoach = () => {
             {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map(day => {
               const isToday = getCurrentDay() === day && getCurrentWeekNumber() === viewingWeek;
               const weekKey = `semaine${viewingWeek}`;
-              const workoutId = weeklySchedule[weekKey][day];
-              
+              const dayWorkouts = weeklySchedule[weekKey]?.[day] || [];
+              const workoutIds = Array.isArray(dayWorkouts) ? dayWorkouts : (dayWorkouts ? [dayWorkouts] : []);
+
               return (
                 <div key={day} className={`border-2 rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-md ${
                   isToday ? 'border-purple-600 ring-2 ring-purple-200 dark:ring-purple-700' : 'border-gray-200 dark:border-gray-700'
@@ -2381,29 +2412,59 @@ const MyMusicCoach = () => {
                         </span>
                       )}
                     </div>
-                    {workoutId && (
-                      <button
-                        onClick={() => {
-                          const newSchedule = {...weeklySchedule};
-                          newSchedule[weekKey][day] = null;
-                          setWeeklySchedule(newSchedule);
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:bg-red-900/30 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    {workoutIds.length > 0 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                        {workoutIds.length} session{workoutIds.length > 1 ? 's' : ''}
+                      </span>
                     )}
                   </div>
+
+                  {/* Sessions existantes */}
+                  {workoutIds.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {workoutIds.map((wId, index) => {
+                        const workout = workouts.find(w => w.id === wId);
+                        return (
+                          <div key={index} className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/30 rounded-xl px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">🎵</span>
+                              <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                                {workout ? workout.name : 'Session supprimée'}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const newSchedule = {...weeklySchedule};
+                                newSchedule[weekKey][day] = workoutIds.filter((_, i) => i !== index);
+                                setWeeklySchedule(newSchedule);
+                              }}
+                              className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {workoutIds.length === 0 && (
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">🌙 {t('schedule.restDay')}</p>
+                  )}
+
+                  {/* Sélecteur pour ajouter une session */}
                   <select
-                    value={workoutId || ''}
+                    value=""
                     onChange={(e) => {
-                      const newSchedule = {...weeklySchedule};
-                      newSchedule[weekKey][day] = e.target.value ? parseInt(e.target.value) : null;
-                      setWeeklySchedule(newSchedule);
+                      if (e.target.value) {
+                        const newSchedule = {...weeklySchedule};
+                        newSchedule[weekKey][day] = [...workoutIds, parseInt(e.target.value)];
+                        setWeeklySchedule(newSchedule);
+                      }
                     }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 dark:border-purple-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
+                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
                   >
-                    <option value="">🌙 Repos</option>
+                    <option value="">+ {t('schedule.addSession')}</option>
                     {workouts.map(w => (
                       <option key={w.id} value={w.id}>🎵 {w.name}</option>
                     ))}

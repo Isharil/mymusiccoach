@@ -12,7 +12,8 @@
       "Bash(node -e:*)",
       "Bash(node add-dark-mode.cjs:*)",
       "Bash(del:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx vite build:*)"
     ]
   }
 }

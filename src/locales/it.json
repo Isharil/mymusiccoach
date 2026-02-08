@@ -44,7 +44,8 @@
     "archivedAppearHere": "Le sessioni archiviate appariranno qui",
     "restore": "Ripristina",
     "deletePermanently": "Elimina definitivamente",
-    "exercises": "esercizi"
+    "exercises": "esercizi",
+    "allSessionsCompleted": "Tutte le sessioni completate!"
   },
   "schedule": {
     "title": "Programma 4 settimane",
@@ -61,7 +62,8 @@
     },
     "dayAbbr": ["L", "M", "M", "G", "V", "S", "D"],
     "restDay": "Giorno di riposo",
-    "chooseSession": "Scegli una sessione"
+    "chooseSession": "Scegli una sessione",
+    "addSession": "Aggiungi una sessione"
   },
   "workout": {
     "new": "Nuova sessione",

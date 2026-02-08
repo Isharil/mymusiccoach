@@ -44,7 +44,8 @@
     "archivedAppearHere": "Archivierte Sessions erscheinen hier",
     "restore": "Wiederherstellen",
     "deletePermanently": "Endgültig löschen",
-    "exercises": "Übungen"
+    "exercises": "Übungen",
+    "allSessionsCompleted": "Alle Sitzungen abgeschlossen!"
   },
   "schedule": {
     "title": "4-Wochen-Zeitplan",
@@ -61,7 +62,8 @@
     },
     "dayAbbr": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
     "restDay": "Ruhetag",
-    "chooseSession": "Session wählen"
+    "chooseSession": "Session wählen",
+    "addSession": "Session hinzufügen"
   },
   "workout": {
     "new": "Neue Session",
