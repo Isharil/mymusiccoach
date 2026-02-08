@@ -11,7 +11,8 @@
       "Bash(npx tsc:*)",
       "Bash(node -e:*)",
       "Bash(node add-dark-mode.cjs:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(node:*)"
     ]
   }
 }

@@ -1823,7 +1823,7 @@ const MyMusicCoach = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark: font-medium">{t('messages.loading')}</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">{t('messages.loading')}</p>
         </div>
       </div>
     );
@@ -1838,7 +1838,7 @@ const MyMusicCoach = () => {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               {t('home.greeting', { name: settings.userName })} 👋
             </h1>
-            <p className="text-gray-600 dark: flex items-center justify-center gap-2">
+            <p className="text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
               <span className="text-2xl">🎵</span>
               {t('home.ready')}
             </p>
@@ -1891,7 +1891,7 @@ const MyMusicCoach = () => {
                     <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg mb-2">
                       {getTodayWorkout().name}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark: mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         <span>{getTodayWorkout().duration}</span>
@@ -1938,7 +1938,7 @@ const MyMusicCoach = () => {
                             {exercise.type === 'file' && <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                             <div>
                               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{exercise.name}</p>
-                              <p className="text-xs text-gray-500 dark:">{exercise.duration}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{exercise.duration}</p>
                             </div>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full ${
@@ -1955,9 +1955,9 @@ const MyMusicCoach = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Calendar className="w-16 h-16 text-gray-300 dark: dark:text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-600 dark: font-medium mb-2">{t('home.noSession')}</p>
-                  <p className="text-sm text-gray-500 dark: mb-4">{t('home.restOrCustomize')}</p>
+                  <Calendar className="w-16 h-16 text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 font-medium mb-2">{t('home.noSession')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('home.restOrCustomize')}</p>
                   <button
                     onClick={() => {
                       setViewingWeek(getCurrentWeekNumber());
@@ -1989,22 +1989,28 @@ const MyMusicCoach = () => {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div
+              onClick={() => {
+                setViewingWeek(getCurrentWeekNumber());
+                setShowSchedule(true);
+              }}
+              className="grid grid-cols-7 gap-2 cursor-pointer active:scale-[0.98] transition-transform"
+            >
               {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, idx) => {
                 const fullDay = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'][idx];
                 const isToday = getCurrentDay() === fullDay;
                 const currentWeek = getCurrentWeekNumber();
                 const weekKey = `semaine${currentWeek}`;
                 const hasWorkout = weeklySchedule[weekKey][fullDay] !== null;
-                
+
                 return (
                   <div key={idx} className="text-center">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mb-1 ${
-                      isToday 
+                      isToday
                         ? 'bg-purple-600 text-white ring-4 ring-purple-200 dark:ring-purple-700'
                         : hasWorkout
                           ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
                     }`}>
                       {day}
                     </div>
@@ -2037,26 +2043,38 @@ const MyMusicCoach = () => {
 
           {/* Statistiques rapides avec flammes */}
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg text-center">
+            <button
+              onClick={() => setActiveTab('stats')}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg text-center active:scale-95 transition-transform"
+            >
               <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{stats.last7Days}</p>
-              <p className="text-xs text-gray-600 dark:">{t('home.sessionsLast7Days')}</p>
-            </div>
-            <div className={`rounded-2xl p-5 shadow-lg text-center ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white dark:bg-gray-800'}`}>
+              <p className="text-xs text-gray-600 dark:text-gray-400">{t('home.sessionsLast7Days')}</p>
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`rounded-2xl p-5 shadow-lg text-center active:scale-95 transition-transform ${stats.streak >= 3 ? 'bg-gradient-to-br from-orange-400 to-red-500' : 'bg-white dark:bg-gray-800'}`}
+            >
               <div className="flex items-center justify-center gap-1">
                 {stats.streak >= 3 && <span className="text-2xl">🔥</span>}
                 <p className={`text-3xl font-bold ${stats.streak >= 3 ? 'text-white' : 'text-orange-500'}`}>{stats.streak}</p>
               </div>
-              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600 dark:'}`}>{t('home.consecutiveDays')}</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg text-center">
+              <p className={`text-xs ${stats.streak >= 3 ? 'text-orange-100' : 'text-gray-600 dark:text-gray-400'}`}>{t('home.consecutiveDays')}</p>
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg text-center active:scale-95 transition-transform"
+            >
               <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{stats.last28Days}</p>
-              <p className="text-xs text-gray-600 dark:">{t('home.sessionsLast28Days')}</p>
-            </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">{t('home.sessionsLast28Days')}</p>
+            </button>
           </div>
 
           {/* Badges et progression */}
           {(earnedBadges.length > 0 || nextBadge) && (
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-5">
+            <div
+              onClick={() => setActiveTab('stats')}
+              className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-5 cursor-pointer active:scale-[0.98] transition-transform"
+            >
               {earnedBadges.length > 0 && (
                 <div className="mb-4">
                   <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">{t('home.earnedBadges')}</h3>
@@ -2080,12 +2098,12 @@ const MyMusicCoach = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-lg opacity-40">{nextBadge.icon}</span>
                       <div>
-                        <p className="text-xs font-medium text-gray-500 dark:">{t('home.nextBadge')}</p>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('home.nextBadge')}</p>
                         <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{getBadgeName(nextBadge)}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500 dark:">{getBadgeDescription(nextBadge)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{getBadgeDescription(nextBadge)}</p>
                       <p className="text-sm font-bold text-purple-600 dark:text-purple-400">
                         {nextBadge.type === 'streak'
                           ? `${stats.streak}/${nextBadge.threshold} ${t('home.days')}`
@@ -2121,7 +2139,7 @@ const MyMusicCoach = () => {
                   <>
                     <button
                       onClick={() => setShowArchive(true)}
-                      className="text-gray-600 dark: text-sm font-medium hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-300 flex items-center gap-1 relative"
+                      className="text-gray-600 dark:text-gray-400 text-sm font-medium hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-300 flex items-center gap-1 relative"
                     >
                       <Archive className="w-4 h-4" />
                       <span>{t('home.archive')}</span>
@@ -2180,7 +2198,7 @@ const MyMusicCoach = () => {
                           {workout.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 dark: pb-8">
+                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 pb-8">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           <span>{workout.duration}</span>
@@ -2225,9 +2243,9 @@ const MyMusicCoach = () => {
               <div className="space-y-3">
                 {archivedWorkouts.length === 0 ? (
                   <div className="text-center py-12">
-                    <Archive className="w-16 h-16 text-gray-300 dark: dark:text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-500 dark: font-medium">{t('home.emptyArchive')}</p>
-                    <p className="text-sm text-gray-400 dark: mt-2">{t('home.archivedAppearHere')}</p>
+                    <Archive className="w-16 h-16 text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">{t('home.emptyArchive')}</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('home.archivedAppearHere')}</p>
                   </div>
                 ) : (
                   archivedWorkouts.map(workout => (
@@ -2241,7 +2259,7 @@ const MyMusicCoach = () => {
                           {workout.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 dark: mb-4">
+                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           <span>{workout.duration}</span>
@@ -2378,7 +2396,7 @@ const MyMusicCoach = () => {
                       newSchedule[weekKey][day] = e.target.value ? parseInt(e.target.value) : null;
                       setWeeklySchedule(newSchedule);
                     }}
-                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 dark:border-purple-400 bg-white dark: text-gray-900 dark:text-gray-100 font-medium"
+                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 dark:border-purple-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
                   >
                     <option value="">🌙 Repos</option>
                     {workouts.map(w => (
@@ -2448,7 +2466,7 @@ const MyMusicCoach = () => {
                         <span className="text-sm font-bold text-purple-600 dark:text-purple-400">#{index + 1}</span>
                         <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:">
+                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           {exercise.duration}
@@ -2459,7 +2477,7 @@ const MyMusicCoach = () => {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         status === 'completed' ? 'bg-green-500 text-white' :
-                        status === 'skipped' ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:' :
+                        status === 'skipped' ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400' :
                         'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
                       }`}
                     >
@@ -2493,7 +2511,7 @@ const MyMusicCoach = () => {
               return (
                 <div className="mt-6 space-y-2">
                   {!allExercisesHandled && (
-                    <p className="text-center text-sm text-gray-500 dark:">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                       {handledCount}/{activeWorkout.exercises.length} exercices traités
                     </p>
                   )}
@@ -2503,7 +2521,7 @@ const MyMusicCoach = () => {
                     className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${
                       allExercisesHandled
                         ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-xl'
-                        : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark: cursor-not-allowed'
+                        : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     Terminer la session
@@ -2593,11 +2611,11 @@ const MyMusicCoach = () => {
                           }`}>
                             {translateDifficulty(exercise.difficulty)}
                           </span>
-                          <span className="text-xs text-gray-500 dark:">{translateCategory(exercise.category)}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{translateCategory(exercise.category)}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       {/* Icônes de type déplacées ici */}
                       {exercise.type === 'video' && (
                         <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
@@ -2634,9 +2652,9 @@ const MyMusicCoach = () => {
             <div className="space-y-3">
               {deletedExercises.length === 0 ? (
                 <div className="text-center py-12">
-                  <Trash2 className="w-16 h-16 text-gray-300 dark: dark:text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-500 dark: font-medium">{t('library.emptyTrash')}</p>
-                  <p className="text-sm text-gray-400 dark: mt-2">{t('library.deletedAppearHere')}</p>
+                  <Trash2 className="w-16 h-16 text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">{t('library.emptyTrash')}</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('library.deletedAppearHere')}</p>
                 </div>
               ) : (
                 deletedExercises.map(exercise => (
@@ -2655,7 +2673,7 @@ const MyMusicCoach = () => {
                           }`}>
                             {translateDifficulty(exercise.difficulty)}
                           </span>
-                          <span className="text-xs text-gray-500 dark:">{translateCategory(exercise.category)}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{translateCategory(exercise.category)}</span>
                         </div>
                       </div>
                     </div>
@@ -2732,7 +2750,7 @@ const MyMusicCoach = () => {
             {/* Derniers badges obtenus */}
             {earnedBadges.length > 0 && (
               <div className="mb-4">
-                <p className="text-sm text-gray-600 dark: mb-2">{t('stats.unlockedBadges')} ({earnedBadges.length})</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('stats.unlockedBadges')} ({earnedBadges.length})</p>
                 <div className="flex flex-wrap gap-2">
                   {earnedBadges.slice(-4).reverse().map(badge => (
                     <div
@@ -2754,7 +2772,7 @@ const MyMusicCoach = () => {
               if (nextTwoBadges.length === 0) return null;
               return (
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 dark: mb-2">{t('stats.nextBadges')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('stats.nextBadges')}</p>
                   <div className="space-y-2">
                     {nextTwoBadges.map(badge => (
                       <div
@@ -2763,7 +2781,7 @@ const MyMusicCoach = () => {
                       >
                         <span className="text-2xl grayscale opacity-50">{badge.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-600 dark:">{getBadgeName(badge)}</p>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{getBadgeName(badge)}</p>
                           <p className="text-xs text-gray-400 dark:text-gray-500">{getBadgeDescription(badge)}</p>
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500">
@@ -2796,7 +2814,7 @@ const MyMusicCoach = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-gray-100">{session.workoutName}</h3>
-                      <p className="text-sm text-gray-500 dark:">{session.date} à {session.time}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{session.date} à {session.time}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -2814,7 +2832,7 @@ const MyMusicCoach = () => {
                       ✓ {session.completed} {session.completed > 1 ? t('stats.exercisesCompleted') : t('stats.exerciseCompleted')}
                     </span>
                     {session.skipped > 0 && (
-                      <span className="text-gray-500 dark:">
+                      <span className="text-gray-500 dark:text-gray-400">
                         × {session.skipped} {session.skipped > 1 ? t('stats.exercisesSkipped') : t('stats.exerciseSkipped')}
                       </span>
                     )}
@@ -2831,7 +2849,7 @@ const MyMusicCoach = () => {
             {exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0).length === 0 ? (
               <div className="text-center py-12">
                 <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 dark: font-medium">{t('stats.noProgress')}</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium">{t('stats.noProgress')}</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
                   {t('stats.recordTempos')}
                 </p>
@@ -2851,7 +2869,7 @@ const MyMusicCoach = () => {
                         <div className="mb-4">
                           <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{exercise.name}</h3>
                           <div className="flex items-center gap-3 text-sm">
-                            <span className="text-gray-600 dark:">
+                            <span className="text-gray-600 dark:text-gray-400">
                               {t('stats.base')}: {exercise.baseTempo} BPM
                             </span>
                             {progression > 0 && (
@@ -2911,7 +2929,7 @@ const MyMusicCoach = () => {
                           </svg>
                           
                           {/* Légende des dates */}
-                          <div className="flex justify-between mt-2 text-xs text-gray-500 dark:">
+                          <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
                             <span>{history[0].date}</span>
                             {history.length > 1 && (
                               <span>{history[history.length - 1].date}</span>
@@ -2922,15 +2940,15 @@ const MyMusicCoach = () => {
                         {/* Statistiques */}
                         <div className="grid grid-cols-3 gap-2 mt-4">
                           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 text-center">
-                            <p className="text-xs text-gray-600 dark:">Min</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Min</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{minTempo} BPM</p>
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 text-center">
-                            <p className="text-xs text-gray-600 dark:">Max</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Max</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{maxTempo} BPM</p>
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 text-center">
-                            <p className="text-xs text-gray-600 dark:">Enregistrements</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Enregistrements</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{history.length}</p>
                           </div>
                         </div>
@@ -2988,7 +3006,7 @@ const MyMusicCoach = () => {
                   }`} />
                 </button>
               </div>
-              <p className="text-xs text-gray-500 dark:">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {settings.theme === 'dark' ? t('settings.themeDark') : t('settings.themeLight')}
               </p>
             </div>
@@ -3017,7 +3035,7 @@ const MyMusicCoach = () => {
                 }`}
               />
               {settings.reminderEnabled && (
-                <p className="text-xs text-gray-500 dark: mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {t('settings.reminderTime')}
                 </p>
               )}
@@ -3029,7 +3047,7 @@ const MyMusicCoach = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block">{t('settings.notifications')}</span>
-                    <span className="text-xs text-gray-500 dark:">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       {notificationPermission === 'granted' ? `✅ ${t('settings.allowed')}` :
                        notificationPermission === 'denied' ? `❌ ${t('settings.blocked')}` :
                        `⚠️ ${t('settings.notConfigured')}`}
@@ -3131,7 +3149,7 @@ const MyMusicCoach = () => {
           {/* Section Sauvegarde et Restauration */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{t('settings.dataBackup')}</h2>
-            <p className="text-sm text-gray-600 dark: mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t('settings.exportDescription')}
             </p>
             <div className="space-y-3">
@@ -3165,7 +3183,7 @@ const MyMusicCoach = () => {
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{settings.language === 'fr' ? 'À propos' : 'About'}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2">
-                <span className="text-gray-600 dark:">{settings.language === 'fr' ? 'Version' : 'Version'}</span>
+                <span className="text-gray-600 dark:text-gray-400">{settings.language === 'fr' ? 'Version' : 'Version'}</span>
                 <span className="font-medium text-gray-900 dark:text-gray-100">1.0.0</span>
               </div>
               <button
@@ -3183,7 +3201,7 @@ const MyMusicCoach = () => {
           {/* Zone de réinitialisation */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6 border-2 border-red-200 dark:border-red-700">
             <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4">{t('settings.resetApp')}</h3>
-            <p className="text-sm text-gray-600 dark: mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t('settings.resetWarning')}
             </p>
             <button
@@ -3340,7 +3358,7 @@ const MyMusicCoach = () => {
                     onChange={handleFileUpload}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 dark:bg-purple-900/30 file:text-purple-700 dark:text-purple-300 hover:file:bg-purple-100 dark:bg-purple-900/40"
                   />
-                  <p className="text-xs text-gray-500 dark: mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     Formats acceptés : PDF, Images (PNG/JPEG), Partitions (MusicXML), Guitar Pro (GP5/GPX/GP)
                   </p>
                   {uploadedFile && (
@@ -3383,7 +3401,7 @@ const MyMusicCoach = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tempo de base (BPM) *
-                  <span className="text-xs text-gray-500 dark: ml-1">(mettre 0 si non applicable)</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(mettre 0 si non applicable)</span>
                 </label>
                 <input
                   type="number"
@@ -3560,7 +3578,7 @@ const MyMusicCoach = () => {
                       />
                       <div className="flex-1">
                         <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{ex.name}</p>
-                        <p className="text-xs text-gray-500 dark:">{ex.duration}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{ex.duration}</p>
                       </div>
                     </label>
                   ))}
@@ -3773,7 +3791,7 @@ const MyMusicCoach = () => {
 
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                   <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3">Description</h4>
-                  <p className="text-gray-600 dark:">{selectedExercise.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{selectedExercise.description}</p>
                 </div>
 
                 {/* Notification de fin de chrono */}
@@ -3800,7 +3818,7 @@ const MyMusicCoach = () => {
                   {/* Bloc Durée avec Chronomètre */}
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl p-5 shadow-md">
                     <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400 mb-3" />
-                    <p className="text-sm text-gray-600 dark: mb-1">Durée</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Durée</p>
 
                     {timerActive || timerPaused || timerSeconds > 0 ? (
                       <>
@@ -3834,7 +3852,7 @@ const MyMusicCoach = () => {
                     ) : (
                       <>
                         <p className="font-bold text-gray-900 dark:text-gray-100 text-lg mb-1">{selectedExercise.duration}</p>
-                        <p className="text-xs text-gray-500 dark: mb-3">{selectedExercise.sets}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{selectedExercise.sets}</p>
                         <button
                           onClick={() => startTimer(selectedExercise)}
                           className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
@@ -3847,9 +3865,9 @@ const MyMusicCoach = () => {
                   {selectedExercise.baseTempo > 0 && (
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 shadow-md">
                       <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400 mb-3" />
-                      <p className="text-sm text-gray-600 dark: mb-1">Tempo</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tempo</p>
                       <p className="font-bold text-gray-900 dark:text-gray-100 text-lg">{selectedExercise.baseTempo} BPM</p>
-                      <p className="text-xs text-gray-500 dark: mt-1">Tempo de base</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tempo de base</p>
                     </div>
                   )}
                 </div>
@@ -3912,7 +3930,7 @@ const MyMusicCoach = () => {
                             const isImprovement = olderEntry && entry.tempo > olderEntry.tempo;
                             return (
                               <div key={idx} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                                <span className="text-sm text-gray-600 dark: font-medium">{entry.date}</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">{entry.date}</span>
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-gray-900 dark:text-gray-100">{entry.tempo} BPM</span>
                                   {isImprovement && (
@@ -3924,7 +3942,7 @@ const MyMusicCoach = () => {
                           })}
                         </div>
                       ) : (
-                        <p className="text-center text-gray-500 dark: py-8">Aucun tempo enregistré pour le moment</p>
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucun tempo enregistré pour le moment</p>
                       )}
                     </div>
                   </>
@@ -4178,7 +4196,7 @@ const MyMusicCoach = () => {
                     >
                       <span className={`text-2xl ${isEarned ? '' : 'grayscale opacity-50'}`}>{badge.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold ${isEarned ? 'text-yellow-800 dark:text-yellow-300' : 'text-gray-500 dark:'}`}>
+                        <p className={`text-sm font-bold ${isEarned ? 'text-yellow-800 dark:text-yellow-300' : 'text-gray-500 dark:text-gray-400'}`}>
                           {getBadgeName(badge)}
                         </p>
                         <p className={`text-xs ${isEarned ? 'text-yellow-700 dark:text-yellow-300' : 'text-gray-400 dark:text-gray-500'}`}>
@@ -4285,7 +4303,7 @@ const MyMusicCoach = () => {
             <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4 text-sm text-gray-700 dark:text-gray-300">
               {settings.language === 'fr' ? (
                 <>
-                  <p className="text-gray-500 dark: text-xs">Dernière mise à jour : Février 2025</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Dernière mise à jour : Février 2025</p>
 
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">1. Données collectées</h3>
                   <p>MyMusicCoach ne collecte <strong>aucune donnée personnelle</strong> et n'envoie aucune information à des serveurs externes.</p>
@@ -4316,7 +4334,7 @@ const MyMusicCoach = () => {
                 </>
               ) : (
                 <>
-                  <p className="text-gray-500 dark: text-xs">Last updated: February 2025</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Last updated: February 2025</p>
 
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">1. Data Collection</h3>
                   <p>MyMusicCoach does <strong>not collect any personal data</strong> and does not send any information to external servers.</p>
@@ -4443,7 +4461,7 @@ const MyMusicCoach = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-sm text-gray-500 dark: mb-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Clique sur un exercice pour voir ses détails et modifier son statut ou ajouter un tempo.
               </p>
 
@@ -4452,7 +4470,7 @@ const MyMusicCoach = () => {
                 if (!workout) {
                   return (
                     <div className="text-center py-8">
-                      <p className="text-gray-500 dark:">La session originale n'existe plus.</p>
+                      <p className="text-gray-500 dark:text-gray-400">La session originale n'existe plus.</p>
                     </div>
                   );
                 }
@@ -4478,7 +4496,7 @@ const MyMusicCoach = () => {
                             <span className="text-sm font-bold text-purple-600 dark:text-purple-400">#{index + 1}</span>
                             <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
                           </div>
-                          <div className="flex items-center gap-3 text-sm text-gray-600 dark:">
+                          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                             <span className="flex items-center gap-1">
                               <Clock className="w-4 h-4" />
                               {exercise.duration}
@@ -4489,7 +4507,7 @@ const MyMusicCoach = () => {
                         <div
                           className={`w-10 h-10 rounded-full flex items-center justify-center ${
                             status === 'completed' ? 'bg-green-500 text-white' :
-                            status === 'skipped' ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:' :
+                            status === 'skipped' ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400' :
                             'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
                           }`}
                         >
@@ -4539,7 +4557,7 @@ const MyMusicCoach = () => {
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-gray-900 dark:text-gray-100">Télécharger</p>
-                  <p className="text-sm text-gray-500 dark:">Sauvegarder dans Téléchargements</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Sauvegarder dans Téléchargements</p>
                 </div>
               </button>
 
@@ -4552,13 +4570,13 @@ const MyMusicCoach = () => {
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-gray-900 dark:text-gray-100">Partager</p>
-                  <p className="text-sm text-gray-500 dark:">Envoyer par email, Drive, etc.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Envoyer par email, Drive, etc.</p>
                 </div>
               </button>
 
               <button
                 onClick={() => setExportModalData(null)}
-                className="w-full p-3 text-gray-500 dark: hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-300 font-medium"
+                className="w-full p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-300 font-medium"
               >
                 Annuler
               </button>
