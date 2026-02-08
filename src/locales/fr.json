@@ -87,7 +87,11 @@
     "pause": "Pause",
     "resume": "Reprendre",
     "stop": "Stop",
-    "reset": "Reset"
+    "reset": "Reset",
+    "shortTermGoal": "Objectif 7 jours",
+    "shortTermGoalPlaceholder": "Qu'est-ce que tu veux atteindre cette semaine ?",
+    "mediumTermGoal": "Objectif 28 jours",
+    "mediumTermGoalPlaceholder": "Qu'est-ce que tu veux atteindre ce mois-ci ?"
   },
   "exercise": {
     "new": "Nouvel exercice",
@@ -132,7 +136,11 @@
     "deleteForever": "Supprimer définitivement",
     "noExercises": "Aucun exercice trouvé",
     "createFirst": "Créez votre premier exercice !",
-    "filter": "Filtrer"
+    "filter": "Filtrer",
+    "exercisesTab": "Exercices",
+    "sessionsTab": "Sessions",
+    "exercisesHint": "Créez vos exercices ici, puis assemblez-les en sessions.",
+    "sessionsHint": "Créez une session en combinant vos exercices, ou importez-en une."
   },
   "stats": {
     "title": "Statistiques",
@@ -195,6 +203,8 @@
     "theme": "Thème",
     "themeLight": "Clair",
     "themeDark": "Sombre",
+    "longTermGoal": "Objectif à long terme",
+    "longTermGoalPlaceholder": "Ex : Jouer Eruption de Van Halen en entier",
     "metronomeSound": "Son du métronome",
     "sounds": {
       "click": "Click",
@@ -344,5 +354,8 @@
   "timer": {
     "finished": "Temps écoulé !",
     "wellDone": "Bien joué ! Continue ta pratique 🎵"
+  },
+  "goals": {
+    "myGoal": "Mon objectif :"
   }
 }
