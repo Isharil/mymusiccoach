@@ -575,6 +575,11 @@ const MyMusicCoach = () => {
     localStorage.setItem('mmc_theme', settings.theme);
   }, [settings.theme]);
 
+  // Scroll en haut à chaque changement d'onglet
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
+
   // Sauvegarder dans le dossier Downloads (Android natif)
   const saveToDownloads = async (dataStr, fileName) => {
     try {
