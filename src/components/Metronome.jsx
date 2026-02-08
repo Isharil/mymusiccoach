@@ -129,28 +129,32 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         filter: 2000
       },
       cowbell: {
-        frequencies: isDownbeat ? [800, 540] : isSubBeat ? [700, 470] : [750, 500],
+        frequencies: isDownbeat ? [845, 560] : isSubBeat ? [740, 490] : [800, 530],
         type: 'square',
-        duration: 0.15,
+        duration: 0.08,
         attack: 0,
-        decay: 0.15
+        decay: 0.08,
+        filter: 3500,
+        bandpass: true
       },
       hihat: {
         noise: true,
-        frequencies: isDownbeat ? [10000] : isSubBeat ? [8000] : [9000],
-        duration: isDownbeat ? 0.1 : 0.05,
+        duration: isDownbeat ? 0.08 : 0.04,
         attack: 0,
-        decay: 0.1,
-        filter: isDownbeat ? 12000 : 10000
+        decay: isDownbeat ? 0.08 : 0.04,
+        filter: isDownbeat ? 14000 : 12000,
+        metallic: true,
+        metallicFreqs: isDownbeat ? [12000, 14500] : isSubBeat ? [10000, 12500] : [11000, 13500]
       },
       rimshot: {
-        frequencies: isDownbeat ? [1800, 900] : isSubBeat ? [1500, 750] : [1600, 800],
+        frequencies: isDownbeat ? [2200, 1100, 500] : isSubBeat ? [1800, 900, 400] : [2000, 1000, 450],
         type: 'triangle',
-        duration: 0.04,
+        duration: 0.06,
         attack: 0,
-        decay: 0.04,
+        decay: 0.06,
         noise: true,
-        noiseVolume: 0.3
+        noiseVolume: 0.6,
+        noiseFilter: 3500
       }
     };
 
@@ -158,7 +162,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
 
     // Créer le son principal
     if (params.noise && !params.frequencies) {
-      // Son de bruit pur (hi-hat)
+      // Son de bruit (hi-hat)
       const bufferSize = audioContext.sampleRate * params.duration;
       const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
       const data = buffer.getChannelData(0);
@@ -172,16 +176,34 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       const noiseFilter = audioContext.createBiquadFilter();
       noiseFilter.type = 'highpass';
       noiseFilter.frequency.value = params.filter || 8000;
+      noiseFilter.Q.value = 1.5;
 
       noiseSource.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
       noiseGain.connect(audioContext.destination);
 
-      noiseGain.gain.setValueAtTime(baseVolume, now);
+      noiseGain.gain.setValueAtTime(baseVolume * 0.7, now);
       noiseGain.gain.exponentialRampToValueAtTime(0.001, now + params.decay);
 
       noiseSource.start(now);
       noiseSource.stop(now + params.duration);
+
+      // Composante métallique (oscillateurs haute fréquence pour le shimmer)
+      if (params.metallic && params.metallicFreqs) {
+        params.metallicFreqs.forEach((freq, index) => {
+          const osc = audioContext.createOscillator();
+          const oscGain = audioContext.createGain();
+          osc.type = 'square';
+          osc.frequency.value = freq;
+          osc.connect(oscGain);
+          oscGain.connect(audioContext.destination);
+          const vol = baseVolume * 0.15 / (index + 1);
+          oscGain.gain.setValueAtTime(vol, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + params.decay * 0.6);
+          osc.start(now);
+          osc.stop(now + params.duration);
+        });
+      }
     } else {
       // Sons avec oscillateurs
       params.frequencies.forEach((freq, index) => {
@@ -196,8 +218,9 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         // Ajouter un filtre si spécifié
         if (params.filter) {
           const filter = audioContext.createBiquadFilter();
-          filter.type = 'lowpass';
+          filter.type = params.bandpass ? 'bandpass' : 'lowpass';
           filter.frequency.value = params.filter;
+          if (params.bandpass) filter.Q.value = 3;
           gainNode.connect(filter);
           filter.connect(audioContext.destination);
         } else {
@@ -215,7 +238,8 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
 
       // Ajouter du bruit si spécifié (rimshot)
       if (params.noise && params.noiseVolume) {
-        const bufferSize = audioContext.sampleRate * params.duration;
+        const noiseDuration = params.duration * 1.5;
+        const bufferSize = audioContext.sampleRate * noiseDuration;
         const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -227,17 +251,17 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         const noiseGain = audioContext.createGain();
         const noiseFilter = audioContext.createBiquadFilter();
         noiseFilter.type = 'highpass';
-        noiseFilter.frequency.value = 2000;
+        noiseFilter.frequency.value = params.noiseFilter || 2000;
 
         noiseSource.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
         noiseGain.connect(audioContext.destination);
 
         noiseGain.gain.setValueAtTime(baseVolume * params.noiseVolume, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + params.decay);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + params.decay * 1.5);
 
         noiseSource.start(now);
-        noiseSource.stop(now + params.duration);
+        noiseSource.stop(now + noiseDuration);
       }
     }
   }, [isMuted, volume, getAudioContext, soundType]);

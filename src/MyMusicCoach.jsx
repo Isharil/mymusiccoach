@@ -3132,7 +3132,7 @@ const MyMusicCoach = () => {
                 { id: 'claves', icon: '🥢', label: t('settings.sounds.claves') },
                 { id: 'woodblock', icon: '🪵', label: t('settings.sounds.woodblock') },
                 { id: 'cowbell', icon: '🔔', label: t('settings.sounds.cowbell') },
-                { id: 'hihat', icon: '🥁', label: t('settings.sounds.hihat') },
+                { id: 'hihat', icon: '🥏', label: t('settings.sounds.hihat') },
                 { id: 'rimshot', icon: '🥁', label: t('settings.sounds.rimshot') },
               ].map(sound => (
                 <button
