@@ -8,7 +8,10 @@
       "Bash(npm run build:*)",
       "Bash(dir:*)",
       "Bash(npx eslint:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)",
+      "Bash(node add-dark-mode.cjs:*)",
+      "Bash(del:*)"
     ]
   }
 }
