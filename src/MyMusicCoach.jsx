@@ -2903,17 +2903,17 @@ const MyMusicCoach = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-purple-700 dark:text-purple-300 mb-1">{stats.last7Days}</p>
-              <p className="text-xs text-purple-800 dark:text-purple-300">{t('stats.sessionsLast7Days')}</p>
+            <div className="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 rounded-2xl p-5 text-center">
+              <p className="text-3xl font-bold text-purple-700 dark:text-purple-200 mb-1">{stats.last7Days}</p>
+              <p className="text-xs text-purple-900 dark:text-purple-300">{t('stats.sessionsLast7Days')}</p>
             </div>
-            <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-green-700 dark:text-green-300 mb-1">{stats.daysWithPractice}/7</p>
-              <p className="text-xs text-green-800 dark:text-green-300">{t('stats.daysPracticed')}</p>
+            <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded-2xl p-5 text-center">
+              <p className="text-3xl font-bold text-green-700 dark:text-green-200 mb-1">{stats.daysWithPractice}/7</p>
+              <p className="text-xs text-green-900 dark:text-green-300">{t('stats.daysPracticed')}</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-blue-700 dark:text-blue-300 mb-1">{stats.last28Days}</p>
-              <p className="text-xs text-blue-800">{t('stats.sessionsLast28Days')}</p>
+            <div className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-5 text-center">
+              <p className="text-3xl font-bold text-blue-700 dark:text-blue-200 mb-1">{stats.last28Days}</p>
+              <p className="text-xs text-blue-900 dark:text-blue-300">{t('stats.sessionsLast28Days')}</p>
             </div>
           </div>
 
