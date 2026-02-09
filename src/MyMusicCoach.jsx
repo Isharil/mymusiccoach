@@ -2929,10 +2929,10 @@ const MyMusicCoach = () => {
                   {earnedBadges.slice(-4).reverse().map(badge => (
                     <div
                       key={badge.id}
-                      className="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm"
+                      className="bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm"
                     >
                       <span className="text-xl">{badge.icon}</span>
-                      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">{getBadgeName(badge)}</span>
+                      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">{getBadgeName(badge)}</span>
                     </div>
                   ))}
                 </div>
@@ -2955,10 +2955,10 @@ const MyMusicCoach = () => {
                       >
                         <span className="text-2xl grayscale opacity-50">{badge.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{getBadgeName(badge)}</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">{getBadgeDescription(badge)}</p>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{getBadgeName(badge)}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-400">{getBadgeDescription(badge)}</p>
                         </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">
+                        <div className="text-xs text-gray-400 dark:text-gray-400">
                           {badge.type === 'streak'
                             ? `${stats.streak}/${badge.threshold}`
                             : `${stats.totalSessions}/${badge.threshold}`
@@ -4399,23 +4399,23 @@ const MyMusicCoach = () => {
                       key={badge.id}
                       className={`rounded-xl p-3 flex items-center gap-3 transition-all ${
                         isEarned
-                          ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-sm'
+                          ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900 dark:to-yellow-800 shadow-sm'
                           : 'bg-gray-50 dark:bg-gray-700'
                       }`}
                     >
                       <span className={`text-2xl ${isEarned ? '' : 'grayscale opacity-50'}`}>{badge.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold ${isEarned ? 'text-yellow-800 dark:text-yellow-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                        <p className={`text-sm font-bold ${isEarned ? 'text-yellow-800 dark:text-yellow-200' : 'text-gray-500 dark:text-gray-300'}`}>
                           {getBadgeName(badge)}
                         </p>
-                        <p className={`text-xs ${isEarned ? 'text-yellow-700 dark:text-yellow-300' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <p className={`text-xs ${isEarned ? 'text-yellow-700 dark:text-yellow-300' : 'text-gray-400 dark:text-gray-400'}`}>
                           {getBadgeDescription(badge)}
                         </p>
                       </div>
                       {isEarned ? (
                         <Check className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                       ) : (
-                        <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        <span className="text-xs text-gray-400 dark:text-gray-400 flex-shrink-0">
                           {progress}/{badge.threshold}
                         </span>
                       )}
