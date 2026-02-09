@@ -13,7 +13,11 @@
       "Bash(node add-dark-mode.cjs:*)",
       "Bash(del:*)",
       "Bash(node:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(gh auth status:*)",
+      "Bash(winget install:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh:*)"
     ]
   }
 }
