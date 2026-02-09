@@ -205,6 +205,8 @@
     "themeDark": "Dark",
     "longTermGoal": "Long-term goal",
     "longTermGoalPlaceholder": "E.g.: Play Eruption by Van Halen in full",
+    "cycleStartDate": "4-week cycle start date",
+    "cycleStartDateHint": "Set the start date of your week 1. Defaults to the Monday of your first launch.",
     "metronomeSound": "Metronome sound",
     "sounds": {
       "click": "Click",

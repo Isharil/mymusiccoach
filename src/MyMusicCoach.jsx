@@ -43,7 +43,8 @@ const MyMusicCoach = () => {
     userName: "Musician",
     language: "en",
     metronomeSound: "click",
-    longTermGoal: ""
+    longTermGoal: "",
+    cycleStartDate: ""
   });
 
   // Hook de traduction
@@ -761,14 +762,32 @@ const MyMusicCoach = () => {
     return days[today.getDay()];
   };
 
+  // Fonction pour obtenir le lundi de la semaine en cours
+  const getMondayOfCurrentWeek = () => {
+    const today = new Date();
+    const day = today.getDay(); // 0=dim, 1=lun, ...
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today);
+    monday.setDate(diff);
+    return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+  };
+
+  // Auto-initialisation du cycleStartDate au premier lancement
+  useEffect(() => {
+    if (settingsLoading) return;
+    if (!settings.cycleStartDate) {
+      setSettings({ ...settings, cycleStartDate: getMondayOfCurrentWeek() });
+    }
+  }, [settingsLoading]);
+
   // Fonction pour obtenir la semaine actuelle du cycle de 4 semaines (1-4)
   const getCurrentWeekNumber = () => {
     const today = new Date();
-    const startDate = new Date('2026-01-13'); // Date de référence (lundi de la semaine 1)
+    const startDate = new Date(settings.cycleStartDate || getMondayOfCurrentWeek());
     const diffTime = today - startDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const weekNumber = Math.floor(diffDays / 7) % 4; // Cycle de 4 semaines
-    return weekNumber + 1; // Retourne 1, 2, 3 ou 4
+    const weekNumber = Math.floor(diffDays / 7) % 4;
+    return weekNumber + 1;
   };
 
   // Fonction pour obtenir la date d'aujourd'hui au format ISO (heure locale, pas UTC)
@@ -3160,6 +3179,17 @@ const MyMusicCoach = () => {
                 placeholder={t('settings.longTermGoalPlaceholder')}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📅 {t('settings.cycleStartDate')}</label>
+              <input
+                type="date"
+                value={settings.cycleStartDate || ''}
+                onChange={(e) => setSettings({...settings, cycleStartDate: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('settings.cycleStartDateHint')}</p>
             </div>
 
             <div>

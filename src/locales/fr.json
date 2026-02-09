@@ -205,6 +205,8 @@
     "themeDark": "Sombre",
     "longTermGoal": "Objectif à long terme",
     "longTermGoalPlaceholder": "Ex : Jouer Eruption de Van Halen en entier",
+    "cycleStartDate": "Début du cycle de 4 semaines",
+    "cycleStartDateHint": "Définissez la date de début de votre semaine 1. Par défaut, c'est le lundi de votre premier lancement.",
     "metronomeSound": "Son du métronome",
     "sounds": {
       "click": "Click",

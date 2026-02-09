@@ -205,6 +205,8 @@
     "themeDark": "Scuro",
     "longTermGoal": "Obiettivo a lungo termine",
     "longTermGoalPlaceholder": "Es.: Suonare Eruption di Van Halen per intero",
+    "cycleStartDate": "Data di inizio del ciclo di 4 settimane",
+    "cycleStartDateHint": "Imposta la data di inizio della tua settimana 1. Per impostazione predefinita, è il lunedì del tuo primo avvio.",
     "metronomeSound": "Suono del metronomo",
     "sounds": {
       "click": "Click",
