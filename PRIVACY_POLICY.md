@@ -55,5 +55,5 @@ We may update this privacy policy from time to time. Any changes will be reflect
 
 If you have any questions about this privacy policy, you can contact us at:
 
-**Email:** metalicsound13@gmail.com
-**GitHub:** [https://github.com/Isharil/mymusiccoach](https://github.com/Isharil/mymusiccoach)
+**Email:** mymusiccoach.app@gmail.com
+**Website:** [https://github.com/Isharil/mymusiccoach](https://github.com/Isharil/mymusiccoach)
