@@ -2211,9 +2211,9 @@ const MyMusicCoach = () => {
       {/* Modal Planning */}
       {showSchedule && (
         <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
-          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
+          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
             <div className="flex items-center justify-between mb-4">
-              <button 
+              <button
                 onClick={() => setShowSchedule(false)}
                 className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
               >
@@ -2370,7 +2370,7 @@ const MyMusicCoach = () => {
       {/* Page Workout actif */}
       {activeWorkout && (
         <div className="min-h-screen bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
-          <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6 pb-8">
+          <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6 pb-8" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 1rem)'}}>
             <button 
               onClick={() => setActiveWorkout(null)}
               className="text-white text-sm font-medium mb-4"
@@ -3442,7 +3442,7 @@ const MyMusicCoach = () => {
       {/* Modal Créer/Modifier Exercice */}
       {showCreateExercise && (
         <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
-          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
+          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
             <div className="flex items-center justify-between">
               <button
                 onClick={() => {
@@ -3704,9 +3704,9 @@ const MyMusicCoach = () => {
       {/* Modal Créer/Éditer Workout */}
       {showCreateWorkout && (
         <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
-          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg">
+          <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
             <div className="flex items-center justify-between">
-              <button 
+              <button
                 onClick={() => {
                   setShowCreateWorkout(false);
                   setEditingWorkout(null);
@@ -3897,7 +3897,8 @@ const MyMusicCoach = () => {
       {selectedExercise && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
           <div className="h-full flex flex-col bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
-            <div className="flex-shrink-0 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6">
+            <div className="flex-shrink-0 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 1rem)'}}>
+
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => {
@@ -4542,7 +4543,7 @@ const MyMusicCoach = () => {
             <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4 text-sm text-gray-700 dark:text-gray-300">
               {settings.language === 'fr' ? (
                 <>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Dernière mise à jour : Février 2025</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Dernière mise à jour : Février 2026</p>
 
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">1. Données collectées</h3>
                   <p>MyMusicCoach ne collecte <strong>aucune donnée personnelle</strong> et n'envoie aucune information à des serveurs externes.</p>
@@ -4569,11 +4570,11 @@ const MyMusicCoach = () => {
                   <p>Vous pouvez supprimer toutes vos données à tout moment via l'option "Réinitialiser l'application" dans les paramètres.</p>
 
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">7. Contact</h3>
-                  <p>Pour toute question concernant cette politique, contactez-nous à : <span className="text-purple-600 dark:text-purple-400">contact@mymusiccoach.app</span></p>
+                  <p>Pour toute question concernant cette politique, contactez-nous à : <span className="text-purple-600 dark:text-purple-400">mymusiccoach.app@gmail.com</span></p>
                 </>
               ) : (
                 <>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Last updated: February 2025</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">Last updated: February 2026</p>
 
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">1. Data Collection</h3>
                   <p>MyMusicCoach does <strong>not collect any personal data</strong> and does not send any information to external servers.</p>
@@ -4600,7 +4601,7 @@ const MyMusicCoach = () => {
                   <p>You can delete all your data at any time using the "Reset Application" option in settings.</p>
 
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">7. Contact</h3>
-                  <p>For any questions about this policy, contact us at: <span className="text-purple-600 dark:text-purple-400">contact@mymusiccoach.app</span></p>
+                  <p>For any questions about this policy, contact us at: <span className="text-purple-600 dark:text-purple-400">mymusiccoach.app@gmail.com</span></p>
                 </>
               )}
             </div>

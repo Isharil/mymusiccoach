@@ -28,7 +28,10 @@
       "Bash(\"/c/Program Files/Java/jre1.8.0_271/bin/keytool.exe\" -genkey -v -keystore c:/Users/metal/mymusiccoach/android/app/mymusiccoach-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mymusiccoach -storepass mymusiccoach2026 -keypass mymusiccoach2026 -dname \"CN=Isharil, OU=Dev, O=MyMusicCoach, L=Paris, ST=IDF, C=FR\")",
       "Bash(c:/Users/metal/mymusiccoach/android/gradlew.bat -p c:/Users/metal/mymusiccoach/android bundleRelease)",
       "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/java.exe\" -version)",
-      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" c:/Users/metal/mymusiccoach/android/gradlew.bat:*)"
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\" c:/Users/metal/mymusiccoach/android/gradlew.bat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nMise à jour email de contact dans la privacy policy.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)"
     ]
   }
 }
