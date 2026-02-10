@@ -1868,7 +1868,7 @@ const MyMusicCoach = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 pb-20" style={{paddingTop: 'env(safe-area-inset-top, 12px)'}}>
       {/* Page d'accueil */}
       {activeTab === 'home' && !activeWorkout && (
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
