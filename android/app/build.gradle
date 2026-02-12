@@ -18,10 +18,13 @@ android {
     }
     signingConfigs {
         release {
+            def props = new Properties()
+            def localPropsFile = rootProject.file('local.properties')
+            if (localPropsFile.exists()) props.load(new FileInputStream(localPropsFile))
             storeFile file('mymusiccoach-release.jks')
-            storePassword 'mymusiccoach2026'
+            storePassword props['RELEASE_STORE_PASSWORD'] ?: ''
             keyAlias 'mymusiccoach'
-            keyPassword 'mymusiccoach2026'
+            keyPassword props['RELEASE_KEY_PASSWORD'] ?: ''
         }
     }
     buildTypes {
