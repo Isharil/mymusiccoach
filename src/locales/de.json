@@ -63,7 +63,11 @@
     "dayAbbr": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
     "restDay": "Ruhetag",
     "chooseSession": "Session wählen",
-    "addSession": "Session hinzufügen"
+    "addSession": "Session hinzufügen",
+    "today": "Heute",
+    "sessions": "{count} Session | {count} Sessions",
+    "deletedSession": "Gelöschte Session",
+    "saveSchedule": "Zeitplan speichern"
   },
   "workout": {
     "new": "Neue Session",

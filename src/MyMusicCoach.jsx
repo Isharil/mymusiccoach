@@ -2218,9 +2218,9 @@ const MyMusicCoach = () => {
                 className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
               >
                 <span className="text-xl">←</span>
-                <span className="font-medium">Retour</span>
+                <span className="font-medium">{t('schedule.back')}</span>
               </button>
-              <h2 className="text-lg font-bold">Planning sur 4 semaines</h2>
+              <h2 className="text-lg font-bold">{t('schedule.title')}</h2>
               <div className="w-20"></div>
             </div>
 
@@ -2249,7 +2249,7 @@ const MyMusicCoach = () => {
                         : 'bg-white/20 text-white hover:bg-white/30'
                     }`}
                   >
-                    S{week}
+                    {t('schedule.week').charAt(0)}{week}
                     {getCurrentWeekNumber() === week && (
                       <span className="ml-1 text-xs">●</span>
                     )}
@@ -2272,7 +2272,8 @@ const MyMusicCoach = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
-            {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map(day => {
+            {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((day, dayIndex) => {
+              const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
               const isToday = getCurrentDay() === day && getCurrentWeekNumber() === viewingWeek;
               const weekKey = `semaine${viewingWeek}`;
               const dayWorkouts = weeklySchedule[weekKey]?.[day] || [];
@@ -2285,17 +2286,17 @@ const MyMusicCoach = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className={`font-bold capitalize text-base ${isToday ? 'text-purple-600 dark:text-purple-400' : 'text-gray-900 dark:text-gray-100'}`}>
-                        {day}
+                        {t(`schedule.dayNames.${dayKeys[dayIndex]}`)}
                       </span>
                       {isToday && (
                         <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full font-medium">
-                          Aujourd'hui
+                          {t('schedule.today')}
                         </span>
                       )}
                     </div>
                     {workoutIds.length > 0 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        {workoutIds.length} session{workoutIds.length > 1 ? 's' : ''}
+                        {workoutIds.length} {workoutIds.length > 1 ? t('home.sessions') : 'session'}
                       </span>
                     )}
                   </div>
@@ -2310,7 +2311,7 @@ const MyMusicCoach = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-sm">🎵</span>
                               <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                                {workout ? workout.name : 'Session supprimée'}
+                                {workout ? workout.name : t('schedule.deletedSession')}
                               </span>
                             </div>
                             <button
@@ -2361,7 +2362,7 @@ const MyMusicCoach = () => {
               onClick={() => setShowSchedule(false)}
               className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
             >
-              ✓ Sauvegarder le planning
+              ✓ {t('schedule.saveSchedule')}
             </button>
           </div>
         </div>

@@ -63,7 +63,11 @@
     "dayAbbr": ["M", "T", "W", "T", "F", "S", "S"],
     "restDay": "Rest day",
     "chooseSession": "Choose a session",
-    "addSession": "Add a session"
+    "addSession": "Add a session",
+    "today": "Today",
+    "sessions": "{count} session | {count} sessions",
+    "deletedSession": "Deleted session",
+    "saveSchedule": "Save schedule"
   },
   "workout": {
     "new": "New session",

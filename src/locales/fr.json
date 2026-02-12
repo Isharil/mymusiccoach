@@ -63,7 +63,11 @@
     "dayAbbr": ["L", "M", "M", "J", "V", "S", "D"],
     "restDay": "Jour de repos",
     "chooseSession": "Choisir une session",
-    "addSession": "Ajouter une session"
+    "addSession": "Ajouter une session",
+    "today": "Aujourd'hui",
+    "sessions": "{count} session | {count} sessions",
+    "deletedSession": "Session supprimée",
+    "saveSchedule": "Sauvegarder le planning"
   },
   "workout": {
     "new": "Nouvelle session",
