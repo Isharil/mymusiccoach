@@ -207,6 +207,7 @@
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
+    "themeAuto": "Auto (system)",
     "longTermGoal": "Long-term goal",
     "longTermGoalPlaceholder": "E.g.: Play Eruption by Van Halen in full",
     "cycleStartDate": "4-week cycle start date",

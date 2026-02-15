@@ -39,7 +39,7 @@ const MyMusicCoach = () => {
     notifications: true,
     practiceReminder: "18:00",
     reminderEnabled: true,
-    theme: "light",
+    theme: "auto",
     userName: "Musician",
     language: "en",
     metronomeSound: "click",
@@ -580,19 +580,37 @@ const MyMusicCoach = () => {
     updateReminder();
   }, [settings.notifications, settings.practiceReminder, settings.reminderEnabled]);
 
+  // Helper pour savoir si le mode sombre est actif (résolu)
+  const isDarkMode = () => {
+    if (settings.theme === 'auto') return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return settings.theme === 'dark';
+  };
+
   // Appliquer le thème sombre
   useEffect(() => {
-    const isDark = settings.theme === 'dark';
-    if (isDark) {
-      document.documentElement.classList.add('dark');
+    const applyTheme = (isDark) => {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', isDark ? '#1f2937' : '#7c3aed');
+      }
+    };
+
+    if (settings.theme === 'auto') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mediaQuery.matches);
+      const handler = (e) => applyTheme(e.matches);
+      mediaQuery.addEventListener('change', handler);
+      localStorage.setItem('mmc_theme', mediaQuery.matches ? 'dark' : 'light');
+      return () => mediaQuery.removeEventListener('change', handler);
     } else {
-      document.documentElement.classList.remove('dark');
+      applyTheme(settings.theme === 'dark');
+      localStorage.setItem('mmc_theme', settings.theme);
     }
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', isDark ? '#1f2937' : '#7c3aed');
-    }
-    localStorage.setItem('mmc_theme', settings.theme);
   }, [settings.theme]);
 
   // Scroll en haut à chaque changement d'onglet
@@ -3079,10 +3097,10 @@ const MyMusicCoach = () => {
                         <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 rounded-xl p-4">
                           <svg viewBox="0 0 300 100" className="w-full h-24">
                             {/* Grille de fond */}
-                            <line x1="0" y1="80" x2="300" y2="80" stroke={settings.theme === 'dark' ? '#374151' : '#e5e7eb'} strokeWidth="1" />
-                            <line x1="0" y1="60" x2="300" y2="60" stroke={settings.theme === 'dark' ? '#374151' : '#e5e7eb'} strokeWidth="1" />
-                            <line x1="0" y1="40" x2="300" y2="40" stroke={settings.theme === 'dark' ? '#374151' : '#e5e7eb'} strokeWidth="1" />
-                            <line x1="0" y1="20" x2="300" y2="20" stroke={settings.theme === 'dark' ? '#374151' : '#e5e7eb'} strokeWidth="1" />
+                            <line x1="0" y1="80" x2="300" y2="80" stroke={isDarkMode() ? '#374151' : '#e5e7eb'} strokeWidth="1" />
+                            <line x1="0" y1="60" x2="300" y2="60" stroke={isDarkMode() ? '#374151' : '#e5e7eb'} strokeWidth="1" />
+                            <line x1="0" y1="40" x2="300" y2="40" stroke={isDarkMode() ? '#374151' : '#e5e7eb'} strokeWidth="1" />
+                            <line x1="0" y1="20" x2="300" y2="20" stroke={isDarkMode() ? '#374151' : '#e5e7eb'} strokeWidth="1" />
                             
                             {/* Ligne de base */}
                             <line 
@@ -3116,7 +3134,7 @@ const MyMusicCoach = () => {
                               const y = 100 - ((h.tempo - minTempo + 5) / (maxTempo - minTempo + 10)) * 90;
                               return (
                                 <g key={i}>
-                                  <circle cx={x} cy={y} r="5" fill="#9333ea" stroke={settings.theme === 'dark' ? '#1f2937' : '#fff'} strokeWidth="2" />
+                                  <circle cx={x} cy={y} r="5" fill="#9333ea" stroke={isDarkMode() ? '#1f2937' : '#fff'} strokeWidth="2" />
                                 </g>
                               );
                             })}
@@ -3209,22 +3227,22 @@ const MyMusicCoach = () => {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.theme')}</label>
-                <button
-                  onClick={() => setSettings({...settings, theme: settings.theme === 'dark' ? 'light' : 'dark'})}
-                  className={`w-12 h-6 rounded-full transition-colors ${
-                    settings.theme === 'dark' ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-white dark:bg-gray-800 rounded-full shadow-md transition-transform ${
-                    settings.theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.theme')}</label>
+              <div className="flex rounded-xl overflow-hidden border border-gray-300 dark:border-gray-600">
+                {['auto', 'light', 'dark'].map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setSettings({...settings, theme: mode})}
+                    className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                      settings.theme === mode
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {mode === 'auto' ? t('settings.themeAuto') : mode === 'light' ? t('settings.themeLight') : t('settings.themeDark')}
+                  </button>
+                ))}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {settings.theme === 'dark' ? t('settings.themeDark') : t('settings.themeLight')}
-              </p>
             </div>
 
             <div>
@@ -4115,7 +4133,11 @@ const MyMusicCoach = () => {
 
                 {/* Métronome compact */}
                 <Metronome
-                  initialTempo={selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120}
+                  initialTempo={
+                    selectedExercise.tempoHistory?.length > 0
+                      ? selectedExercise.tempoHistory[selectedExercise.tempoHistory.length - 1].tempo
+                      : (selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120)
+                  }
                   compact={true}
                   t={t}
                   soundType={settings.metronomeSound}

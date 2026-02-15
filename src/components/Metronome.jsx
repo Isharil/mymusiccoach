@@ -60,6 +60,11 @@ const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
 const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key, soundType = 'click', theme = 'light' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [tempo, setTempo] = useState(initialTempo);
+
+  // Synchroniser le tempo quand l'exercice change
+  useEffect(() => {
+    setTempo(initialTempo);
+  }, [initialTempo]);
   const [currentBeat, setCurrentBeat] = useState(0);
   const [currentSubBeat, setCurrentSubBeat] = useState(0);
   const [subdivision, setSubdivision] = useState(SUBDIVISIONS[0]);

@@ -207,6 +207,7 @@
     "theme": "Tema",
     "themeLight": "Claro",
     "themeDark": "Oscuro",
+    "themeAuto": "Auto (sistema)",
     "longTermGoal": "Objetivo a largo plazo",
     "longTermGoalPlaceholder": "Ej.: Tocar Eruption de Van Halen completo",
     "cycleStartDate": "Fecha de inicio del ciclo de 4 semanas",

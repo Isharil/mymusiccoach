@@ -207,6 +207,7 @@
     "theme": "Design",
     "themeLight": "Hell",
     "themeDark": "Dunkel",
+    "themeAuto": "Auto (System)",
     "longTermGoal": "Langfristiges Ziel",
     "longTermGoalPlaceholder": "Z.B.: Eruption von Van Halen komplett spielen",
     "cycleStartDate": "Startdatum des 4-Wochen-Zyklus",
