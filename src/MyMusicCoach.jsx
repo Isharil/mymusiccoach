@@ -79,6 +79,7 @@ const MyMusicCoach = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [deletedExercises, setDeletedExercises, deletedExercisesLoading] = useIndexedDB('mmc_deletedExercises', []);
   const [showTrash, setShowTrash] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const [archivedWorkouts, setArchivedWorkouts, archivedWorkoutsLoading] = useIndexedDB('mmc_archivedWorkouts', []);
   const [showArchive, setShowArchive] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -3022,7 +3023,7 @@ const MyMusicCoach = () => {
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{t('stats.recentHistory')}</h2>
             <div className="space-y-3">
-              {sessionHistory.slice().reverse().map(session => (
+              {sessionHistory.slice().reverse().slice(0, showAllHistory ? sessionHistory.length : 1).map(session => (
                 <div key={session.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -3052,6 +3053,14 @@ const MyMusicCoach = () => {
                   </div>
                 </div>
               ))}
+              {sessionHistory.length > 1 && (
+                <button
+                  onClick={() => setShowAllHistory(!showAllHistory)}
+                  className="w-full py-2 text-sm font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
+                >
+                  {showAllHistory ? t('stats.showLess') : t('stats.showMore', { count: sessionHistory.length - 1 })}
+                </button>
+              )}
             </div>
           </div>
 

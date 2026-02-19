@@ -181,6 +181,8 @@
     "totalSessions": "Gesamte Sessions",
     "sessionsLast28Days": "Sessions (28 Tage)",
     "recentHistory": "Neuester Sessionverlauf",
+    "showMore": "Mehr anzeigen ({count} weitere)",
+    "showLess": "Weniger anzeigen",
     "lastTen": "Sessionverlauf (letzte 10)",
     "completed": "Abgeschlossen",
     "skipped": "Übersprungen",

@@ -181,6 +181,8 @@
     "totalSessions": "Total sessions",
     "sessionsLast28Days": "Sessions (28 days)",
     "recentHistory": "Recent session history",
+    "showMore": "Show more ({count} others)",
+    "showLess": "Show less",
     "lastTen": "Session History (last 10)",
     "completed": "Completed",
     "skipped": "Skipped",
