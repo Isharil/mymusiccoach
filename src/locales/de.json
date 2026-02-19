@@ -128,7 +128,10 @@
     "currentTempo": "Aktuelles Tempo",
     "notes": "Anmerkungen",
     "notesPlaceholder": "Notiere deine Beobachtungen, Schwierigkeiten, Verbesserungspunkte...",
-    "notesHint": "Diese Notizen werden mit deiner Session gespeichert"
+    "notesHint": "Diese Notizen werden mit deiner Session gespeichert",
+    "saveTempoAndValidate": "{tempo} BPM speichern und bestätigen",
+    "skip": "Überspringen",
+    "validate": "Übung bestätigen"
   },
   "library": {
     "title": "Meine Übungen",

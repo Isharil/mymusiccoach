@@ -57,7 +57,7 @@ const buildTimeSignature = (numerator, denominator, customGrouping = null) => {
   };
 };
 
-const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key, soundType = 'click', theme = 'light' }) => {
+const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => key, soundType = 'click', theme = 'light', onTempoChange }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [tempo, setTempo] = useState(initialTempo);
 
@@ -65,6 +65,11 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
   useEffect(() => {
     setTempo(initialTempo);
   }, [initialTempo]);
+
+  // Notifier le parent quand le tempo change
+  useEffect(() => {
+    if (onTempoChange) onTempoChange(tempo);
+  }, [tempo]);
   const [currentBeat, setCurrentBeat] = useState(0);
   const [currentSubBeat, setCurrentSubBeat] = useState(0);
   const [subdivision, setSubdivision] = useState(SUBDIVISIONS[0]);

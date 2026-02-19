@@ -18,6 +18,7 @@ const MyMusicCoach = () => {
   const [activeWorkout, setActiveWorkout, activeWorkoutLoading] = useIndexedDB('mmc_activeWorkout', null);
   const [workoutProgress, setWorkoutProgress, workoutProgressLoading] = useIndexedDB('mmc_workoutProgress', {});
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [metronomeTempo, setMetronomeTempo] = useState(null);
   const [currentTempo, setCurrentTempo, currentTempoLoading] = useIndexedDB('mmc_currentTempo', {});
   const [exerciseNotes, setExerciseNotes, exerciseNotesLoading] = useIndexedDB('mmc_exerciseNotes', {}); // Notes/commentaires par exercice
   const [showSchedule, setShowSchedule] = useState(false);
@@ -4142,6 +4143,7 @@ const MyMusicCoach = () => {
                   t={t}
                   soundType={settings.metronomeSound}
                   theme={settings.theme}
+                  onTempoChange={setMetronomeTempo}
                 />
 
                 {selectedExercise.baseTempo > 0 && (
@@ -4289,9 +4291,35 @@ const MyMusicCoach = () => {
 
                   // Vérifier si un tempo est saisi mais non enregistré
                   const hasUnsavedTempo = selectedExercise.baseTempo > 0 && currentTempo[selectedExercise.id];
+                  const hasTempo = selectedExercise.baseTempo > 0;
 
                   return (
                     <div className="space-y-3">
+                      {hasTempo && metronomeTempo && (
+                        <button
+                          onClick={() => {
+                            // Enregistrer le tempo du métronome
+                            const today = new Date();
+                            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                            const updatedExercises = exercises.map(ex => {
+                              if (ex.id === selectedExercise.id) {
+                                return { ...ex, tempoHistory: [...ex.tempoHistory, { date: dateStr, tempo: metronomeTempo }] };
+                              }
+                              return ex;
+                            });
+                            setExercises(updatedExercises);
+                            setCurrentTempo({...currentTempo, [selectedExercise.id]: ''});
+                            // Valider l'exercice et fermer
+                            setWorkoutProgress({...workoutProgress, [key]: 'completed'});
+                            stopTimer();
+                            setSelectedExercise(null);
+                          }}
+                          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                        >
+                          <Activity className="w-5 h-5" />
+                          {t('exercise.saveTempoAndValidate', { tempo: metronomeTempo })}
+                        </button>
+                      )}
                       <div className="flex gap-3">
                         <button
                           onClick={() => {
@@ -4300,23 +4328,22 @@ const MyMusicCoach = () => {
                           className="flex-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
                         >
                           <X className="w-5 h-5" />
-                          Sauter
+                          {t('exercise.skip')}
                         </button>
                         <button
                           onClick={() => {
-                            // Auto-enregistrer le tempo si saisi
+                            // Auto-enregistrer le tempo si saisi manuellement
                             if (hasUnsavedTempo) {
                               saveTempo(selectedExercise.id);
                             }
                             setWorkoutProgress({...workoutProgress, [key]: 'completed'});
-                            // Fermer l'exercice
                             stopTimer();
                             setSelectedExercise(null);
                           }}
                           className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
                           <Check className="w-6 h-6" />
-                          Valider l'exercice
+                          {t('exercise.validate')}
                         </button>
                       </div>
                     </div>

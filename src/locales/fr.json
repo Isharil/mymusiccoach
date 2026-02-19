@@ -128,7 +128,10 @@
     "currentTempo": "Tempo actuel",
     "notes": "Observations",
     "notesPlaceholder": "Note tes observations, difficultés rencontrées, points à améliorer...",
-    "notesHint": "Ces notes seront sauvegardées avec ta session"
+    "notesHint": "Ces notes seront sauvegardées avec ta session",
+    "saveTempoAndValidate": "Enregistrer {tempo} BPM et valider",
+    "skip": "Sauter",
+    "validate": "Valider l'exercice"
   },
   "library": {
     "title": "Mes exercices",
