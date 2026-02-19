@@ -95,7 +95,12 @@
     "shortTermGoal": "Objectif 7 jours",
     "shortTermGoalPlaceholder": "Qu'est-ce que tu veux atteindre cette semaine ?",
     "mediumTermGoal": "Objectif 28 jours",
-    "mediumTermGoalPlaceholder": "Qu'est-ce que tu veux atteindre ce mois-ci ?"
+    "mediumTermGoalPlaceholder": "Qu'est-ce que tu veux atteindre ce mois-ci ?",
+    "back": "Retour",
+    "exerciseCount": "{count} exercices",
+    "viewDetails": "Voir les détails",
+    "exercisesHandled": "{done}/{total} exercices traités",
+    "finishSession": "Terminer la session"
   },
   "exercise": {
     "new": "Nouvel exercice",
@@ -153,7 +158,15 @@
     "progressHistory": "Historique de progression",
     "noTempoRecorded": "Aucun tempo enregistré pour le moment",
     "validated": "Exercice validé !",
-    "skipped": "Exercice sauté"
+    "skipped": "Exercice sauté",
+    "namePlaceholder": "Exercice technique...",
+    "durationPlaceholder": "5 min",
+    "setsPlaceholder": "3 séries",
+    "descriptionPlaceholder": "Description de l'exercice...",
+    "baseTempoHint": "mettre 0 si non applicable",
+    "acceptedFormats": "Formats acceptés : PDF, Images (PNG/JPEG), Partitions (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "fileAdded": "Fichier ajouté : {name}",
+    "fillRequired": "Veuillez remplir tous les champs obligatoires"
   },
   "library": {
     "title": "Mes exercices",

@@ -95,7 +95,12 @@
     "shortTermGoal": "7-day goal",
     "shortTermGoalPlaceholder": "What do you want to achieve this week?",
     "mediumTermGoal": "28-day goal",
-    "mediumTermGoalPlaceholder": "What do you want to achieve this month?"
+    "mediumTermGoalPlaceholder": "What do you want to achieve this month?",
+    "back": "Back",
+    "exerciseCount": "{count} exercises",
+    "viewDetails": "View details",
+    "exercisesHandled": "{done}/{total} exercises handled",
+    "finishSession": "Finish session"
   },
   "exercise": {
     "new": "New exercise",
@@ -153,7 +158,15 @@
     "progressHistory": "Progress history",
     "noTempoRecorded": "No tempo recorded yet",
     "validated": "Exercise validated!",
-    "skipped": "Exercise skipped"
+    "skipped": "Exercise skipped",
+    "namePlaceholder": "Technical exercise...",
+    "durationPlaceholder": "5 min",
+    "setsPlaceholder": "3 sets",
+    "descriptionPlaceholder": "Exercise description...",
+    "baseTempoHint": "set to 0 if not applicable",
+    "acceptedFormats": "Accepted formats: PDF, Images (PNG/JPEG), Scores (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "fileAdded": "File added: {name}",
+    "fillRequired": "Please fill in all required fields"
   },
   "library": {
     "title": "My exercises",

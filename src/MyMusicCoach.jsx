@@ -2392,11 +2392,11 @@ const MyMusicCoach = () => {
       {activeWorkout && (
         <div className="min-h-screen bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
           <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6 pb-8" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 1rem)'}}>
-            <button 
+            <button
               onClick={() => setActiveWorkout(null)}
               className="text-white text-sm font-medium mb-4"
             >
-              ← Retour
+              ← {t('workout.back')}
             </button>
             <h1 className="text-3xl font-bold mb-2">{activeWorkout.name}</h1>
             <div className="flex items-center gap-4 text-purple-100">
@@ -2406,7 +2406,7 @@ const MyMusicCoach = () => {
               </div>
               <div className="flex items-center gap-1">
                 <Activity className="w-4 h-4" />
-                <span className="text-sm">{activeWorkout.exercises.length} exercices</span>
+                <span className="text-sm">{t('workout.exerciseCount', { count: activeWorkout.exercises.length })}</span>
               </div>
             </div>
             {(activeWorkout.shortTermGoal || activeWorkout.mediumTermGoal) && (
@@ -2469,7 +2469,7 @@ const MyMusicCoach = () => {
                     onClick={() => setSelectedExercise(exercise)}
                     className="w-full bg-purple-600 dark:bg-purple-500 text-white py-3 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                   >
-                    Voir les détails
+                    {t('workout.viewDetails')}
                   </button>
                 </div>
               );
@@ -2490,7 +2490,7 @@ const MyMusicCoach = () => {
                 <div className="mt-6 space-y-2">
                   {!allExercisesHandled && (
                     <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                      {handledCount}/{activeWorkout.exercises.length} exercices traités
+                      {t('workout.exercisesHandled', { done: handledCount, total: activeWorkout.exercises.length })}
                     </p>
                   )}
                   <button
@@ -2502,7 +2502,7 @@ const MyMusicCoach = () => {
                         : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    Terminer la session
+                    {t('workout.finishSession')}
                   </button>
                 </div>
               );
@@ -3483,9 +3483,9 @@ const MyMusicCoach = () => {
                 className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
               >
                 <span className="text-xl">←</span>
-                <span className="font-medium">Retour</span>
+                <span className="font-medium">{t('exercise.back')}</span>
               </button>
-              <h2 className="text-lg font-bold">{editingExercise ? 'Modifier l\'exercice' : 'Nouvel exercice'}</h2>
+              <h2 className="text-lg font-bold">{editingExercise ? t('exercise.edit') : t('exercise.new')}</h2>
               <div className="w-20"></div>
             </div>
           </div>
@@ -3513,53 +3513,53 @@ const MyMusicCoach = () => {
           >
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
               <div className="bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-300 dark:border-yellow-600 rounded-xl p-3 mb-2">
-                <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">⚠️ Tous les champs marqués d'un * sont obligatoires</p>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">⚠️ {t('exercise.requiredFields')}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom de l'exercice *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.name')} *</label>
                 <input
                   type="text"
                   name="name"
                   required
                   defaultValue={editingExercise?.name || ''}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
-                  placeholder="Exercice technique..."
+                  placeholder={t('exercise.namePlaceholder')}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Durée *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.duration')} *</label>
                   <input
                     type="text"
                     name="duration"
                     required
                     defaultValue={editingExercise?.duration || ''}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
-                    placeholder="5 min"
+                    placeholder={t('exercise.durationPlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Séries *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.sets')} *</label>
                   <input
                     type="text"
                     name="sets"
                     required
                     defaultValue={editingExercise?.sets || ''}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
-                    placeholder="3 séries"
+                    placeholder={t('exercise.setsPlaceholder')}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Complément (optionnel)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.attachment')}</label>
                 <div className="flex gap-2">
                   {[
-                    { value: 'none', label: 'Aucun' },
-                    { value: 'video', label: 'Vidéo' },
-                    { value: 'file', label: 'Fichier' }
+                    { value: 'none', label: t('exercise.none') },
+                    { value: 'video', label: t('exercise.video') },
+                    { value: 'file', label: t('exercise.file') }
                   ].map(type => (
                     <button
                       key={type.value}
@@ -3582,7 +3582,7 @@ const MyMusicCoach = () => {
 
               {newExerciseType === 'video' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL YouTube</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.youtubeUrl')}</label>
                   <input
                     type="url"
                     name="videoUrl"
@@ -3595,7 +3595,7 @@ const MyMusicCoach = () => {
 
               {newExerciseType === 'file' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Importer un fichier</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.importFile')}</label>
                   <input
                     type="file"
                     accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.gp5,.gpx,.gp"
@@ -3603,33 +3603,33 @@ const MyMusicCoach = () => {
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 dark:bg-purple-900/30 file:text-purple-700 dark:text-purple-300 hover:file:bg-purple-100 dark:bg-purple-900/40"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    Formats acceptés : PDF, Images (PNG/JPEG), Partitions (MusicXML), Guitar Pro (GP5/GPX/GP)
+                    {t('exercise.acceptedFormats')}
                   </p>
                   {uploadedFile && (
                     <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-2">
                       <Check className="w-4 h-4" />
-                      Fichier ajouté : {uploadedFile.name}
+                      {t('exercise.fileAdded', { name: uploadedFile.name })}
                     </p>
                   )}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Difficulté *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.difficulty')} *</label>
                 <select
                   name="difficulty"
                   required
                   defaultValue={editingExercise?.difficulty || 'Débutant'}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
                 >
-                  <option value="Débutant">Débutant</option>
-                  <option value="Intermédiaire">Intermédiaire</option>
-                  <option value="Avancé">Avancé</option>
+                  <option value="Débutant">{t('exercise.beginner')}</option>
+                  <option value="Intermédiaire">{t('exercise.intermediate')}</option>
+                  <option value="Avancé">{t('exercise.advanced')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.category')} *</label>
                 <select
                   name="category"
                   required
@@ -3644,8 +3644,8 @@ const MyMusicCoach = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tempo de base (BPM) *
-                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(mettre 0 si non applicable)</span>
+                  {t('exercise.baseTempo')} *
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({t('exercise.baseTempoHint')})</span>
                 </label>
                 <input
                   type="number"
@@ -3660,14 +3660,14 @@ const MyMusicCoach = () => {
               </div>
 
               <div className="pb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.description')} *</label>
                 <textarea
                   name="description"
                   required
                   rows="3"
                   defaultValue={editingExercise?.description || ''}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
-                  placeholder="Description de l'exercice..."
+                  placeholder={t('exercise.descriptionPlaceholder')}
                 />
               </div>
             </div>
@@ -3697,7 +3697,7 @@ const MyMusicCoach = () => {
                   };
 
                   if (!data.name || !data.duration || !data.sets) {
-                    showToast('Veuillez remplir tous les champs obligatoires', 'warning');
+                    showToast(t('exercise.fillRequired'), 'warning');
                     return;
                   }
 
@@ -3723,7 +3723,7 @@ const MyMusicCoach = () => {
                 }}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                {editingExercise ? '✓ Enregistrer les modifications' : '✓ Créer l\'exercice'}
+                {editingExercise ? `✓ ${t('exercise.saveChanges')}` : `✓ ${t('exercise.create')}`}
               </button>
             </div>
           </form>
@@ -3876,7 +3876,7 @@ const MyMusicCoach = () => {
                   };
 
                   if (!data.name || !data.duration || !data.category) {
-                    showToast('Veuillez remplir tous les champs obligatoires', 'warning');
+                    showToast(t('exercise.fillRequired'), 'warning');
                     return;
                   }
 
@@ -4891,7 +4891,7 @@ const MyMusicCoach = () => {
                         onClick={() => setSelectedExercise(exercise)}
                         className="w-full bg-purple-600 text-white py-2 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors text-sm"
                       >
-                        Voir les détails
+                        {t('workout.viewDetails')}
                       </button>
                     </div>
                   );

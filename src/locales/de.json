@@ -95,7 +95,12 @@
     "shortTermGoal": "7-Tage-Ziel",
     "shortTermGoalPlaceholder": "Was möchtest du diese Woche erreichen?",
     "mediumTermGoal": "28-Tage-Ziel",
-    "mediumTermGoalPlaceholder": "Was möchtest du diesen Monat erreichen?"
+    "mediumTermGoalPlaceholder": "Was möchtest du diesen Monat erreichen?",
+    "back": "Zurück",
+    "exerciseCount": "{count} Übungen",
+    "viewDetails": "Details anzeigen",
+    "exercisesHandled": "{done}/{total} Übungen bearbeitet",
+    "finishSession": "Session beenden"
   },
   "exercise": {
     "new": "Neue Übung",
@@ -153,7 +158,15 @@
     "progressHistory": "Fortschrittsverlauf",
     "noTempoRecorded": "Noch kein Tempo aufgezeichnet",
     "validated": "Übung bestätigt!",
-    "skipped": "Übung übersprungen"
+    "skipped": "Übung übersprungen",
+    "namePlaceholder": "Technische Übung...",
+    "durationPlaceholder": "5 Min",
+    "setsPlaceholder": "3 Sätze",
+    "descriptionPlaceholder": "Beschreibung der Übung...",
+    "baseTempoHint": "auf 0 setzen, wenn nicht zutreffend",
+    "acceptedFormats": "Akzeptierte Formate: PDF, Bilder (PNG/JPEG), Partituren (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "fileAdded": "Datei hinzugefügt: {name}",
+    "fillRequired": "Bitte alle Pflichtfelder ausfüllen"
   },
   "library": {
     "title": "Meine Übungen",

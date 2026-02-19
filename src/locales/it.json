@@ -95,7 +95,12 @@
     "shortTermGoal": "Obiettivo 7 giorni",
     "shortTermGoalPlaceholder": "Cosa vuoi raggiungere questa settimana?",
     "mediumTermGoal": "Obiettivo 28 giorni",
-    "mediumTermGoalPlaceholder": "Cosa vuoi raggiungere questo mese?"
+    "mediumTermGoalPlaceholder": "Cosa vuoi raggiungere questo mese?",
+    "back": "Indietro",
+    "exerciseCount": "{count} esercizi",
+    "viewDetails": "Vedi dettagli",
+    "exercisesHandled": "{done}/{total} esercizi trattati",
+    "finishSession": "Termina sessione"
   },
   "exercise": {
     "new": "Nuovo esercizio",
@@ -153,7 +158,15 @@
     "progressHistory": "Storico progressi",
     "noTempoRecorded": "Nessun tempo registrato per il momento",
     "validated": "Esercizio convalidato!",
-    "skipped": "Esercizio saltato"
+    "skipped": "Esercizio saltato",
+    "namePlaceholder": "Esercizio tecnico...",
+    "durationPlaceholder": "5 min",
+    "setsPlaceholder": "3 serie",
+    "descriptionPlaceholder": "Descrizione dell'esercizio...",
+    "baseTempoHint": "impostare 0 se non applicabile",
+    "acceptedFormats": "Formati accettati: PDF, Immagini (PNG/JPEG), Spartiti (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "fileAdded": "File aggiunto: {name}",
+    "fillRequired": "Si prega di compilare tutti i campi obbligatori"
   },
   "library": {
     "title": "I miei esercizi",
