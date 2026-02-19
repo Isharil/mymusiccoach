@@ -3929,7 +3929,7 @@ const MyMusicCoach = () => {
                   }}
                   className="text-white text-sm font-medium"
                 >
-                  ← Retour
+                  ← {t('exercise.back')}
                 </button>
                 <h3 className="font-bold text-lg flex-1 text-center">{selectedExercise.name}</h3>
                 <div className="relative">
@@ -3955,7 +3955,7 @@ const MyMusicCoach = () => {
                         className="w-full px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 flex items-center gap-3"
                       >
                         <Edit2 className="w-5 h-5" />
-                        Modifier l'exercice
+                        {t('exercise.edit')}
                       </button>
                       <button
                         onClick={() => {
@@ -3965,7 +3965,7 @@ const MyMusicCoach = () => {
                         className="w-full px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 dark:bg-red-900/30 flex items-center gap-3"
                       >
                         <Trash2 className="w-5 h-5" />
-                        Supprimer l'exercice
+                        {t('exercise.delete')}
                       </button>
                     </div>
                   )}
@@ -3997,8 +3997,8 @@ const MyMusicCoach = () => {
                         <Video className="w-8 h-8" />
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-lg">Voir la vidéo</p>
-                        <p className="text-red-100 text-sm">Ouvrir sur YouTube</p>
+                        <p className="font-bold text-lg">{t('exercise.watchVideo')}</p>
+                        <p className="text-red-100 text-sm">{t('exercise.openYoutube')}</p>
                       </div>
                     </div>
                   </a>
@@ -4019,7 +4019,7 @@ const MyMusicCoach = () => {
                           download={selectedExercise.fileData.name}
                           className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
                         >
-                          Télécharger l'image
+                          {t('exercise.downloadImage')}
                         </a>
                       </>
                     ) : (
@@ -4036,13 +4036,13 @@ const MyMusicCoach = () => {
                           download={selectedExercise.fileData.name}
                           className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
                         >
-                          {selectedExercise.fileData.name.match(/\.(gp5|gpx|gp)$/i) 
-                            ? 'Télécharger le fichier Guitar Pro'
+                          {selectedExercise.fileData.name.match(/\.(gp5|gpx|gp)$/i)
+                            ? t('exercise.downloadGuitarPro')
                             : selectedExercise.fileData.name.match(/\.(pdf)$/i)
-                            ? 'Télécharger le PDF'
+                            ? t('exercise.downloadPdf')
                             : selectedExercise.fileData.name.match(/\.(musicxml|xml)$/i)
-                            ? 'Télécharger la partition'
-                            : 'Télécharger le fichier'}
+                            ? t('exercise.downloadScore')
+                            : t('exercise.downloadFile')}
                         </a>
                       </>
                     )}
@@ -4050,7 +4050,7 @@ const MyMusicCoach = () => {
                 )}
 
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-                  <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3">Description</h4>
+                  <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3">{t('exercise.description')}</h4>
                   <p className="text-gray-600 dark:text-gray-400">{selectedExercise.description}</p>
                 </div>
 
@@ -4078,7 +4078,7 @@ const MyMusicCoach = () => {
                   {/* Bloc Durée avec Chronomètre */}
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-2xl p-5 shadow-md">
                     <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400 mb-3" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Durée</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('exercise.duration')}</p>
 
                     {timerActive || timerPaused || timerSeconds > 0 ? (
                       <>
@@ -4091,21 +4091,21 @@ const MyMusicCoach = () => {
                               onClick={() => pauseTimer()}
                               className="flex-1 bg-yellow-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-yellow-600 transition-colors"
                             >
-                              ⏸ Pause
+                              ⏸ {t('exercise.pause')}
                             </button>
                           ) : (
                             <button
                               onClick={() => resumeTimer()}
                               className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-green-600 transition-colors"
                             >
-                              ▶️ Reprendre
+                              ▶️ {t('exercise.resume')}
                             </button>
                           )}
                           <button
                             onClick={() => stopTimer()}
                             className="flex-1 bg-gray-500 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-gray-600 transition-colors"
                           >
-                            ⏹ Stop
+                            ⏹ {t('exercise.stop')}
                           </button>
                         </div>
                       </>
@@ -4117,17 +4117,17 @@ const MyMusicCoach = () => {
                           onClick={() => startTimer(selectedExercise)}
                           className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                         >
-                          ⏱️ Lancer le chrono
+                          ⏱️ {t('exercise.startTimer')}
                         </button>
                       </>
                     )}
                   </div>
                   {selectedExercise.baseTempo > 0 && (
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 shadow-md">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-5 shadow-md">
                       <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400 mb-3" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tempo</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">{t('exercise.tempo')}</p>
                       <p className="font-bold text-gray-900 dark:text-gray-100 text-lg">{selectedExercise.baseTempo} BPM</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tempo de base</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('exercise.baseTempoLabel')}</p>
                     </div>
                   )}
                 </div>
@@ -4148,12 +4148,12 @@ const MyMusicCoach = () => {
 
                 {selectedExercise.baseTempo > 0 && (
                   <>
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 shadow-lg border-2 border-blue-200 dark:border-blue-700">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-2xl p-6 shadow-lg border-2 border-blue-200 dark:border-blue-700">
                       <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
                         <span className="text-xl">🎯</span>
-                        Enregistrer ton tempo
+                        {t('exercise.recordYourTempo')}
                       </h4>
-                      <p className="text-xs text-blue-700 dark:text-blue-300 mb-4">Avant de valider, note le tempo que tu as atteint</p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 mb-4">{t('exercise.recordTempoHint')}</p>
                       <div className="flex gap-3 mb-3">
                         <input
                           type="number"
@@ -4167,7 +4167,7 @@ const MyMusicCoach = () => {
                             }
                           }}
                           placeholder={`${selectedExercise.baseTempo}`}
-                          className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-lg font-bold text-center"
+                          className="flex-1 px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 text-lg font-bold text-center"
                         />
                         <span className="text-blue-700 dark:text-blue-300 font-bold flex items-center px-3">BPM</span>
                       </div>
@@ -4181,12 +4181,32 @@ const MyMusicCoach = () => {
                         }`}
                       >
                         <TrendingUp className="w-5 h-5" />
-                        Enregistrer mon tempo
+                        {t('exercise.recordMyTempo')}
                       </button>
                     </div>
 
+                    {/* Zone de notes/observations - uniquement pendant une session active */}
+                    {(activeWorkout && activeWorkout.exercises.includes(selectedExercise.id)) && (
+                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 rounded-2xl p-6 shadow-lg border border-amber-200 dark:border-amber-700">
+                        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                          <span className="text-xl">📝</span>
+                          {t('exercise.notes')}
+                        </h4>
+                        <textarea
+                          value={exerciseNotes[selectedExercise.id] || ''}
+                          onChange={(e) => setExerciseNotes({...exerciseNotes, [selectedExercise.id]: e.target.value})}
+                          placeholder={t('exercise.notesPlaceholder')}
+                          className="w-full px-4 py-3 border border-amber-300 dark:border-amber-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none bg-white dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+                          rows={3}
+                        />
+                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                          {t('exercise.notesHint')}
+                        </p>
+                      </div>
+                    )}
+
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-                      <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Historique de progression</h4>
+                      <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">{t('exercise.progressHistory')}</h4>
                       {selectedExercise.tempoHistory.length > 0 ? (
                         <div className="space-y-3">
                           {selectedExercise.tempoHistory.slice().reverse().map((entry, idx, reversedArray) => {
@@ -4207,30 +4227,10 @@ const MyMusicCoach = () => {
                           })}
                         </div>
                       ) : (
-                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Aucun tempo enregistré pour le moment</p>
+                        <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t('exercise.noTempoRecorded')}</p>
                       )}
                     </div>
                   </>
-                )}
-
-                {/* Zone de notes/observations - uniquement pendant une session active */}
-                {(activeWorkout && activeWorkout.exercises.includes(selectedExercise.id)) && (
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-lg border border-amber-200">
-                    <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-xl">📝</span>
-                      {t('exercise.notes')}
-                    </h4>
-                    <textarea
-                      value={exerciseNotes[selectedExercise.id] || ''}
-                      onChange={(e) => setExerciseNotes({...exerciseNotes, [selectedExercise.id]: e.target.value})}
-                      placeholder={t('exercise.notesPlaceholder')}
-                      className="w-full px-4 py-3 border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none bg-white dark:bg-gray-800"
-                      rows={3}
-                    />
-                    <p className="text-xs text-amber-700 mt-2">
-                      {t('exercise.notesHint')}
-                    </p>
-                  </div>
                 )}
 
               </div>
@@ -4250,7 +4250,7 @@ const MyMusicCoach = () => {
                           <div className="bg-green-500 rounded-full p-2">
                             <Check className="w-5 h-5 text-white" />
                           </div>
-                          <span className="font-bold text-green-900 dark:text-green-200">Exercice validé !</span>
+                          <span className="font-bold text-green-900 dark:text-green-200">{t('exercise.validated')}</span>
                         </div>
                         <button
                           onClick={() => {
@@ -4260,7 +4260,7 @@ const MyMusicCoach = () => {
                           }}
                           className="w-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
                         >
-                          Annuler
+                          {t('exercise.cancel')}
                         </button>
                       </div>
                     );
@@ -4273,7 +4273,7 @@ const MyMusicCoach = () => {
                           <div className="bg-gray-400 rounded-full p-2">
                             <X className="w-5 h-5 text-white" />
                           </div>
-                          <span className="font-bold text-gray-700 dark:text-gray-300">Exercice sauté</span>
+                          <span className="font-bold text-gray-700 dark:text-gray-300">{t('exercise.skipped')}</span>
                         </div>
                         <button
                           onClick={() => {
@@ -4283,7 +4283,7 @@ const MyMusicCoach = () => {
                           }}
                           className="w-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
                         >
-                          Annuler
+                          {t('exercise.cancel')}
                         </button>
                       </div>
                     );
@@ -4369,7 +4369,7 @@ const MyMusicCoach = () => {
                             <div className="bg-green-500 rounded-full p-2">
                               <Check className="w-5 h-5 text-white" />
                             </div>
-                            <span className="font-bold text-green-900 dark:text-green-200">Exercice validé !</span>
+                            <span className="font-bold text-green-900 dark:text-green-200">{t('exercise.validated')}</span>
                           </div>
                           <button
                             onClick={() => {
@@ -4390,7 +4390,7 @@ const MyMusicCoach = () => {
                             <div className="bg-gray-400 rounded-full p-2">
                               <X className="w-5 h-5 text-white" />
                             </div>
-                            <span className="font-bold text-gray-700 dark:text-gray-300">Exercice sauté</span>
+                            <span className="font-bold text-gray-700 dark:text-gray-300">{t('exercise.skipped')}</span>
                           </div>
                           <button
                             onClick={() => {
