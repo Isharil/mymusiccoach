@@ -3980,19 +3980,91 @@ const MyMusicCoach = () => {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                  selectedExercise.difficulty === 'Débutant' ? 'bg-green-400 text-green-900 dark:text-green-200' :
-                  selectedExercise.difficulty === 'Intermédiaire' ? 'bg-yellow-400 text-yellow-900' :
-                  'bg-red-400 text-red-900'
-                }`}>
-                  {selectedExercise.difficulty}
-                </span>
-                <span className="text-purple-100 text-sm">{selectedExercise.category}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    selectedExercise.difficulty === 'Débutant' ? 'bg-green-400 text-green-900 dark:text-green-200' :
+                    selectedExercise.difficulty === 'Intermédiaire' ? 'bg-yellow-400 text-yellow-900' :
+                    'bg-red-400 text-red-900'
+                  }`}>
+                    {selectedExercise.difficulty}
+                  </span>
+                  <span className="text-purple-100 text-sm">{selectedExercise.category}</span>
+                </div>
+                {/* Widget timer alarme dans le header */}
+                {activeWorkout && activeWorkout.exercises.includes(selectedExercise.id) && (
+                  timerActive || timerPaused || timerSeconds > 0 ? (
+                    <div className={`flex items-center gap-1.5 pl-1 pr-1 py-1 rounded-full border border-white/20 ${
+                      timerActive
+                        ? 'bg-white/20 text-white'
+                        : timerPaused
+                        ? 'bg-yellow-500/80 text-white'
+                        : 'bg-white/10 text-white'
+                    }`}>
+                      <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0">
+                        {/* Pieds */}
+                        <line x1="9" y1="24" x2="7" y2="26.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="19" y1="24" x2="21" y2="26.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        {/* Cloches */}
+                        <circle cx="6" cy="6" r="3.5" fill="none" stroke="white" strokeWidth="1.3"/>
+                        <circle cx="22" cy="6" r="3.5" fill="none" stroke="white" strokeWidth="1.3"/>
+                        {/* Cadran */}
+                        <circle cx="14" cy="14.5" r="10" fill="none" stroke="white" strokeWidth="1.5"/>
+                        <circle cx="14" cy="14.5" r="8.5" fill="white" fillOpacity="0.15"/>
+                        {/* Marqueurs heures */}
+                        {[0,30,60,90,120,150,180,210,240,270,300,330].map(a => (
+                          <line key={a} x1={14+Math.sin(a*Math.PI/180)*7} y1={14.5-Math.cos(a*Math.PI/180)*7} x2={14+Math.sin(a*Math.PI/180)*8.2} y2={14.5-Math.cos(a*Math.PI/180)*8.2} stroke="white" strokeWidth="1" strokeLinecap="round"/>
+                        ))}
+                        {/* Aiguille minutes (basée sur les minutes) */}
+                        <line x1="14" y1="14.5" x2={14+Math.sin((Math.floor(timerSeconds/60)%60)*6*Math.PI/180)*5.5} y2={14.5-Math.cos((Math.floor(timerSeconds/60)%60)*6*Math.PI/180)*5.5} stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        {/* Aiguille secondes */}
+                        <line x1="14" y1="14.5" x2={14+Math.sin((timerSeconds%60)*6*Math.PI/180)*7} y2={14.5-Math.cos((timerSeconds%60)*6*Math.PI/180)*7} stroke={timerActive ? '#f87171' : 'white'} strokeWidth="0.8" strokeLinecap="round" className="transition-all duration-1000 ease-linear"/>
+                        {/* Centre */}
+                        <circle cx="14" cy="14.5" r="1.2" fill="white"/>
+                        {/* Bouton du haut */}
+                        <rect x="12.5" y="2" width="3" height="2.5" rx="1" fill="white"/>
+                      </svg>
+                      <span className="font-bold text-xs tabular-nums">{formatTime(timerSeconds)}</span>
+                      {timerActive ? (
+                        <button onClick={() => pauseTimer()} className="p-0.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
+                          <span className="text-[10px]">⏸</span>
+                        </button>
+                      ) : (
+                        <button onClick={() => resumeTimer()} className="p-0.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
+                          <span className="text-[10px]">▶️</span>
+                        </button>
+                      )}
+                      <button onClick={() => stopTimer()} className="p-0.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
+                        <span className="text-[10px]">⏹</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => startTimer(selectedExercise)}
+                      className="flex items-center gap-1 px-1.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all animate-pulse border border-white/20"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 28 28" className="shrink-0">
+                        <line x1="9" y1="24" x2="7" y2="26.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="19" y1="24" x2="21" y2="26.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle cx="6" cy="6" r="3.5" fill="none" stroke="white" strokeWidth="1.3"/>
+                        <circle cx="22" cy="6" r="3.5" fill="none" stroke="white" strokeWidth="1.3"/>
+                        <circle cx="14" cy="14.5" r="10" fill="none" stroke="white" strokeWidth="1.5"/>
+                        <circle cx="14" cy="14.5" r="8.5" fill="white" fillOpacity="0.15"/>
+                        {/* Aiguilles fixes à 10h10 */}
+                        <line x1="14" y1="14.5" x2={14+Math.sin(300*Math.PI/180)*5.5} y2={14.5-Math.cos(300*Math.PI/180)*5.5} stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="14" y1="14.5" x2={14+Math.sin(60*Math.PI/180)*5.5} y2={14.5-Math.cos(60*Math.PI/180)*5.5} stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle cx="14" cy="14.5" r="1.2" fill="white"/>
+                        <rect x="12.5" y="2" width="3" height="2.5" rx="1" fill="white"/>
+                      </svg>
+                      <span className="text-xs font-bold">START</span>
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto relative">
+
               <div className="p-6 space-y-6">
                 {selectedExercise.type === 'video' && selectedExercise.videoUrl && (
                   <a
