@@ -105,11 +105,12 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
   }, []);
 
   // Générer un son selon le type sélectionné
-  const playClick = useCallback((isDownbeat, isSubBeat) => {
+  // scheduledTime = temps exact auquel jouer le son (Web Audio clock)
+  const playClick = useCallback((isDownbeat, isSubBeat, scheduledTime) => {
     if (isMuted) return;
 
     const audioContext = getAudioContext();
-    const now = audioContext.currentTime;
+    const now = scheduledTime ?? audioContext.currentTime;
 
     // Ajuster le volume selon le type de temps
     const baseVolume = isDownbeat ? volume : isSubBeat ? volume * 0.5 : volume * 0.8;
@@ -344,6 +345,21 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
     return position % subdivision.divisor === 0;
   }, [timeSignature, subdivision]);
 
+  // File d'attente des beats visuels à afficher
+  const visualQueueRef = useRef([]);
+  const rafRef = useRef(null);
+
+  // Boucle RAF pour mettre à jour l'affichage visuel sans perturber l'audio
+  const drawVisual = useCallback(() => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+    const currentTime = audioContext.currentTime;
+    while (visualQueueRef.current.length > 0 && visualQueueRef.current[0].time <= currentTime) {
+      setCurrentBeat(visualQueueRef.current.shift().beat);
+    }
+    rafRef.current = requestAnimationFrame(drawVisual);
+  }, []);
+
   // Scheduler pour le timing précis
   const scheduler = useCallback(() => {
     const audioContext = getAudioContext();
@@ -354,20 +370,22 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
     const secondsPerQuarter = 60.0 / tempo;
     const secondsPerEighth = secondsPerQuarter / 2; // Croche = moitié de la noire
 
-    while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
+    // Lookahead 150ms pour mobile (plus tolérant aux délais JS sur Android)
+    while (nextNoteTimeRef.current < audioContext.currentTime + 0.15) {
       const position = currentBeatRef.current;
       const isDownbeat = position === 0;
       const isAccent = isAccentBeat(position);
+      const scheduledTime = nextNoteTimeRef.current;
 
-      // Jouer le son
+      // Programmer le son à l'instant exact (pas "maintenant")
       if (isAccent) {
-        playClick(isDownbeat, false);
+        playClick(isDownbeat, false, scheduledTime);
       } else {
-        playClick(false, true);
+        playClick(false, true, scheduledTime);
       }
 
-      // Mettre à jour l'affichage
-      setCurrentBeat(position);
+      // Programmer la mise à jour visuelle (séparée du scheduling audio)
+      visualQueueRef.current.push({ time: scheduledTime, beat: position });
 
       // Calculer l'intervalle jusqu'au prochain clic
       let nextInterval;
@@ -420,6 +438,11 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
         clearInterval(timerIdRef.current);
         timerIdRef.current = null;
       }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      visualQueueRef.current = [];
       setIsPlaying(false);
       setCurrentBeat(0);
       setCurrentSubBeat(0);
@@ -430,10 +453,12 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       if (audioContext.state === 'suspended') {
         audioContext.resume();
       }
+      visualQueueRef.current = [];
       nextNoteTimeRef.current = audioContext.currentTime;
       currentBeatRef.current = 0;
       currentSubBeatRef.current = 0;
       timerIdRef.current = setInterval(scheduler, 25);
+      rafRef.current = requestAnimationFrame(drawVisual);
       setIsPlaying(true);
     }
   }, [isPlaying, scheduler, getAudioContext]);
@@ -451,6 +476,9 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
     return () => {
       if (timerIdRef.current) {
         clearInterval(timerIdRef.current);
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
       }
       if (autoTempoTimerRef.current) {
         clearInterval(autoTempoTimerRef.current);
