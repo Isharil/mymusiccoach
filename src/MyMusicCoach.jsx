@@ -1888,7 +1888,7 @@ const MyMusicCoach = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950 pb-20" style={{paddingTop: 'env(safe-area-inset-top, 12px)'}}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{paddingTop: 'env(safe-area-inset-top, 12px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)'}}>
       {/* Page d'accueil */}
       {activeTab === 'home' && !activeWorkout && (
         <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
@@ -2390,7 +2390,7 @@ const MyMusicCoach = () => {
 
       {/* Page Workout actif */}
       {activeWorkout && (
-        <div className="min-h-screen bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
+        <div className="min-h-screen bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto" style={{paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)'}}>
           <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6 pb-8" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 1rem)'}}>
             <button
               onClick={() => setActiveWorkout(null)}
@@ -4978,7 +4978,7 @@ const MyMusicCoach = () => {
 
       {/* Barre de navigation */}
       {!selectedExercise && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 pt-3 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto z-40" style={{paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)'}}>
         <div className="flex justify-around">
           <button
             onClick={() => { setActiveTab('home'); setActiveWorkout(null); setSelectedExercise(null); }}
