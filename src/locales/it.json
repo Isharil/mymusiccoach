@@ -260,7 +260,22 @@
       "cowbell": "Cowbell",
       "hihat": "Hi-Hat",
       "rimshot": "Rimshot"
-    }
+    },
+    "restartTutorial": "Rivedi il tutorial"
+  },
+  "onboarding": {
+    "step1Title": "Benvenuto in MyMusicCoach!",
+    "step1Desc": "Facciamo un rapido tour dell'app.",
+    "step2Title": "La Libreria",
+    "step2Desc": "Qui crei i tuoi esercizi: video, tempo base, note... Poi li raggruppi in sessioni.",
+    "step3Title": "Home",
+    "step3Desc": "Qui avvii le sessioni di allenamento e segui i tuoi progressi. Puoi anche accedere al metronomo.",
+    "step4Title": "Impostazioni",
+    "step4Desc": "Qui scegli la lingua, il tema e puoi definire il tuo obiettivo musicale a lungo termine.",
+    "start": "Inizia il tour",
+    "next": "Avanti",
+    "finish": "Fine",
+    "skip": "Salta"
   },
   "metronome": {
     "title": "Metronomo",

@@ -260,7 +260,22 @@
       "cowbell": "Cowbell",
       "hihat": "Hi-Hat",
       "rimshot": "Rimshot"
-    }
+    },
+    "restartTutorial": "Replay tutorial"
+  },
+  "onboarding": {
+    "step1Title": "Welcome to MyMusicCoach!",
+    "step1Desc": "Let's take a quick tour of the app.",
+    "step2Title": "The Library",
+    "step2Desc": "On this page you create your exercises: video, base tempo, notes... Then group them into sessions.",
+    "step3Title": "Home",
+    "step3Desc": "On this page you start training sessions and track your daily progress. You can also access the metronome.",
+    "step4Title": "Settings",
+    "step4Desc": "On this page you choose your language, theme, and set your long-term musical goal.",
+    "start": "Take the tour",
+    "next": "Next",
+    "finish": "Done",
+    "skip": "Skip"
   },
   "metronome": {
     "title": "Metronome",
