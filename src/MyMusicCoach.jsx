@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Award, ChevronRight, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
+import { Play, Check, Clock, TrendingUp, Plus, Home, Book, BarChart3, Settings, Video, FileText, Activity, Calendar, X, Edit2, Trash2, Award, ChevronRight, ChevronLeft, Bell, Music, Archive, Download, Upload, MoreVertical } from 'lucide-react';
 import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence, clearAppStorage } from './hooks/useIndexedDB';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -89,6 +89,8 @@ const MyMusicCoach = () => {
   const [deletedExercises, setDeletedExercises, deletedExercisesLoading] = useIndexedDB('mmc_deletedExercises', []);
   const [showTrash, setShowTrash] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth());
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [archivedWorkouts, setArchivedWorkouts, archivedWorkoutsLoading] = useIndexedDB('mmc_archivedWorkouts', []);
   const [showArchive, setShowArchive] = useState(false);
@@ -2967,6 +2969,116 @@ const MyMusicCoach = () => {
               <p className="text-xs text-blue-900 dark:text-blue-300">{t('stats.sessionsLast28Days')}</p>
             </div>
           </div>
+
+          {/* Calendrier de pratique */}
+          {(() => {
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+            // Index des sessions par date (YYYY-MM-DD → count)
+            const sessionDates = {};
+            sessionHistory.forEach(s => {
+              const d = s.date.includes('/')
+                ? (() => { const [day,mo,yr] = s.date.split('/'); return `${yr}-${mo.padStart(2,'0')}-${day.padStart(2,'0')}`; })()
+                : s.date;
+              sessionDates[d] = (sessionDates[d] || 0) + 1;
+            });
+
+            const firstDayOfMonth = new Date(calendarYear, calendarMonth, 1);
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+            // Décalage lundi=0
+            const offset = (firstDayOfMonth.getDay() + 6) % 7;
+
+            const monthLabel = firstDayOfMonth.toLocaleString(settings.language, { month: 'long', year: 'numeric' });
+
+            const prevMonth = () => {
+              if (calendarMonth === 0) { setCalendarYear(y => y - 1); setCalendarMonth(11); }
+              else setCalendarMonth(m => m - 1);
+            };
+            const nextMonth = () => {
+              if (calendarMonth === 11) { setCalendarYear(y => y + 1); setCalendarMonth(0); }
+              else setCalendarMonth(m => m + 1);
+            };
+
+            const isCurrentMonth = calendarYear === today.getFullYear() && calendarMonth === today.getMonth();
+
+            // En-têtes lundi→dimanche localisés (2024-01-01 est un lundi)
+            const dayHeaders = Array.from({ length: 7 }, (_, i) =>
+              new Date(2024, 0, i + 1).toLocaleString(settings.language, { weekday: 'short' }).slice(0, 2)
+            );
+
+            // Cellules : null pour les cases vides, puis 1..daysInMonth
+            const cells = [...Array(offset).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+
+            return (
+              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📅 {t('stats.practiceCalendar')}</h2>
+
+                {/* Navigation mois */}
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
+                    <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{monthLabel}</span>
+                  <button
+                    onClick={nextMonth}
+                    disabled={isCurrentMonth}
+                    className={`p-2 rounded-xl transition-colors ${isCurrentMonth ? 'opacity-25 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                </div>
+
+                {/* En-têtes jours */}
+                <div className="grid grid-cols-7 mb-1">
+                  {dayHeaders.map((d, i) => (
+                    <div key={i} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1 capitalize">{d}</div>
+                  ))}
+                </div>
+
+                {/* Grille */}
+                <div className="grid grid-cols-7 gap-y-1">
+                  {cells.map((day, i) => {
+                    if (!day) return <div key={`e-${i}`} />;
+                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const count = sessionDates[dateStr] || 0;
+                    const isToday = dateStr === todayStr;
+                    const isFuture = dateStr > todayStr;
+
+                    return (
+                      <div key={dateStr} className="flex justify-center items-center py-0.5">
+                        <div className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium relative
+                          ${count > 0 ? 'bg-green-500 text-white' : ''}
+                          ${isToday && count === 0 ? 'ring-2 ring-purple-500 text-purple-600 dark:text-purple-400' : ''}
+                          ${isToday && count > 0 ? 'ring-2 ring-green-700' : ''}
+                          ${!count && !isToday ? (isFuture ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400') : ''}
+                        `}>
+                          {day}
+                          {count > 1 && (
+                            <span className="absolute -top-0.5 -right-0.5 bg-green-700 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                              {count}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Légende */}
+                <div className="flex items-center gap-5 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-green-500 shrink-0" />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{t('stats.calendarSessionDone')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full ring-2 ring-purple-500 shrink-0" />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{t('stats.calendarToday')}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Section Badges */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
