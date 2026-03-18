@@ -2015,12 +2015,12 @@ const MyMusicCoach = () => {
                           >
                             {completed ? (
                               <>
-                                <Check className="w-5 h-5" />
+                                <Check aria-hidden="true" className="w-5 h-5" />
                                 {t('home.completedEdit')}
                               </>
                             ) : (
                               <>
-                                <Play className="w-5 h-5" />
+                                <Play aria-hidden="true" className="w-5 h-5" />
                                 {t('home.startSession')}
                               </>
                             )}
@@ -2090,7 +2090,7 @@ const MyMusicCoach = () => {
                 className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:text-purple-300 dark:hover:text-purple-300 flex items-center gap-1"
               >
                 {t('home.edit')}
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight aria-hidden="true" className="w-4 h-4" />
               </button>
             </div>
             <div
@@ -2147,7 +2147,7 @@ const MyMusicCoach = () => {
                 <p className="font-bold text-lg">{t('metronome.title')}</p>
                 <p className="text-sm text-white/80">{t('home.metronomeDesc')}</p>
               </div>
-              <ChevronRight className="w-6 h-6 ml-auto" />
+              <ChevronRight aria-hidden="true" className="w-6 h-6 ml-auto" />
             </button>
           </div>
 
@@ -2243,7 +2243,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Planning */}
       {showSchedule && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
+        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen" role="dialog" aria-modal="true">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
             <div className="flex items-center justify-between mb-4">
               <button
@@ -2262,13 +2262,14 @@ const MyMusicCoach = () => {
               <button
                 onClick={() => setViewingWeek(Math.max(1, viewingWeek - 1))}
                 disabled={viewingWeek === 1}
+                aria-label="Semaine précédente"
                 className={`p-2 rounded-lg transition-colors ${
-                  viewingWeek === 1 
-                    ? 'text-white/30 cursor-not-allowed' 
+                  viewingWeek === 1
+                    ? 'text-white/30 cursor-not-allowed'
                     : 'text-white hover:bg-white/20'
                 }`}
               >
-                <ChevronRight className="w-6 h-6 rotate-180" />
+                <ChevronRight aria-hidden="true" className="w-6 h-6 rotate-180" />
               </button>
               
               <div className="flex gap-2">
@@ -2293,13 +2294,14 @@ const MyMusicCoach = () => {
               <button
                 onClick={() => setViewingWeek(Math.min(4, viewingWeek + 1))}
                 disabled={viewingWeek === 4}
+                aria-label="Semaine suivante"
                 className={`p-2 rounded-lg transition-colors ${
-                  viewingWeek === 4 
-                    ? 'text-white/30 cursor-not-allowed' 
+                  viewingWeek === 4
+                    ? 'text-white/30 cursor-not-allowed'
                     : 'text-white hover:bg-white/20'
                 }`}
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight aria-hidden="true" className="w-6 h-6" />
               </button>
             </div>
           </div>
@@ -2353,9 +2355,10 @@ const MyMusicCoach = () => {
                                 newSchedule[weekKey][day] = workoutIds.filter((_, i) => i !== index);
                                 setWeeklySchedule(newSchedule);
                               }}
+                              aria-label="Supprimer"
                               className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                             >
-                              <X className="w-4 h-4" />
+                              <X aria-hidden="true" className="w-4 h-4" />
                             </button>
                           </div>
                         );
@@ -2537,9 +2540,10 @@ const MyMusicCoach = () => {
                 {librarySubTab === 'exercises' && !showTrash && (
                   <button
                     onClick={() => setShowTrash(true)}
+                    aria-label="Corbeille"
                     className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 p-3 rounded-full shadow hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-600 transition-colors relative"
                   >
-                    <Archive className="w-5 h-5" />
+                    <Archive aria-hidden="true" className="w-5 h-5" />
                     {deletedExercises.length > 0 && (
                       <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                         {deletedExercises.length}
@@ -2566,24 +2570,27 @@ const MyMusicCoach = () => {
                 {librarySubTab === 'exercises' && !showTrash && (
                   <button
                     onClick={() => setShowCreateExercise(true)}
+                    aria-label="Créer un exercice"
                     className="bg-purple-600 dark:bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                   >
-                    <Plus className="w-5 h-5" />
+                    <Plus aria-hidden="true" className="w-5 h-5" />
                   </button>
                 )}
                 {librarySubTab === 'sessions' && !showArchive && (
                   <>
                     <button
                       onClick={() => setShowImportModal(true)}
+                      aria-label="Importer"
                       className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 p-3 rounded-full shadow hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                     >
-                      <Upload className="w-5 h-5" />
+                      <Upload aria-hidden="true" className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => { setEditingWorkout(null); setShowCreateWorkout(true); }}
+                      aria-label="Créer une session"
                       className="bg-purple-600 dark:bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                     >
-                      <Plus className="w-5 h-5" />
+                      <Plus aria-hidden="true" className="w-5 h-5" />
                     </button>
                   </>
                 )}
@@ -2780,7 +2787,7 @@ const MyMusicCoach = () => {
                   onClick={() => setShowArchive(true)}
                   className="text-gray-600 dark:text-gray-400 text-sm font-medium hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 relative"
                 >
-                  <Archive className="w-4 h-4" />
+                  <Archive aria-hidden="true" className="w-4 h-4" />
                   <span>{t('home.archive')}</span>
                   <span className="bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center ml-1">
                     {archivedWorkouts.length}
@@ -2851,7 +2858,7 @@ const MyMusicCoach = () => {
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-all border border-blue-200 dark:border-blue-700"
                           >
-                            <FileText className="w-3.5 h-3.5" />
+                            <FileText aria-hidden="true" className="w-3.5 h-3.5" />
                             <span>{t('home.export')}</span>
                           </button>
                           <button
@@ -2861,7 +2868,7 @@ const MyMusicCoach = () => {
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-lg transition-all border border-orange-200 dark:border-orange-700"
                           >
-                            <Archive className="w-3.5 h-3.5" />
+                            <Archive aria-hidden="true" className="w-3.5 h-3.5" />
                             <span>{t('home.archiveAction')}</span>
                           </button>
                         </div>
@@ -2935,7 +2942,7 @@ const MyMusicCoach = () => {
               onClick={() => setShowExportModal(true)}
               className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
-              <FileText className="w-4 h-4" />
+              <FileText aria-hidden="true" className="w-4 h-4" />
               {t('stats.exportReport')}
             </button>
           </div>
@@ -3016,16 +3023,17 @@ const MyMusicCoach = () => {
 
                 {/* Navigation mois */}
                 <div className="flex items-center justify-between mb-4">
-                  <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
-                    <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <button onClick={prevMonth} aria-label="Mois précédent" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
+                    <ChevronLeft aria-hidden="true" className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   </button>
                   <span className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{monthLabel}</span>
                   <button
                     onClick={nextMonth}
                     disabled={isCurrentMonth}
+                    aria-label="Mois suivant"
                     className={`p-2 rounded-xl transition-colors ${isCurrentMonth ? 'opacity-25 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                   >
-                    <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   </button>
                 </div>
 
@@ -3157,9 +3165,9 @@ const MyMusicCoach = () => {
                       <button
                         onClick={() => startEditSession(session)}
                         className="p-2 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 dark:bg-purple-900/30 rounded-lg transition-colors"
-                        title="Modifier cette session"
+                        aria-label="Modifier"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 aria-hidden="true" className="w-4 h-4" />
                       </button>
                       <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
@@ -3438,7 +3446,7 @@ const MyMusicCoach = () => {
                     onClick={requestNotificationPermission}
                     className="w-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 py-3 rounded-xl font-medium hover:bg-purple-200 dark:hover:bg-purple-800/40 transition-colors flex items-center justify-center gap-2"
                   >
-                    <Bell className="w-5 h-5" />
+                    <Bell aria-hidden="true" className="w-5 h-5" />
                     {t('settings.enableNotifications')}
                   </button>
                 )}
@@ -3524,11 +3532,11 @@ const MyMusicCoach = () => {
                 onClick={handleExportData}
                 className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
               >
-                <Download className="w-5 h-5" />
+                <Download aria-hidden="true" className="w-5 h-5" />
                 {t('settings.exportData')}
               </button>
               <label className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600 transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                <Upload className="w-5 h-5" />
+                <Upload aria-hidden="true" className="w-5 h-5" />
                 {t('settings.importBackup')}
                 <input
                   type="file"
@@ -3560,7 +3568,7 @@ const MyMusicCoach = () => {
                 <span className="text-gray-700 dark:text-gray-300 font-medium">
                   {settings.language === 'fr' ? 'Politique de confidentialité' : 'Privacy Policy'}
                 </span>
-                <ChevronRight className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               </button>
               <button
                 onClick={() => { setSettings(prev => ({ ...prev, onboardingDone: false })); setOnboardingStep(0); }}
@@ -3569,7 +3577,7 @@ const MyMusicCoach = () => {
                 <span className="text-purple-700 dark:text-purple-300 font-medium">
                   {t('settings.restartTutorial')}
                 </span>
-                <ChevronRight className="w-5 h-5 text-purple-400 dark:text-purple-500" />
+                <ChevronRight aria-hidden="true" className="w-5 h-5 text-purple-400 dark:text-purple-500" />
               </button>
             </div>
           </div>
@@ -3593,7 +3601,7 @@ const MyMusicCoach = () => {
               }}
               className="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 aria-hidden="true" className="w-5 h-5" />
               {t('settings.resetApp')}
             </button>
           </div>
@@ -3602,7 +3610,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Créer/Modifier Exercice */}
       {showCreateExercise && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
+        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen" role="dialog" aria-modal="true">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
             <div className="flex items-center justify-between">
               <button
@@ -3864,7 +3872,7 @@ const MyMusicCoach = () => {
 
       {/* Modal Créer/Éditer Workout */}
       {showCreateWorkout && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen">
+        <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen" role="dialog" aria-modal="true">
           <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
             <div className="flex items-center justify-between">
               <button
@@ -4057,7 +4065,7 @@ const MyMusicCoach = () => {
       {/* Modal Détails Exercice */}
       {selectedExercise && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
-          <div className="h-full flex flex-col bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
+          <div className="h-full flex flex-col bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto" role="dialog" aria-modal="true">
             <div className="flex-shrink-0 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-6" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 1rem)'}}>
 
               <div className="flex items-center justify-between mb-4">
@@ -4076,9 +4084,10 @@ const MyMusicCoach = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExerciseMenu(!showExerciseMenu)}
+                    aria-label="Plus d'options"
                     className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                   >
-                    <MoreVertical className="w-5 h-5" />
+                    <MoreVertical aria-hidden="true" className="w-5 h-5" />
                   </button>
                   {showExerciseMenu && (
                     <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg py-2 min-w-[200px] z-10">
@@ -4095,7 +4104,7 @@ const MyMusicCoach = () => {
                         }}
                         className="w-full px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 flex items-center gap-3"
                       >
-                        <Edit2 className="w-5 h-5" />
+                        <Edit2 aria-hidden="true" className="w-5 h-5" />
                         {t('exercise.edit')}
                       </button>
                       <button
@@ -4105,7 +4114,7 @@ const MyMusicCoach = () => {
                         }}
                         className="w-full px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 dark:bg-red-900/30 flex items-center gap-3"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 aria-hidden="true" className="w-5 h-5" />
                         {t('exercise.delete')}
                       </button>
                     </div>
@@ -4529,7 +4538,7 @@ const MyMusicCoach = () => {
                           }}
                           className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
-                          <Activity className="w-5 h-5" />
+                          <Activity aria-hidden="true" className="w-5 h-5" />
                           {t('exercise.saveTempoAndValidate', { tempo: metronomeTempo })}
                         </button>
                       )}
@@ -4540,7 +4549,7 @@ const MyMusicCoach = () => {
                           }}
                           className="flex-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
                         >
-                          <X className="w-5 h-5" />
+                          <X aria-hidden="true" className="w-5 h-5" />
                           {t('exercise.skip')}
                         </button>
                         <button
@@ -4555,7 +4564,7 @@ const MyMusicCoach = () => {
                           }}
                           className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
-                          <Check className="w-6 h-6" />
+                          <Check aria-hidden="true" className="w-6 h-6" />
                           {t('exercise.validate')}
                         </button>
                       </div>
@@ -4625,7 +4634,7 @@ const MyMusicCoach = () => {
                           }}
                           className="flex-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
                         >
-                          <X className="w-5 h-5" />
+                          <X aria-hidden="true" className="w-5 h-5" />
                           Sauté
                         </button>
                         <button
@@ -4634,7 +4643,7 @@ const MyMusicCoach = () => {
                           }}
                           className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
-                          <Check className="w-6 h-6" />
+                          <Check aria-hidden="true" className="w-6 h-6" />
                           Validé
                         </button>
                       </div>
@@ -4653,7 +4662,7 @@ const MyMusicCoach = () => {
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6"
           onClick={() => setShowMetronome(false)}
         >
-          <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-xs sm:max-w-sm landscape:max-w-sm" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <Metronome onClose={() => setShowMetronome(false)} t={t} soundType={settings.metronomeSound} theme={settings.theme} />
           </div>
         </div>
@@ -4667,6 +4676,8 @@ const MyMusicCoach = () => {
         >
           <div
             className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full max-h-[85vh] overflow-hidden shadow-2xl"
+            role="dialog"
+            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-6 rounded-t-3xl">
@@ -4674,9 +4685,10 @@ const MyMusicCoach = () => {
                 <h2 className="text-xl font-bold">🏆 {t('stats.allBadges')}</h2>
                 <button
                   onClick={() => setShowAllBadges(false)}
+                  aria-label="Fermer"
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X aria-hidden="true" className="w-6 h-6" />
                 </button>
               </div>
               <p className="text-yellow-100 text-sm mt-1">
@@ -4730,6 +4742,8 @@ const MyMusicCoach = () => {
         >
           <div
             className="bg-white dark:bg-gray-800 rounded-3xl max-w-sm w-full shadow-2xl"
+            role="dialog"
+            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-3xl">
@@ -4737,9 +4751,10 @@ const MyMusicCoach = () => {
                 <h2 className="text-xl font-bold">📊 Exporter le rapport</h2>
                 <button
                   onClick={() => setShowExportModal(false)}
+                  aria-label="Fermer"
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X aria-hidden="true" className="w-6 h-6" />
                 </button>
               </div>
               <p className="text-blue-100 text-sm mt-1">
@@ -4788,6 +4803,8 @@ const MyMusicCoach = () => {
         >
           <div
             className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full max-h-[85vh] overflow-hidden shadow-2xl"
+            role="dialog"
+            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-3xl">
@@ -4797,9 +4814,10 @@ const MyMusicCoach = () => {
                 </h2>
                 <button
                   onClick={() => setShowPrivacyPolicy(false)}
+                  aria-label="Fermer"
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X aria-hidden="true" className="w-6 h-6" />
                 </button>
               </div>
             </div>
@@ -4875,7 +4893,7 @@ const MyMusicCoach = () => {
       {/* Modal Import Session */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md sm:max-w-lg landscape:max-w-lg w-full shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md sm:max-w-lg landscape:max-w-lg w-full shadow-2xl" role="dialog" aria-modal="true">
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-3xl">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold">Importer une session</h2>
@@ -4884,9 +4902,10 @@ const MyMusicCoach = () => {
                     setShowImportModal(false);
                     setImportFile(null);
                   }}
+                  aria-label="Fermer"
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X aria-hidden="true" className="w-6 h-6" />
                 </button>
               </div>
               <p className="text-blue-100 text-sm">
@@ -4946,7 +4965,7 @@ const MyMusicCoach = () => {
       {/* Modal d'édition de session terminée */}
       {editingSession && !selectedExercise && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-md sm:max-w-lg landscape:max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-md sm:max-w-lg landscape:max-w-lg max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-t-3xl">
               <div className="flex justify-between items-center">
                 <div>
@@ -4955,9 +4974,10 @@ const MyMusicCoach = () => {
                 </div>
                 <button
                   onClick={() => { setEditingSession(null); setEditingSessionProgress({}); }}
+                  aria-label="Fermer"
                   className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X aria-hidden="true" className="w-5 h-5 text-white" />
                 </button>
               </div>
               <p className="text-white mt-2 font-medium">{editingSession.workoutName}</p>
@@ -5044,7 +5064,7 @@ const MyMusicCoach = () => {
       {/* Modal de choix d'export (Android) */}
       {exportModalData && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-xl" role="dialog" aria-modal="true">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-5">
               <h2 className="text-white font-bold text-lg">Exporter le fichier</h2>
               <p className="text-purple-200 text-sm mt-1">{exportModalData.fileName}</p>
@@ -5056,7 +5076,7 @@ const MyMusicCoach = () => {
                 className="w-full flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/40 dark:bg-green-900/40 rounded-xl transition-colors"
               >
                 <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                  <Download className="w-6 h-6 text-white" />
+                  <Download aria-hidden="true" className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-gray-900 dark:text-gray-100">Télécharger</p>
@@ -5069,7 +5089,7 @@ const MyMusicCoach = () => {
                 className="w-full flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl transition-colors"
               >
                 <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Upload className="w-6 h-6 text-white" />
+                  <Upload aria-hidden="true" className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-gray-900 dark:text-gray-100">Partager</p>
@@ -5114,38 +5134,42 @@ const MyMusicCoach = () => {
         <div className="flex justify-around">
           <button
             onClick={() => { setActiveTab('home'); setActiveWorkout(null); setSelectedExercise(null); }}
+            aria-current={activeTab === 'home' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'home' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'
             }`}
           >
-            <Home className="w-6 h-6" />
+            <Home aria-hidden="true" className="w-6 h-6" />
             <span className="text-xs font-medium">{t('nav.home')}</span>
           </button>
           <button
             onClick={() => { setActiveTab('library'); setActiveWorkout(null); setSelectedExercise(null); }}
+            aria-current={activeTab === 'library' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'library' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'
             }`}
           >
-            <Book className="w-6 h-6" />
+            <Book aria-hidden="true" className="w-6 h-6" />
             <span className="text-xs font-medium">{t('nav.exercises')}</span>
           </button>
           <button
             onClick={() => { setActiveTab('stats'); setActiveWorkout(null); setSelectedExercise(null); }}
+            aria-current={activeTab === 'stats' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'stats' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'
             }`}
           >
-            <BarChart3 className="w-6 h-6" />
+            <BarChart3 aria-hidden="true" className="w-6 h-6" />
             <span className="text-xs font-medium">{t('nav.stats')}</span>
           </button>
           <button
             onClick={() => { setActiveTab('settings'); setActiveWorkout(null); setSelectedExercise(null); }}
+            aria-current={activeTab === 'settings' ? 'page' : undefined}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'settings' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'
             }`}
           >
-            <Settings className="w-6 h-6" />
+            <Settings aria-hidden="true" className="w-6 h-6" />
             <span className="text-xs font-medium">{t('nav.settings')}</span>
           </button>
         </div>
