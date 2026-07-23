@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Inicio",
-    "exercises": "Ejercicios",
+    "exercises": "Biblioteca",
     "stats": "Estadísticas",
     "settings": "Ajustes",
     "metronome": "Metrónomo",
@@ -17,6 +17,9 @@
     "noSession": "Sin sesión programada",
     "restOrCustomize": "Descansa o personaliza tu horario",
     "viewSchedule": "Ver horario",
+    "noSessionsYet": "Aún no tienes ninguna sesión lista",
+    "createFirstSessionHint": "Crea tu primera sesión combinando ejercicios de tu biblioteca",
+    "createFirstSession": "Crear mi primera sesión",
     "startSession": "Iniciar sesión",
     "completedEdit": "Sesión completada - Editar",
     "weekOf": "Semana {current}/4",
@@ -67,7 +70,9 @@
     "today": "Hoy",
     "sessions": "{count} sesión | {count} sesiones",
     "deletedSession": "Sesión eliminada",
-    "saveSchedule": "Guardar horario"
+    "saveSchedule": "Guardar horario",
+    "noSessionsYet": "Aún no has creado ninguna sesión. Crea una en tu biblioteca para poder programarla aquí.",
+    "createSession": "Crear una sesión"
   },
   "workout": {
     "new": "Nueva sesión",
@@ -169,7 +174,7 @@
     "fillRequired": "Por favor, rellene todos los campos obligatorios"
   },
   "library": {
-    "title": "Mis ejercicios",
+    "title": "Biblioteca",
     "all": "Todos",
     "trash": "Papelera",
     "emptyTrash": "La papelera está vacía",
@@ -177,6 +182,7 @@
     "restoreExercise": "Restaurar",
     "deleteForever": "Eliminar permanentemente",
     "noExercises": "No se encontraron ejercicios",
+    "noSessions": "Aún no se ha creado ninguna sesión",
     "createFirst": "¡Crea tu primer ejercicio!",
     "filter": "Filtrar",
     "exercisesTab": "Ejercicios",
@@ -414,7 +420,8 @@
     "back": "Volver",
     "next": "Siguiente",
     "min": "min",
-    "series": "series"
+    "series": "series",
+    "example": "Ejemplo"
   },
   "timer": {
     "finished": "¡Tiempo terminado!",

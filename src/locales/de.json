@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Startseite",
-    "exercises": "Übungen",
+    "exercises": "Bibliothek",
     "stats": "Statistiken",
     "settings": "Einstellungen",
     "metronome": "Metronom",
@@ -17,6 +17,9 @@
     "noSession": "Keine geplante Session",
     "restOrCustomize": "Ruh dich aus oder passe deinen Zeitplan an",
     "viewSchedule": "Zeitplan anzeigen",
+    "noSessionsYet": "Du hast noch keine Session bereit",
+    "createFirstSessionHint": "Erstelle deine erste Session, indem du Übungen aus deiner Bibliothek kombinierst",
+    "createFirstSession": "Meine erste Session erstellen",
     "startSession": "Session starten",
     "completedEdit": "Session abgeschlossen - Bearbeiten",
     "weekOf": "Woche {current}/4",
@@ -67,7 +70,9 @@
     "today": "Heute",
     "sessions": "{count} Session | {count} Sessions",
     "deletedSession": "Gelöschte Session",
-    "saveSchedule": "Zeitplan speichern"
+    "saveSchedule": "Zeitplan speichern",
+    "noSessionsYet": "Du hast noch keine Session erstellt. Erstelle eine in deiner Bibliothek, um sie hier einzuplanen.",
+    "createSession": "Session erstellen"
   },
   "workout": {
     "new": "Neue Session",
@@ -169,7 +174,7 @@
     "fillRequired": "Bitte alle Pflichtfelder ausfüllen"
   },
   "library": {
-    "title": "Meine Übungen",
+    "title": "Bibliothek",
     "all": "Alle",
     "trash": "Papierkorb",
     "emptyTrash": "Papierkorb ist leer",
@@ -177,6 +182,7 @@
     "restoreExercise": "Wiederherstellen",
     "deleteForever": "Endgültig löschen",
     "noExercises": "Keine Übungen gefunden",
+    "noSessions": "Noch keine Sitzung erstellt",
     "createFirst": "Erstelle deine erste Übung!",
     "filter": "Filtern",
     "exercisesTab": "Übungen",
@@ -414,7 +420,8 @@
     "back": "Zurück",
     "next": "Weiter",
     "min": "Min",
-    "series": "Sätze"
+    "series": "Sätze",
+    "example": "Beispiel"
   },
   "timer": {
     "finished": "Zeit abgelaufen!",

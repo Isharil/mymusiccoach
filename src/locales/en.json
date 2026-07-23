@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Home",
-    "exercises": "Exercises",
+    "exercises": "Library",
     "stats": "Stats",
     "settings": "Settings",
     "metronome": "Metronome",
@@ -17,6 +17,9 @@
     "noSession": "No scheduled session",
     "restOrCustomize": "Take a rest or customize your schedule",
     "viewSchedule": "View schedule",
+    "noSessionsYet": "You don't have a session ready yet",
+    "createFirstSessionHint": "Create your first session by combining exercises from your library",
+    "createFirstSession": "Create my first session",
     "startSession": "Start session",
     "completedEdit": "Session completed - Edit",
     "weekOf": "Week {current}/4",
@@ -67,7 +70,9 @@
     "today": "Today",
     "sessions": "{count} session | {count} sessions",
     "deletedSession": "Deleted session",
-    "saveSchedule": "Save schedule"
+    "saveSchedule": "Save schedule",
+    "noSessionsYet": "You haven't created any sessions yet. Create one in your library to schedule it here.",
+    "createSession": "Create a session"
   },
   "workout": {
     "new": "New session",
@@ -169,7 +174,7 @@
     "fillRequired": "Please fill in all required fields"
   },
   "library": {
-    "title": "My exercises",
+    "title": "Library",
     "all": "All",
     "trash": "Trash",
     "emptyTrash": "Trash is empty",
@@ -177,6 +182,7 @@
     "restoreExercise": "Restore",
     "deleteForever": "Delete permanently",
     "noExercises": "No exercises found",
+    "noSessions": "No sessions created yet",
     "createFirst": "Create your first exercise!",
     "filter": "Filter",
     "exercisesTab": "Exercises",
@@ -414,7 +420,8 @@
     "back": "Back",
     "next": "Next",
     "min": "min",
-    "series": "sets"
+    "series": "sets",
+    "example": "Example"
   },
   "timer": {
     "finished": "Time's up!",

@@ -137,7 +137,8 @@ const MyMusicCoach = () => {
       category: "Technique",
       description: "Exercice d'échauffement pour préparer ta session.",
       videoUrl: "",
-      tempoHistory: []
+      tempoHistory: [],
+      isExample: true
     },
     {
       id: 2,
@@ -150,7 +151,8 @@ const MyMusicCoach = () => {
       category: "Rythme",
       description: "Travail du sens rythmique.",
       videoUrl: "",
-      tempoHistory: []
+      tempoHistory: [],
+      isExample: true
     }
   ];
 
@@ -162,14 +164,16 @@ const MyMusicCoach = () => {
       name: "Routine Débutant",
       duration: "30 min",
       exercises: [1, 2],
-      category: "Technique"
+      category: "Technique",
+      isExample: true
     },
     {
       id: 2,
       name: "Improvisation Blues",
       duration: "45 min",
       exercises: [1],
-      category: "Improvisation"
+      category: "Improvisation",
+      isExample: true
     }
   ]);
 
@@ -1117,7 +1121,7 @@ const MyMusicCoach = () => {
 
   const createOrUpdateWorkout = (workoutData) => {
     if (editingWorkout) {
-      setWorkouts(workouts.map(w => w.id === editingWorkout.id ? { ...w, ...workoutData } : w));
+      setWorkouts(workouts.map(w => w.id === editingWorkout.id ? { ...w, ...workoutData, isExample: false } : w));
       setEditingWorkout(null);
       setShowCreateWorkout(false);
     } else {
@@ -2057,6 +2061,21 @@ const MyMusicCoach = () => {
                     );
                   })}
                 </div>
+              ) : workouts.length === 0 ? (
+                <div className="text-center py-8">
+                  <Music className="w-16 h-16 text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 font-medium mb-2">{t('home.noSessionsYet')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('home.createFirstSessionHint')}</p>
+                  <button
+                    onClick={() => {
+                      setActiveTab('library');
+                      setLibrarySubTab('sessions');
+                    }}
+                    className="bg-purple-600 dark:bg-purple-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
+                  >
+                    {t('home.createFirstSession')}
+                  </button>
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <Calendar className="w-16 h-16 text-gray-300 dark:text-gray-500 mx-auto mb-4" />
@@ -2307,6 +2326,21 @@ const MyMusicCoach = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
+            {workouts.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-2xl p-5 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{t('schedule.noSessionsYet')}</p>
+                <button
+                  onClick={() => {
+                    setShowSchedule(false);
+                    setActiveTab('library');
+                    setLibrarySubTab('sessions');
+                  }}
+                  className="bg-purple-600 dark:bg-purple-500 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
+                >
+                  {t('schedule.createSession')}
+                </button>
+              </div>
+            )}
             {['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map((day, dayIndex) => {
               const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
               const isToday = getCurrentDay() === day && getCurrentWeekNumber() === viewingWeek;
@@ -2371,22 +2405,24 @@ const MyMusicCoach = () => {
                   )}
 
                   {/* Sélecteur pour ajouter une session */}
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const newSchedule = {...weeklySchedule};
-                        newSchedule[weekKey][day] = [...workoutIds, parseInt(e.target.value)];
-                        setWeeklySchedule(newSchedule);
-                      }
-                    }}
-                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
-                  >
-                    <option value="">+ {t('schedule.addSession')}</option>
-                    {workouts.map(w => (
-                      <option key={w.id} value={w.id}>🎵 {w.name}</option>
-                    ))}
-                  </select>
+                  {workouts.length > 0 && (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const newSchedule = {...weeklySchedule};
+                          newSchedule[weekKey][day] = [...workoutIds, parseInt(e.target.value)];
+                          setWeeklySchedule(newSchedule);
+                        }
+                      }}
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
+                    >
+                      <option value="">+ {t('schedule.addSession')}</option>
+                      {workouts.map(w => (
+                        <option key={w.id} value={w.id}>🎵 {w.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               );
             })}
@@ -2672,7 +2708,14 @@ const MyMusicCoach = () => {
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 pr-2">
-                              <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{exercise.name}</h3>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
+                                {exercise.isExample && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
+                                    {t('common.example')}
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 mb-2">
                                 <span className={`text-xs px-2 py-1 rounded-full ${
                                   exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
@@ -2801,7 +2844,7 @@ const MyMusicCoach = () => {
                   {workouts.length === 0 ? (
                     <div className="text-center py-8">
                       <Music className="w-12 h-12 text-gray-300 dark:text-gray-500 mx-auto mb-3" />
-                      <p className="text-gray-500 dark:text-gray-400 font-medium mb-2">{t('library.noExercises')}</p>
+                      <p className="text-gray-500 dark:text-gray-400 font-medium mb-2">{t('library.noSessions')}</p>
                       <p className="text-gray-400 dark:text-gray-500 text-sm">{t('library.sessionsHint')}</p>
                     </div>
                   ) : (
@@ -2818,7 +2861,14 @@ const MyMusicCoach = () => {
                           className="cursor-pointer"
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-bold text-gray-900 dark:text-gray-100">{workout.name}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-gray-900 dark:text-gray-100">{workout.name}</h3>
+                              {workout.isExample && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
+                                  {t('common.example')}
+                                </span>
+                              )}
+                            </div>
                             <span className="text-xs bg-purple-200 dark:bg-purple-800/40 text-purple-800 dark:text-purple-300 px-2 py-1 rounded-full">
                               {workout.category}
                             </span>
@@ -3848,6 +3898,7 @@ const MyMusicCoach = () => {
                       ...editingExercise,
                       ...normalizedData,
                       fileData: uploadedFile || editingExercise.fileData,
+                      isExample: false,
                     };
                     setExercises(exercises.map(ex =>
                       ex.id === editingExercise.id ? updatedExercise : ex
@@ -4021,7 +4072,7 @@ const MyMusicCoach = () => {
                   }
 
                   if (editingWorkout) {
-                    setWorkouts(workouts.map(w => w.id === editingWorkout.id ? { ...w, ...data } : w));
+                    setWorkouts(workouts.map(w => w.id === editingWorkout.id ? { ...w, ...data, isExample: false } : w));
                     setEditingWorkout(null);
                     setShowCreateWorkout(false);
                   } else {
@@ -5182,7 +5233,12 @@ const MyMusicCoach = () => {
         const titleKey = `onboarding.step${onboardingStep + 1}Title`;
         const descKey = `onboarding.step${onboardingStep + 1}Desc`;
 
-        const finishOnboarding = () => setSettings(prev => ({ ...prev, onboardingDone: true }));
+        const finishOnboarding = () => {
+          setSettings(prev => ({ ...prev, onboardingDone: true }));
+          setActiveTab('home');
+          setActiveWorkout(null);
+          setSelectedExercise(null);
+        };
 
         const goNext = () => {
           const nextIdx = onboardingStep + 1;
