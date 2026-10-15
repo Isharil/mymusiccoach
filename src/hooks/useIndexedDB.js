@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { get, set, del, keys, clear } from 'idb-keyval';
 
 // Liste des clés utilisées par l'application
@@ -96,6 +96,9 @@ export async function checkStoragePersistence() {
 export function useIndexedDB(key, initialValue) {
   const [storedValue, setStoredValue] = useState(initialValue);
   const [isLoading, setIsLoading] = useState(true);
+  // Dernière valeur connue, pour que les mises à jour fonctionnelles successives
+  // ne partent pas d'une valeur périmée (closure du dernier rendu)
+  const valueRef = useRef(initialValue);
 
   // Charger la valeur depuis IndexedDB au montage
   useEffect(() => {
@@ -106,6 +109,7 @@ export function useIndexedDB(key, initialValue) {
         const value = await get(key);
         if (isMounted) {
           if (value !== undefined) {
+            valueRef.current = value;
             setStoredValue(value);
           } else {
             // Si aucune valeur n'existe, sauvegarder la valeur initiale
@@ -130,15 +134,16 @@ export function useIndexedDB(key, initialValue) {
 
   // Fonction pour mettre à jour la valeur
   const setValue = useCallback(async (value) => {
+    // Permettre les fonctions comme avec useState
+    const valueToStore = value instanceof Function ? value(valueRef.current) : value;
+    valueRef.current = valueToStore;
+    setStoredValue(valueToStore);
     try {
-      // Permettre les fonctions comme avec useState
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
       await set(key, valueToStore);
     } catch (error) {
       console.error(`Erreur lors de la sauvegarde de ${key} dans IndexedDB:`, error);
     }
-  }, [key, storedValue]);
+  }, [key]);
 
   return [storedValue, setValue, isLoading];
 }

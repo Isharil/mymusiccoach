@@ -8,6 +8,18 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import Metronome from './components/Metronome';
 import { useTranslation } from './hooks/useTranslation';
 import { availableLanguages } from './locales';
+import { computeStreaks, getCycleWeekNumber, getScheduledWorkoutIds, normalizeDate, parseLocalDate, toLocalDateStr } from './utils/practiceStats';
+
+// Échappe le texte saisi par l'utilisateur avant de l'insérer dans du HTML généré
+const escapeHtml = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// Plus grand id d'une liste d'éléments (0 si vide)
+const maxIdOf = (items) => items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0);
 
 // tab: onglet vers lequel naviguer quand on arrive sur l'étape
 const ONBOARDING_STEPS = [
@@ -279,90 +291,47 @@ const MyMusicCoach = () => {
     const twentyEightDaysAgo = new Date(now);
     twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
 
-    // Fonction pour parser une date de session
-    const parseSessionDate = (dateStr) => {
-      if (dateStr.includes('-')) {
-        return new Date(dateStr);
-      } else if (dateStr.includes('/')) {
-        const [day, month, year] = dateStr.split('/');
-        return new Date(year, month - 1, day);
-      }
-      return new Date(dateStr);
-    };
-
     const sessionsLast7Days = sessionHistory.filter(session => {
-      const sessionDate = parseSessionDate(session.date);
+      const sessionDate = parseLocalDate(session.date);
       return sessionDate >= sevenDaysAgo;
     }).length;
 
     const sessionsLast28Days = sessionHistory.filter(session => {
-      const sessionDate = parseSessionDate(session.date);
+      const sessionDate = parseLocalDate(session.date);
       return sessionDate >= twentyEightDaysAgo;
     }).length;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Fonction pour formater une date locale en YYYY-MM-DD (sans conversion UTC)
-    const toLocalDateStr = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
-    // Normaliser toutes les dates au format ISO (YYYY-MM-DD)
-    const normalizeDate = (dateStr) => {
-      if (dateStr.includes('-')) {
-        return dateStr; // Déjà en format ISO
-      } else if (dateStr.includes('/')) {
-        const [day, month, year] = dateStr.split('/');
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      }
-      return dateStr;
-    };
-
     // Obtenir les dates uniques normalisées
-    const uniqueDates = [...new Set(sessionHistory.map(s => normalizeDate(s.date)))];
+    const uniqueDates = new Set(sessionHistory.map(s => normalizeDate(s.date)));
 
-    // Calcul du streak actuel (jours consécutifs depuis aujourd'hui/hier)
-    let currentStreak = 0;
-    if (uniqueDates.length > 0) {
-      let checkDate = new Date(today);
-      const todayStr = toLocalDateStr(today);
-      const yesterdayDate = new Date(today);
-      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterdayStr = toLocalDateStr(yesterdayDate);
+    // Un jour de repos prévu au planning ne casse pas la série.
+    // Si le planning est entièrement vide, aucun jour n'est considéré comme repos
+    // (sinon la série ne pourrait jamais être perdue).
+    const existingWorkoutIds = new Set(workouts.map(w => w.id));
+    const hasPlannedDay = Object.values(weeklySchedule).some(week =>
+      Object.values(week || {}).some(ids =>
+        (Array.isArray(ids) ? ids : [ids]).some(id => existingWorkoutIds.has(id))
+      )
+    );
+    const isRestDay = (date) => hasPlannedDay &&
+      !getScheduledWorkoutIds(weeklySchedule, settings.cycleStartDate, date)
+        .some(id => existingWorkoutIds.has(id));
 
-      // Si pas de session aujourd'hui ET pas hier, le streak est perdu
-      if (!uniqueDates.includes(todayStr) && !uniqueDates.includes(yesterdayStr)) {
-        currentStreak = 0;
-      } else {
-        // Si pas de session aujourd'hui, commencer à vérifier depuis hier
-        if (!uniqueDates.includes(todayStr)) {
-          checkDate.setDate(checkDate.getDate() - 1);
-        }
-
-        // Compter les jours consécutifs
-        for (let i = 0; i < 365; i++) {
-          const dateStr = toLocalDateStr(checkDate);
-          if (uniqueDates.includes(dateStr)) {
-            currentStreak++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else {
-            break;
-          }
-        }
-      }
-    }
+    const { current: currentStreak, best: bestStreak } = computeStreaks(
+      [...uniqueDates],
+      isRestDay,
+      today
+    );
 
     // Nombre de jours avec pratique sur les 7 derniers jours
     let daysWithPractice = 0;
     for (let i = 0; i < 7; i++) {
       const checkDate = new Date(today);
       checkDate.setDate(checkDate.getDate() - i);
-      const dateStr = toLocalDateStr(checkDate);
-      if (uniqueDates.includes(dateStr)) {
+      if (uniqueDates.has(toLocalDateStr(checkDate))) {
         daysWithPractice++;
       }
     }
@@ -370,11 +339,12 @@ const MyMusicCoach = () => {
     return {
       last7Days: sessionsLast7Days,
       streak: currentStreak, // Streak actuel pour l'accueil
+      bestStreak, // Meilleure série de tous les temps (badges acquis définitivement)
       daysWithPractice: daysWithPractice, // Jours pratiqués sur 7 jours pour les stats
       last28Days: sessionsLast28Days,
       totalSessions: sessionHistory.length // Gardé pour les badges
     };
-  }, [sessionHistory]);
+  }, [sessionHistory, weeklySchedule, workouts, settings.cycleStartDate]);
 
   // Définition des badges (les noms/descriptions sont traduits via les clés)
   const BADGES = [
@@ -420,13 +390,14 @@ const MyMusicCoach = () => {
   const earnedBadges = useMemo(() => {
     return BADGES.filter(badge => {
       if (badge.type === 'streak') {
-        return stats.streak >= badge.threshold;
+        // Basé sur la meilleure série : un badge obtenu n'est jamais perdu
+        return stats.bestStreak >= badge.threshold;
       } else if (badge.type === 'sessions') {
         return stats.totalSessions >= badge.threshold;
       }
       return false;
     });
-  }, [stats.streak, stats.totalSessions]);
+  }, [stats.bestStreak, stats.totalSessions]);
 
   // Obtenir le prochain badge à débloquer (memoïsé)
   const nextBadge = useMemo(() => {
@@ -819,12 +790,7 @@ const MyMusicCoach = () => {
 
   // Fonction pour obtenir la semaine actuelle du cycle de 4 semaines (1-4)
   const getCurrentWeekNumber = () => {
-    const today = new Date();
-    const startDate = new Date(settings.cycleStartDate || getMondayOfCurrentWeek());
-    const diffTime = today - startDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const weekNumber = Math.floor(diffDays / 7) % 4;
-    return weekNumber + 1;
+    return getCycleWeekNumber(new Date(), settings.cycleStartDate || getMondayOfCurrentWeek());
   };
 
   // Fonction pour obtenir la date d'aujourd'hui au format ISO (heure locale, pas UTC)
@@ -899,11 +865,13 @@ const MyMusicCoach = () => {
     const workoutExercises = workout.exercises;
     let completed = 0;
     let skipped = 0;
-    
+    const exerciseProgress = {}; // Statut par exercice, nécessaire pour modifier la session plus tard
+
     workoutExercises.forEach(exId => {
-      const key = `${workout.id}-${exId}`;
-      if (workoutProgress[key] === 'completed') completed++;
-      if (workoutProgress[key] === 'skipped') skipped++;
+      const status = workoutProgress[`${workout.id}-${exId}`];
+      if (status === 'completed') completed++;
+      if (status === 'skipped') skipped++;
+      if (status) exerciseProgress[exId] = status;
     });
     
     // Collecter les notes pour cette session
@@ -915,7 +883,7 @@ const MyMusicCoach = () => {
     });
 
     const newSession = {
-      id: sessionHistory.length + 1,
+      id: sessionHistory.reduce((max, s) => Math.max(max, Number(s.id) || 0), 0) + 1,
       date: dateStr,
       time: timeStr,
       workoutId: workout.id,
@@ -923,6 +891,7 @@ const MyMusicCoach = () => {
       completed,
       skipped,
       total: workoutExercises.length,
+      exerciseProgress,
       notes: sessionNotes // Notes/observations de l'élève
     };
 
@@ -949,14 +918,22 @@ const MyMusicCoach = () => {
 
     // Initialiser le progress avec les données existantes ou des valeurs par défaut
     const progress = {};
-    workout.exercises.forEach(exId => {
-      if (session.exerciseProgress && session.exerciseProgress[exId]) {
-        progress[exId] = session.exerciseProgress[exId];
-      } else {
-        // Pour les anciennes sessions sans exerciseProgress, marquer comme "completed" par défaut
-        progress[exId] = 'completed';
-      }
-    });
+    if (session.exerciseProgress) {
+      workout.exercises.forEach(exId => {
+        if (session.exerciseProgress[exId]) {
+          progress[exId] = session.exerciseProgress[exId];
+        }
+      });
+    } else {
+      // Anciennes sessions sans statut par exercice : on ne sait pas lesquels ont été sautés.
+      // On reconstitue un statut cohérent avec les compteurs enregistrés
+      // (les N premiers validés, les suivants sautés) pour ne pas fausser les stats.
+      let remainingCompleted = session.completed ?? workout.exercises.length;
+      workout.exercises.forEach(exId => {
+        progress[exId] = remainingCompleted > 0 ? 'completed' : 'skipped';
+        remainingCompleted--;
+      });
+    }
 
     setEditingSession(session);
     setEditingSessionProgress(progress);
@@ -1026,6 +1003,12 @@ const MyMusicCoach = () => {
     }
   };
 
+  // Les ids des éléments en corbeille / archivés restent réservés : ils peuvent être restaurés
+  // et le planning peut encore y faire référence.
+  const getNextExerciseId = () => maxIdOf([...exercises, ...deletedExercises]) + 1;
+  const getNextWorkoutId = () => maxIdOf([...workouts, ...archivedWorkouts]) + 1;
+
+  // Archive la session. Elle reste dans le planning pour retrouver sa place si on la restaure.
   const deleteWorkout = (workoutId) => {
     const workoutToArchive = workouts.find(w => w.id === workoutId);
     if (workoutToArchive) {
@@ -1036,6 +1019,19 @@ const MyMusicCoach = () => {
         setShowCreateWorkout(false);
       }
     }
+  };
+
+  // Retire une session de toutes les journées du planning
+  const removeWorkoutFromSchedule = (workoutId) => {
+    setWeeklySchedule(prev => Object.fromEntries(
+      Object.entries(prev).map(([weekKey, days]) => [
+        weekKey,
+        Object.fromEntries(Object.entries(days).map(([day, ids]) => [
+          day,
+          (Array.isArray(ids) ? ids : (ids ? [ids] : [])).filter(id => id !== workoutId)
+        ]))
+      ])
+    ));
   };
 
   const restoreWorkout = (workoutId) => {
@@ -1049,6 +1045,7 @@ const MyMusicCoach = () => {
   const permanentlyDeleteWorkout = (workoutId) => {
     if (window.confirm('Supprimer définitivement cette session ? Cette action est irréversible.')) {
       setArchivedWorkouts(archivedWorkouts.filter(w => w.id !== workoutId));
+      removeWorkoutFromSchedule(workoutId);
     }
   };
 
@@ -1100,10 +1097,9 @@ const MyMusicCoach = () => {
   };
 
   const createExercise = (formData) => {
-    const maxId = exercises.length > 0 ? Math.max(...exercises.map(ex => ex.id)) : 0;
     const normalizedData = normalizeExerciseFields(formData);
     const newExercise = {
-      id: maxId + 1,
+      id: getNextExerciseId(),
       ...normalizedData,
       tempoHistory: []
     };
@@ -1125,9 +1121,8 @@ const MyMusicCoach = () => {
       setEditingWorkout(null);
       setShowCreateWorkout(false);
     } else {
-      const maxId = workouts.length > 0 ? Math.max(...workouts.map(w => w.id)) : 0;
       const newWorkout = {
-        id: maxId + 1,
+        id: getNextWorkoutId(),
         ...workoutData
       };
       setWorkouts([...workouts, newWorkout]);
@@ -1205,10 +1200,10 @@ const MyMusicCoach = () => {
         // Importer les exercices
         const newExercises = [];
         const exerciseIdMapping = {}; // Ancien ID -> Nouveau ID
-        const maxExerciseId = exercises.length > 0 ? Math.max(...exercises.map(ex => ex.id)) : 0;
+        const firstNewExerciseId = getNextExerciseId();
 
         importData.exercises.forEach((exerciseData, index) => {
-          const newId = maxExerciseId + index + 1;
+          const newId = firstNewExerciseId + index;
           const newExercise = {
             id: newId,
             ...exerciseData,
@@ -1222,9 +1217,8 @@ const MyMusicCoach = () => {
         setExercises([...exercises, ...newExercises]);
 
         // Créer la session avec les nouveaux IDs
-        const maxWorkoutId = workouts.length > 0 ? Math.max(...workouts.map(w => w.id)) : 0;
         const newWorkout = {
-          id: maxWorkoutId + 1,
+          id: getNextWorkoutId(),
           name: importData.workout.name,
           duration: importData.workout.duration,
           category: importData.workout.category,
@@ -1461,21 +1455,9 @@ const MyMusicCoach = () => {
     cutoffDate.setHours(0, 0, 0, 0); // Début de journée pour inclure toute la journée
 
     // Filtrer les sessions par période
-    const filteredSessions = sessionHistory.filter(session => {
-      // Parser la date de la session (formats: "2025-02-02" ou "02/02/2025")
-      let sessionDate;
-      if (session.date.includes('-')) {
-        // Format ISO: YYYY-MM-DD
-        sessionDate = new Date(session.date);
-      } else if (session.date.includes('/')) {
-        // Format FR: DD/MM/YYYY
-        const parts = session.date.split('/');
-        if (parts.length === 3) {
-          sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
-        }
-      }
-      return sessionDate && sessionDate >= cutoffDate;
-    }).reverse();
+    const filteredSessions = sessionHistory
+      .filter(session => parseLocalDate(session.date) >= cutoffDate)
+      .reverse();
 
     // Libellé de la période
     const periodLabel = weeks === 1 ? 'les 7 derniers jours' :
@@ -1492,23 +1474,6 @@ const MyMusicCoach = () => {
     const periodDays = weeks * 7;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    const toLocalDateStr = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
-    const normalizeDate = (dateStr) => {
-      if (dateStr.includes('-')) {
-        return dateStr;
-      } else if (dateStr.includes('/')) {
-        const [day, month, year] = dateStr.split('/');
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      }
-      return dateStr;
-    };
 
     const uniqueDates = [...new Set(sessionHistory.map(s => normalizeDate(s.date)))];
 
@@ -1571,7 +1536,7 @@ const MyMusicCoach = () => {
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Rapport de Progression - ${reportData.userName}</title>
+        <title>Rapport de Progression - ${escapeHtml(reportData.userName)}</title>
         <style>
           @media print {
             body { margin: 0; }
@@ -1762,7 +1727,7 @@ const MyMusicCoach = () => {
 
         <div class="header">
           <h1>📊 Rapport de Progression</h1>
-          <p><strong>${reportData.userName}</strong></p>
+          <p><strong>${escapeHtml(reportData.userName)}</strong></p>
           <p>${reportData.date}</p>
           <p style="color: #9333EA; font-weight: bold;">Période : ${reportData.periodLabel}</p>
         </div>
@@ -1800,11 +1765,11 @@ const MyMusicCoach = () => {
             <tbody>
               ${reportData.recentSessions.map(session => `
                 <tr>
-                  <td>${formatDate(session.date)} ${session.time}</td>
-                  <td><strong>${session.workoutName}</strong></td>
-                  <td><span class="badge badge-success">${session.completed}</span></td>
-                  <td>${session.skipped > 0 ? `<span class="badge badge-warning">${session.skipped}</span>` : '-'}</td>
-                  <td>${session.total}</td>
+                  <td>${escapeHtml(formatDate(session.date))} ${escapeHtml(session.time)}</td>
+                  <td><strong>${escapeHtml(session.workoutName)}</strong></td>
+                  <td><span class="badge badge-success">${Number(session.completed) || 0}</span></td>
+                  <td>${session.skipped > 0 ? `<span class="badge badge-warning">${Number(session.skipped)}</span>` : '-'}</td>
+                  <td>${Number(session.total) || 0}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -1824,9 +1789,9 @@ const MyMusicCoach = () => {
               const exerciseName = exercise ? exercise.name : 'Exercice inconnu';
               return `
               <div class="observation-card">
-                <div class="date">📅 ${formatDate(session.date)} ${session.time} — ${session.workoutName}</div>
-                <div class="exercise-name">🎵 ${exerciseName}</div>
-                <div class="note-text">${note}</div>
+                <div class="date">📅 ${escapeHtml(formatDate(session.date))} ${escapeHtml(session.time)} — ${escapeHtml(session.workoutName)}</div>
+                <div class="exercise-name">🎵 ${escapeHtml(exerciseName)}</div>
+                <div class="note-text">${escapeHtml(note)}</div>
               </div>
               `;
             }).join('');
@@ -1855,9 +1820,9 @@ const MyMusicCoach = () => {
                 const progression = lastTempo.tempo - firstTempo.tempo;
                 return `
                   <tr>
-                    <td><strong>${ex.name}</strong></td>
-                    <td>${ex.baseTempo} BPM</td>
-                    <td>${lastTempo.tempo} BPM</td>
+                    <td><strong>${escapeHtml(ex.name)}</strong></td>
+                    <td>${Number(ex.baseTempo) || 0} BPM</td>
+                    <td>${Number(lastTempo.tempo) || 0} BPM</td>
                     <td style="color: ${progression >= 0 ? '#059669' : '#DC2626'};">
                       ${progression >= 0 ? '+' : ''}${progression} BPM
                     </td>
@@ -2375,19 +2340,25 @@ const MyMusicCoach = () => {
                     <div className="space-y-2 mb-3">
                       {workoutIds.map((wId, index) => {
                         const workout = workouts.find(w => w.id === wId);
+                        const archivedWorkout = !workout && archivedWorkouts.find(w => w.id === wId);
                         return (
                           <div key={index} className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/30 rounded-xl px-4 py-3">
                             <div className="flex items-center gap-2">
                               <span className="text-sm">🎵</span>
                               <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                                {workout ? workout.name : t('schedule.deletedSession')}
+                                {workout
+                                  ? workout.name
+                                  : archivedWorkout
+                                    ? `${archivedWorkout.name} (${t('home.archive')})`
+                                    : t('schedule.deletedSession')}
                               </span>
                             </div>
                             <button
                               onClick={() => {
-                                const newSchedule = {...weeklySchedule};
-                                newSchedule[weekKey][day] = workoutIds.filter((_, i) => i !== index);
-                                setWeeklySchedule(newSchedule);
+                                setWeeklySchedule(prev => ({
+                                  ...prev,
+                                  [weekKey]: { ...prev[weekKey], [day]: workoutIds.filter((_, i) => i !== index) }
+                                }));
                               }}
                               aria-label="Supprimer"
                               className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -2410,9 +2381,10 @@ const MyMusicCoach = () => {
                       value=""
                       onChange={(e) => {
                         if (e.target.value) {
-                          const newSchedule = {...weeklySchedule};
-                          newSchedule[weekKey][day] = [...workoutIds, parseInt(e.target.value)];
-                          setWeeklySchedule(newSchedule);
+                          setWeeklySchedule(prev => ({
+                            ...prev,
+                            [weekKey]: { ...prev[weekKey], [day]: [...workoutIds, parseInt(e.target.value)] }
+                          }));
                         }
                       }}
                       className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
@@ -4076,9 +4048,8 @@ const MyMusicCoach = () => {
                     setEditingWorkout(null);
                     setShowCreateWorkout(false);
                   } else {
-                    const maxId = workouts.length > 0 ? Math.max(...workouts.map(w => w.id)) : 0;
                     const newWorkout = {
-                      id: maxId + 1,
+                      id: getNextWorkoutId(),
                       ...data
                     };
                     setWorkouts([...workouts, newWorkout]);
@@ -4096,16 +4067,13 @@ const MyMusicCoach = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
-                      const workoutId = editingWorkout.id;
-                      setWorkouts(workouts.filter(w => w.id !== workoutId));
-                      setEditingWorkout(null);
-                      setShowCreateWorkout(false);
-                    }
+                    // Archive (réversible) plutôt que suppression définitive
+                    deleteWorkout(editingWorkout.id);
                   }}
-                  className="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-3 rounded-xl font-medium border-2 border-red-200 dark:border-red-700"
+                  className="w-full bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 py-3 rounded-xl font-medium border-2 border-orange-200 dark:border-orange-700 flex items-center justify-center gap-2"
                 >
-                  🗑️ Supprimer cette session
+                  <Archive aria-hidden="true" className="w-4 h-4" />
+                  {t('home.archiveAction')}
                 </button>
               )}
             </div>
@@ -4419,6 +4387,26 @@ const MyMusicCoach = () => {
                   onTempoChange={setMetronomeTempo}
                 />
 
+                {/* Zone de notes/observations - pendant une session active, avec ou sans tempo */}
+                {(activeWorkout && activeWorkout.exercises.includes(selectedExercise.id)) && (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 rounded-2xl p-6 shadow-lg border border-amber-200 dark:border-amber-700">
+                    <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                      <span className="text-xl">📝</span>
+                      {t('exercise.notes')}
+                    </h4>
+                    <textarea
+                      value={exerciseNotes[selectedExercise.id] || ''}
+                      onChange={(e) => setExerciseNotes({...exerciseNotes, [selectedExercise.id]: e.target.value})}
+                      placeholder={t('exercise.notesPlaceholder')}
+                      className="w-full px-4 py-3 border border-amber-300 dark:border-amber-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none bg-white dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+                      rows={3}
+                    />
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                      {t('exercise.notesHint')}
+                    </p>
+                  </div>
+                )}
+
                 {selectedExercise.baseTempo > 0 && (
                   <>
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-2xl p-6 shadow-lg border-2 border-blue-200 dark:border-blue-700">
@@ -4457,26 +4445,6 @@ const MyMusicCoach = () => {
                         {t('exercise.recordMyTempo')}
                       </button>
                     </div>
-
-                    {/* Zone de notes/observations - uniquement pendant une session active */}
-                    {(activeWorkout && activeWorkout.exercises.includes(selectedExercise.id)) && (
-                      <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 rounded-2xl p-6 shadow-lg border border-amber-200 dark:border-amber-700">
-                        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                          <span className="text-xl">📝</span>
-                          {t('exercise.notes')}
-                        </h4>
-                        <textarea
-                          value={exerciseNotes[selectedExercise.id] || ''}
-                          onChange={(e) => setExerciseNotes({...exerciseNotes, [selectedExercise.id]: e.target.value})}
-                          placeholder={t('exercise.notesPlaceholder')}
-                          className="w-full px-4 py-3 border border-amber-300 dark:border-amber-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none bg-white dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-                          rows={3}
-                        />
-                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
-                          {t('exercise.notesHint')}
-                        </p>
-                      </div>
-                    )}
 
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                       <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">{t('exercise.progressHistory')}</h4>
