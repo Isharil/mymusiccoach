@@ -83,7 +83,8 @@ const MyMusicCoach = () => {
     'Improvisation': 'improvisation',
     'Oreille': 'earTraining'
   };
-  const translateCategory = (cat) => t(`categories.${categoryKeys[cat] || cat.toLowerCase()}`);
+  // Les catégories inconnues (session en texte libre, import) restent telles quelles
+  const translateCategory = (cat) => categoryKeys[cat] ? t(`categories.${categoryKeys[cat]}`) : cat;
 
   // Helper pour traduire les difficultés
   const difficultyKeys = {
@@ -91,7 +92,32 @@ const MyMusicCoach = () => {
     'Intermédiaire': 'intermediate',
     'Avancé': 'advanced'
   };
-  const translateDifficulty = (diff) => t(`difficulties.${difficultyKeys[diff] || diff.toLowerCase()}`);
+  const translateDifficulty = (diff) => difficultyKeys[diff] ? t(`difficulties.${difficultyKeys[diff]}`) : diff;
+
+  // Le contenu d'exemple est affiché dans la langue choisie tant qu'il n'a pas été modifié
+  const EXAMPLE_EXERCISE_KEYS = { 1: 'exercise1', 2: 'exercise2' };
+  const EXAMPLE_WORKOUT_KEYS = { 1: 'workout1', 2: 'workout2' };
+  const exerciseName = (ex) =>
+    ex?.isExample && EXAMPLE_EXERCISE_KEYS[ex.id] ? t(`examples.${EXAMPLE_EXERCISE_KEYS[ex.id]}Name`) : ex?.name;
+  const exerciseDescription = (ex) =>
+    ex?.isExample && EXAMPLE_EXERCISE_KEYS[ex.id] ? t(`examples.${EXAMPLE_EXERCISE_KEYS[ex.id]}Desc`) : ex?.description;
+  const workoutName = (w) =>
+    w?.isExample && EXAMPLE_WORKOUT_KEYS[w.id] ? t(`examples.${EXAMPLE_WORKOUT_KEYS[w.id]}Name`) : w?.name;
+
+  // Les séries sont stockées sous la forme "3 séries" : on réaffiche le nombre dans la langue choisie
+  const formatSets = (sets) => {
+    const match = String(sets ?? '').match(/^(\d+)/);
+    return match ? t('common.setsCount', { count: Number(match[1]) }) : sets;
+  };
+
+  // "YYYY-MM-DD" -> date lisible dans la langue choisie
+  const formatDisplayDate = (dateStr, options = { day: 'numeric', month: 'short', year: 'numeric' }) =>
+    dateStr ? parseLocalDate(dateStr).toLocaleDateString(settings.language || 'en', options) : '';
+
+  // Affiche en gras les passages entourés de ** dans un texte traduit
+  const renderBold = (text) => text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 ? <strong key={i}>{part}</strong> : part
+  );
 
   const [notificationPermission, setNotificationPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
@@ -410,7 +436,7 @@ const MyMusicCoach = () => {
 
   const requestNotificationPermission = async () => {
     if (!isNativePlatform) {
-      showToast('Les notifications sont disponibles uniquement sur l\'application mobile.', 'warning');
+      showToast(t('messages.notificationsMobileOnly'), 'warning');
       return;
     }
 
@@ -419,7 +445,7 @@ const MyMusicCoach = () => {
 
       if (permStatus.display === 'granted') {
         setNotificationPermission('granted');
-        showToast('Les notifications sont déjà autorisées.', 'success');
+        showToast(t('messages.notificationsAlreadyAllowed'), 'success');
         return;
       }
 
@@ -433,7 +459,7 @@ const MyMusicCoach = () => {
       }
     } catch (error) {
       console.error('Erreur permissions notification:', error);
-      showToast('Erreur lors de la demande de permission.', 'error');
+      showToast(t('messages.permissionError'), 'error');
     }
   };
 
@@ -444,7 +470,7 @@ const MyMusicCoach = () => {
       await LocalNotifications.schedule({
         notifications: [{
           title: '🎵 MyMusicCoach',
-          body: `Bonjour ${settings.userName} ! Les notifications sont activées.`,
+          body: t('messages.notificationsHello', { name: settings.userName }),
           id: 9999,
           schedule: { at: new Date(Date.now() + 1000) },
           sound: null,
@@ -480,8 +506,8 @@ const MyMusicCoach = () => {
 
       await LocalNotifications.schedule({
         notifications: [{
-          title: '🎵 MyMusicCoach - Session du jour',
-          body: `Il est temps de pratiquer ! Ouvre l'app pour voir ta session.`,
+          title: `🎵 ${t('messages.dailyReminderTitle')}`,
+          body: t('messages.dailyReminder'),
           id: 1,
           schedule: {
             at: scheduledDate,
@@ -618,7 +644,7 @@ const MyMusicCoach = () => {
         encoding: Encoding.UTF8,
         recursive: true
       });
-      showToast(`Fichier sauvegardé : ${fileName}`, 'success');
+      showToast(t('messages.fileSaved', { name: fileName }), 'success');
       setExportModalData(null);
       return true;
     } catch (error) {
@@ -631,11 +657,11 @@ const MyMusicCoach = () => {
           directory: Directory.Documents,
           encoding: Encoding.UTF8
         });
-        showToast(`Fichier sauvegardé : ${fileName}`, 'success');
+        showToast(t('messages.fileSaved', { name: fileName }), 'success');
         setExportModalData(null);
         return true;
-      } catch (err) {
-        showToast('Erreur lors de la sauvegarde. Essayez l\'option Partager.', 'error');
+      } catch {
+        showToast(t('messages.saveError'), 'error');
         return false;
       }
     }
@@ -654,7 +680,7 @@ const MyMusicCoach = () => {
       await Share.share({
         title: fileName,
         url: result.uri,
-        dialogTitle: 'Partager le fichier'
+        dialogTitle: t('export.dialogTitle')
       });
       setExportModalData(null);
       return true;
@@ -664,7 +690,7 @@ const MyMusicCoach = () => {
         return true;
       }
       console.error('Erreur partage:', error);
-      showToast('Erreur lors du partage.', 'error');
+      showToast(t('messages.shareError'), 'error');
       return false;
     }
   };
@@ -698,11 +724,11 @@ const MyMusicCoach = () => {
       // Sur iOS PWA/Safari : copier dans le presse-papier (seule méthode fiable)
       try {
         await navigator.clipboard.writeText(dataStr);
-        showToast(`Contenu copié ! Collez-le dans Fichiers ou Notes sous le nom : ${fileName}`, 'success', 6000);
+        showToast(t('messages.copiedPaste', { name: fileName }), 'success', 6000);
         return true;
       } catch (error) {
         console.error('Erreur clipboard:', error);
-        prompt('Impossible de copier automatiquement.\nSélectionnez et copiez le contenu :', dataStr.substring(0, 500) + '...');
+        prompt(t('messages.copyManually'), dataStr.substring(0, 500) + '...');
         return false;
       }
     } else {
@@ -730,13 +756,13 @@ const MyMusicCoach = () => {
     try {
       const dataToExport = await exportAppData();
       if (!dataToExport) {
-        showToast('Erreur lors de la préparation des données', 'error');
+        showToast(t('messages.exportPrepError'), 'error');
         return;
       }
       const fileName = `mymusiccoach-backup-${new Date().toISOString().split('T')[0]}.json`;
       await downloadFile(dataToExport, fileName, 'application/json');
     } catch (error) {
-      showToast('Erreur lors de l\'export des données.', 'error');
+      showToast(t('messages.exportError'), 'error');
       console.error(error);
     }
   };
@@ -750,13 +776,14 @@ const MyMusicCoach = () => {
       try {
         const result = await importAppData(e.target.result);
         if (result.success) {
-          showToast('Données importées. Rechargement...', 'success');
+          showToast(t('messages.dataImported'), 'success');
           setTimeout(() => window.location.reload(), 1500);
         } else {
-          showToast(result.message, 'error');
+          console.error(result.message);
+          showToast(t('messages.invalidFile'), 'error');
         }
       } catch (error) {
-        showToast('Fichier invalide.', 'error');
+        showToast(t('messages.invalidFile'), 'error');
         console.error(error);
       }
     };
@@ -831,7 +858,7 @@ const MyMusicCoach = () => {
   const saveTempo = (exerciseId) => {
     const tempo = parseInt(currentTempo[exerciseId]);
     if (!tempo || tempo < 20 || tempo > 300) {
-      showToast('Veuillez entrer un tempo valide (entre 20 et 300 BPM)', 'warning');
+      showToast(t('messages.validTempo'), 'warning');
       return;
     }
 
@@ -887,7 +914,7 @@ const MyMusicCoach = () => {
       date: dateStr,
       time: timeStr,
       workoutId: workout.id,
-      workoutName: workout.name,
+      workoutName: workoutName(workout),
       completed,
       skipped,
       total: workoutExercises.length,
@@ -902,8 +929,8 @@ const MyMusicCoach = () => {
 
     // Notification de félicitations (uniquement sur mobile natif)
     sendImmediateNotification(
-      '🎉 Session terminée !',
-      `Bravo ${settings.userName} ! ${completed} exercice${completed > 1 ? 's' : ''} complété${completed > 1 ? 's' : ''} sur ${workoutExercises.length}.`,
+      `🎉 ${t('messages.sessionFinished')}`,
+      t('messages.congratulations', { name: settings.userName, count: completed, total: workoutExercises.length }),
       100
     );
   };
@@ -912,7 +939,7 @@ const MyMusicCoach = () => {
   const startEditSession = (session) => {
     const workout = workouts.find(w => w.id === session.workoutId);
     if (!workout) {
-      showToast('La session originale n\'existe plus.', 'error');
+      showToast(t('messages.sessionNoLongerExists'), 'error');
       return;
     }
 
@@ -974,8 +1001,8 @@ const MyMusicCoach = () => {
 
     // Notification de début de session (uniquement sur mobile natif)
     sendImmediateNotification(
-      '🎵 Session démarrée !',
-      `${workout.name} - ${workout.exercises.length} exercice${workout.exercises.length > 1 ? 's' : ''} à pratiquer. Bon courage !`,
+      `🎵 ${t('messages.sessionStarted')}`,
+      `${workoutName(workout)} - ${t('messages.exercisesToPractice', { count: workout.exercises.length })} ${t('messages.goodLuck')}`,
       101
     );
   };
@@ -998,7 +1025,7 @@ const MyMusicCoach = () => {
   };
 
   const permanentlyDeleteExercise = (exerciseId) => {
-    if (window.confirm('Supprimer définitivement cet exercice ? Cette action est irréversible.')) {
+    if (window.confirm(t('messages.deleteExerciseConfirm'))) {
       setDeletedExercises(deletedExercises.filter(ex => ex.id !== exerciseId));
     }
   };
@@ -1043,7 +1070,7 @@ const MyMusicCoach = () => {
   };
 
   const permanentlyDeleteWorkout = (workoutId) => {
-    if (window.confirm('Supprimer définitivement cette session ? Cette action est irréversible.')) {
+    if (window.confirm(t('messages.deleteSessionConfirm'))) {
       setArchivedWorkouts(archivedWorkouts.filter(w => w.id !== workoutId));
       removeWorkoutFromSchedule(workoutId);
     }
@@ -1134,7 +1161,7 @@ const MyMusicCoach = () => {
   const exportWorkout = async (workout) => {
     try {
       if (!workout || !workout.exercises) {
-        showToast('Session invalide', 'error');
+        showToast(t('messages.invalidSession'), 'error');
         return;
       }
 
@@ -1143,8 +1170,15 @@ const MyMusicCoach = () => {
         const exercise = exercises.find(ex => ex.id === exId);
         if (!exercise) return null;
         // Retirer l'ID pour éviter les conflits lors de l'import
+        // eslint-disable-next-line no-unused-vars
         const { id, ...exerciseData } = exercise;
-        return exerciseData;
+        // Le contenu d'exemple est exporté dans la langue affichée
+        return {
+          ...exerciseData,
+          name: exerciseName(exercise),
+          description: exerciseDescription(exercise),
+          isExample: false
+        };
       }).filter(Boolean);
 
       // Créer l'objet à exporter
@@ -1153,7 +1187,7 @@ const MyMusicCoach = () => {
         appName: "MyMusicCoach",
         exportDate: new Date().toISOString(),
         workout: {
-          name: workout.name,
+          name: workoutName(workout),
           duration: workout.duration,
           category: workout.category,
           exerciseCount: workoutExercises.length
@@ -1166,7 +1200,7 @@ const MyMusicCoach = () => {
       const fileName = `mymusiccoach-session-${new Date().toISOString().split('T')[0]}.json`;
       await downloadFile(jsonContent, fileName, 'application/json');
     } catch (error) {
-      showToast(`Erreur lors de l'export: ${error.message}`, 'error');
+      showToast(t('messages.workoutExportError', { error: error.message }), 'error');
       console.error('Export workout error:', error);
     }
   };
@@ -1176,7 +1210,7 @@ const MyMusicCoach = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.json')) {
-      showToast('Le fichier doit être au format JSON', 'error');
+      showToast(t('messages.fileMustBeJson'), 'error');
       return;
     }
 
@@ -1187,12 +1221,12 @@ const MyMusicCoach = () => {
 
         // Vérifier la structure du fichier
         if (!importData.version || !importData.workout || !importData.exercises) {
-          showToast('Format de fichier invalide', 'error');
+          showToast(t('messages.invalidFileFormat'), 'error');
           return;
         }
 
         if (importData.appName !== "MyMusicCoach") {
-          if (!window.confirm('Ce fichier ne provient pas de MyMusicCoach. Continuer quand même ?')) {
+          if (!window.confirm(t('messages.notFromApp'))) {
             return;
           }
         }
@@ -1232,7 +1266,7 @@ const MyMusicCoach = () => {
 
       } catch (error) {
         console.error('Erreur import:', error);
-        showToast('Erreur lors de l\'importation du fichier', 'error');
+        showToast(t('messages.importError'), 'error');
       }
     };
     reader.readAsText(file);
@@ -1460,10 +1494,7 @@ const MyMusicCoach = () => {
       .reverse();
 
     // Libellé de la période
-    const periodLabel = weeks === 1 ? 'les 7 derniers jours' :
-                        weeks === 2 ? 'les 14 derniers jours' :
-                        weeks === 3 ? 'les 21 derniers jours' :
-                        'les 28 derniers jours';
+    const periodLabel = t('report.lastDays', { count: weeks * 7 });
 
     // Créer le contenu du rapport
     // Calculer les stats pour la période
@@ -1502,7 +1533,7 @@ const MyMusicCoach = () => {
 
     const reportData = {
       userName: settings.userName,
-      date: new Date().toLocaleDateString('fr-FR', {
+      date: new Date().toLocaleDateString(settings.language || 'en', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -1520,23 +1551,17 @@ const MyMusicCoach = () => {
 
     setShowExportModal(false);
 
-    // Helper pour formater les dates
-    const formatDate = (dateStr) => {
-      if (dateStr.includes('-')) {
-        // Format ISO: YYYY-MM-DD -> DD/MM/YYYY
-        const [year, month, day] = dateStr.split('-');
-        return `${day}/${month}/${year}`;
-      }
-      return dateStr; // Déjà au bon format
-    };
+    const formatDate = (dateStr) => formatDisplayDate(dateStr);
+    // Textes traduits insérés dans le HTML
+    const tr = (key, params) => escapeHtml(t(key, params));
 
     // Créer le document HTML pour le PDF
     const htmlContent = `
       <!DOCTYPE html>
-      <html>
+      <html lang="${escapeHtml(settings.language || 'en')}">
       <head>
         <meta charset="UTF-8">
-        <title>Rapport de Progression - ${escapeHtml(reportData.userName)}</title>
+        <title>${tr('report.title')} - ${escapeHtml(reportData.userName)}</title>
         <style>
           @media print {
             body { margin: 0; }
@@ -1712,54 +1737,54 @@ const MyMusicCoach = () => {
       </head>
       <body>
         <button class="print-button no-print" onclick="window.print()">
-          🖨️ Enregistrer en PDF (Ctrl+P)
+          🖨️ ${tr('report.printSave')} (Ctrl+P)
         </button>
 
         <div class="instructions no-print">
-          <h3>📋 Comment enregistrer en PDF ?</h3>
+          <h3>📋 ${tr('report.howToTitle')}</h3>
           <ol>
-            <li>Clique sur le bouton violet ci-dessus (ou appuie sur <strong>Ctrl+P</strong> / <strong>Cmd+P</strong>)</li>
-            <li>Dans la fenêtre qui s'ouvre, choisis <strong>"Enregistrer au format PDF"</strong> comme imprimante</li>
-            <li>Clique sur <strong>"Enregistrer"</strong></li>
-            <li>Ton rapport PDF est prêt à être partagé avec ton prof ! 🎓</li>
+            <li>${tr('report.howToStep1')}</li>
+            <li>${tr('report.howToStep2')}</li>
+            <li>${tr('report.howToStep3')}</li>
+            <li>${tr('report.howToStep4')}</li>
           </ol>
         </div>
 
         <div class="header">
-          <h1>📊 Rapport de Progression</h1>
+          <h1>📊 ${tr('report.title')}</h1>
           <p><strong>${escapeHtml(reportData.userName)}</strong></p>
-          <p>${reportData.date}</p>
-          <p style="color: #9333EA; font-weight: bold;">Période : ${reportData.periodLabel}</p>
+          <p>${escapeHtml(reportData.date)}</p>
+          <p style="color: #9333EA; font-weight: bold;">${tr('report.period')} : ${escapeHtml(reportData.periodLabel)}</p>
         </div>
 
         <div class="section">
-          <h2>📈 Statistiques de la période</h2>
+          <h2>📈 ${tr('report.periodStats')}</h2>
           <div class="stats-grid">
             <div class="stat-card">
               <h3>${reportData.stats.sessionsCount}</h3>
-              <p>Sessions<br/>pratiquées</p>
+              <p>${tr('report.sessionsPracticed')}</p>
             </div>
             <div class="stat-card">
               <h3>${reportData.stats.streak}</h3>
-              <p>Meilleur streak<br/>(jours d'affilée)</p>
+              <p>${tr('report.bestStreak')}</p>
             </div>
             <div class="stat-card">
               <h3>${reportData.stats.daysWithPractice}</h3>
-              <p>Jours<br/>avec pratique</p>
+              <p>${tr('report.daysWithPractice')}</p>
             </div>
           </div>
         </div>
 
         <div class="section">
-          <h2>📅 Historique des Sessions (${reportData.periodLabel})</h2>
+          <h2>📅 ${tr('report.sessionHistory')} (${escapeHtml(reportData.periodLabel)})</h2>
           <table>
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Session</th>
-                <th>Complété</th>
-                <th>Sauté</th>
-                <th>Total</th>
+                <th>${tr('report.colDate')}</th>
+                <th>${tr('report.colSession')}</th>
+                <th>${tr('report.colCompleted')}</th>
+                <th>${tr('report.colSkipped')}</th>
+                <th>${tr('report.colTotal')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1781,16 +1806,16 @@ const MyMusicCoach = () => {
           if (sessionsWithNotes.length === 0) return '';
           return `
         <div class="section">
-          <h2>📝 Observations de l'élève</h2>
+          <h2>📝 ${tr('report.observations')}</h2>
           ${sessionsWithNotes.map(session => {
             const noteEntries = Object.entries(session.notes);
             return noteEntries.map(([exId, note]) => {
               const exercise = exercises.find(e => e.id === parseInt(exId));
-              const exerciseName = exercise ? exercise.name : 'Exercice inconnu';
+              const name = exercise ? exerciseName(exercise) : t('report.unknownExercise');
               return `
               <div class="observation-card">
                 <div class="date">📅 ${escapeHtml(formatDate(session.date))} ${escapeHtml(session.time)} — ${escapeHtml(session.workoutName)}</div>
-                <div class="exercise-name">🎵 ${escapeHtml(exerciseName)}</div>
+                <div class="exercise-name">🎵 ${escapeHtml(name)}</div>
                 <div class="note-text">${escapeHtml(note)}</div>
               </div>
               `;
@@ -1802,15 +1827,15 @@ const MyMusicCoach = () => {
 
         ${reportData.exercisesWithProgress.length > 0 ? `
         <div class="section">
-          <h2>📊 Progression des Tempos</h2>
+          <h2>📊 ${tr('report.tempoProgress')}</h2>
           <table>
             <thead>
               <tr>
-                <th>Exercice</th>
-                <th>Tempo de base</th>
-                <th>Dernier tempo</th>
-                <th>Progression</th>
-                <th>Enregistrements</th>
+                <th>${tr('report.colExercise')}</th>
+                <th>${tr('report.colBaseTempo')}</th>
+                <th>${tr('report.colLastTempo')}</th>
+                <th>${tr('report.colProgress')}</th>
+                <th>${tr('report.colRecords')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1820,7 +1845,7 @@ const MyMusicCoach = () => {
                 const progression = lastTempo.tempo - firstTempo.tempo;
                 return `
                   <tr>
-                    <td><strong>${escapeHtml(ex.name)}</strong></td>
+                    <td><strong>${escapeHtml(exerciseName(ex))}</strong></td>
                     <td>${Number(ex.baseTempo) || 0} BPM</td>
                     <td>${Number(lastTempo.tempo) || 0} BPM</td>
                     <td style="color: ${progression >= 0 ? '#059669' : '#DC2626'};">
@@ -1836,19 +1861,15 @@ const MyMusicCoach = () => {
         ` : ''}
 
         <div class="footer">
-          <p>Rapport généré par MyMusicCoach - Application de coaching musical</p>
-          <p>Ce rapport peut être partagé avec votre professeur pour suivre votre progression</p>
+          <p>${tr('report.footer1')}</p>
+          <p>${tr('report.footer2')}</p>
         </div>
-
-        <script>
-          // Rapport prêt à être imprimé
-        </script>
       </body>
       </html>
     `;
 
     // Télécharger le fichier HTML
-    const fileName = `Rapport_${reportData.userName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+    const fileName = `${t('report.filePrefix')}_${reportData.userName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
     await downloadFile(htmlContent, fileName, 'text/html');
   };
 
@@ -1899,7 +1920,7 @@ const MyMusicCoach = () => {
                 <Calendar className="w-6 h-6" />
               </div>
               <p className="text-purple-100 text-sm capitalize">
-                {new Date().toLocaleDateString('fr-FR', { 
+                {new Date().toLocaleDateString(settings.language || 'en', {
                   weekday: 'long', 
                   year: 'numeric', 
                   month: 'long', 
@@ -1939,7 +1960,7 @@ const MyMusicCoach = () => {
                         }`}>
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">
-                              {workout.name}
+                              {workoutName(workout)}
                             </h3>
                             {completed && (
                               <div className="bg-green-500 rounded-full p-1">
@@ -1954,19 +1975,19 @@ const MyMusicCoach = () => {
                             </div>
                             <div className="flex items-center gap-1">
                               <Activity className="w-4 h-4" />
-                              <span>{workout.exercises.length} {t('home.exercises')}</span>
+                              <span>{t('workout.exerciseCount', { count: workout.exercises.length })}</span>
                             </div>
                           </div>
                           {(workout.shortTermGoal || workout.mediumTermGoal) && (
                             <div className="space-y-1 mb-3">
                               {workout.shortTermGoal && (
                                 <p className="text-xs text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20 rounded-lg px-3 py-1.5">
-                                  🎯 7j : {workout.shortTermGoal}
+                                  🎯 {t('goals.shortTermShort')} : {workout.shortTermGoal}
                                 </p>
                               )}
                               {workout.mediumTermGoal && (
                                 <p className="text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-1.5">
-                                  🗓️ 28j : {workout.mediumTermGoal}
+                                  🗓️ {t('goals.mediumTermShort')} : {workout.mediumTermGoal}
                                 </p>
                               )}
                             </div>
@@ -2007,7 +2028,7 @@ const MyMusicCoach = () => {
                                   {exercise.type === 'video' && <Video className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
                                   {exercise.type === 'file' && <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{exercise.name}</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{exerciseName(exercise)}</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">{exercise.duration}</p>
                                   </div>
                                 </div>
@@ -2084,7 +2105,7 @@ const MyMusicCoach = () => {
               }}
               className="grid grid-cols-7 gap-2 cursor-pointer active:scale-[0.98] transition-transform"
             >
-              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, idx) => {
+              {t('schedule.dayAbbr').map((day, idx) => {
                 const fullDay = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'][idx];
                 const isToday = getCurrentDay() === fullDay;
                 const currentWeek = getCurrentWeekNumber();
@@ -2125,7 +2146,7 @@ const MyMusicCoach = () => {
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
             >
               <div className="bg-white/20 rounded-xl p-3">
-                <img src="/metronome.svg" alt="Metronome" className="w-7 h-7 invert" />
+                <img src="/metronome.svg" alt="" aria-hidden="true" className="w-7 h-7 invert" />
               </div>
               <div className="text-left">
                 <p className="font-bold text-lg">{t('metronome.title')}</p>
@@ -2246,7 +2267,7 @@ const MyMusicCoach = () => {
               <button
                 onClick={() => setViewingWeek(Math.max(1, viewingWeek - 1))}
                 disabled={viewingWeek === 1}
-                aria-label="Semaine précédente"
+                aria-label={t('schedule.previousWeek')}
                 className={`p-2 rounded-lg transition-colors ${
                   viewingWeek === 1
                     ? 'text-white/30 cursor-not-allowed'
@@ -2278,7 +2299,7 @@ const MyMusicCoach = () => {
               <button
                 onClick={() => setViewingWeek(Math.min(4, viewingWeek + 1))}
                 disabled={viewingWeek === 4}
-                aria-label="Semaine suivante"
+                aria-label={t('schedule.nextWeek')}
                 className={`p-2 rounded-lg transition-colors ${
                   viewingWeek === 4
                     ? 'text-white/30 cursor-not-allowed'
@@ -2330,7 +2351,7 @@ const MyMusicCoach = () => {
                     </div>
                     {workoutIds.length > 0 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        {workoutIds.length} {workoutIds.length > 1 ? t('home.sessions') : 'session'}
+                        {t('schedule.sessions', { count: workoutIds.length })}
                       </span>
                     )}
                   </div>
@@ -2347,9 +2368,9 @@ const MyMusicCoach = () => {
                               <span className="text-sm">🎵</span>
                               <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
                                 {workout
-                                  ? workout.name
+                                  ? workoutName(workout)
                                   : archivedWorkout
-                                    ? `${archivedWorkout.name} (${t('home.archive')})`
+                                    ? `${workoutName(archivedWorkout)} (${t('home.archive')})`
                                     : t('schedule.deletedSession')}
                               </span>
                             </div>
@@ -2360,7 +2381,7 @@ const MyMusicCoach = () => {
                                   [weekKey]: { ...prev[weekKey], [day]: workoutIds.filter((_, i) => i !== index) }
                                 }));
                               }}
-                              aria-label="Supprimer"
+                              aria-label={t('schedule.removeSession')}
                               className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                             >
                               <X aria-hidden="true" className="w-4 h-4" />
@@ -2391,7 +2412,7 @@ const MyMusicCoach = () => {
                     >
                       <option value="">+ {t('schedule.addSession')}</option>
                       {workouts.map(w => (
-                        <option key={w.id} value={w.id}>🎵 {w.name}</option>
+                        <option key={w.id} value={w.id}>🎵 {workoutName(w)}</option>
                       ))}
                     </select>
                   )}
@@ -2422,7 +2443,7 @@ const MyMusicCoach = () => {
             >
               ← {t('workout.back')}
             </button>
-            <h1 className="text-3xl font-bold mb-2">{activeWorkout.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">{workoutName(activeWorkout)}</h1>
             <div className="flex items-center gap-4 text-purple-100">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
@@ -2466,14 +2487,14 @@ const MyMusicCoach = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-bold text-purple-600 dark:text-purple-400">#{index + 1}</span>
-                        <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100">{exerciseName(exercise)}</h3>
                       </div>
                       <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           {exercise.duration}
                         </span>
-                        <span>{exercise.sets}</span>
+                        <span>{formatSets(exercise.sets)}</span>
                       </div>
                     </div>
                     <div
@@ -2548,7 +2569,7 @@ const MyMusicCoach = () => {
                 {librarySubTab === 'exercises' && !showTrash && (
                   <button
                     onClick={() => setShowTrash(true)}
-                    aria-label="Corbeille"
+                    aria-label={t('library.trash')}
                     className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 p-3 rounded-full shadow hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-600 transition-colors relative"
                   >
                     <Archive aria-hidden="true" className="w-5 h-5" />
@@ -2578,7 +2599,7 @@ const MyMusicCoach = () => {
                 {librarySubTab === 'exercises' && !showTrash && (
                   <button
                     onClick={() => setShowCreateExercise(true)}
-                    aria-label="Créer un exercice"
+                    aria-label={t('library.createExercise')}
                     className="bg-purple-600 dark:bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                   >
                     <Plus aria-hidden="true" className="w-5 h-5" />
@@ -2588,14 +2609,14 @@ const MyMusicCoach = () => {
                   <>
                     <button
                       onClick={() => setShowImportModal(true)}
-                      aria-label="Importer"
+                      aria-label={t('import.title')}
                       className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 p-3 rounded-full shadow hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                     >
                       <Upload aria-hidden="true" className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => { setEditingWorkout(null); setShowCreateWorkout(true); }}
-                      aria-label="Créer une session"
+                      aria-label={t('library.createSession')}
                       className="bg-purple-600 dark:bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
                     >
                       <Plus aria-hidden="true" className="w-5 h-5" />
@@ -2681,7 +2702,7 @@ const MyMusicCoach = () => {
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 pr-2">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
+                                <h3 className="font-bold text-gray-900 dark:text-gray-100">{exerciseName(exercise)}</h3>
                                 {exercise.isExample && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
                                     {t('common.example')}
@@ -2717,7 +2738,7 @@ const MyMusicCoach = () => {
                               <Clock className="w-4 h-4" />
                               {exercise.duration}
                             </span>
-                            <span>{exercise.sets}</span>
+                            <span>{formatSets(exercise.sets)}</span>
                             {exercise.baseTempo > 0 && (
                               <span className="flex items-center gap-1">
                                 <Activity className="w-4 h-4" />
@@ -2749,7 +2770,7 @@ const MyMusicCoach = () => {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1">{exercise.name}</h3>
+                            <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1">{exerciseName(exercise)}</h3>
                             <div className="flex items-center gap-2 mb-2">
                               <span className={`text-xs px-2 py-1 rounded-full ${
                                 exercise.difficulty === 'Débutant' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
@@ -2834,7 +2855,7 @@ const MyMusicCoach = () => {
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-gray-900 dark:text-gray-100">{workout.name}</h3>
+                              <h3 className="font-bold text-gray-900 dark:text-gray-100">{workoutName(workout)}</h3>
                               {workout.isExample && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium">
                                   {t('common.example')}
@@ -2842,19 +2863,19 @@ const MyMusicCoach = () => {
                               )}
                             </div>
                             <span className="text-xs bg-purple-200 dark:bg-purple-800/40 text-purple-800 dark:text-purple-300 px-2 py-1 rounded-full">
-                              {workout.category}
+                              {translateCategory(workout.category)}
                             </span>
                           </div>
                           {(workout.shortTermGoal || workout.mediumTermGoal) && (
                             <div className="space-y-1 mb-2">
                               {workout.shortTermGoal && (
                                 <p className="text-xs text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20 rounded-lg px-2 py-1">
-                                  🎯 7j : {workout.shortTermGoal}
+                                  🎯 {t('goals.shortTermShort')} : {workout.shortTermGoal}
                                 </p>
                               )}
                               {workout.mediumTermGoal && (
                                 <p className="text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg px-2 py-1">
-                                  🗓️ 28j : {workout.mediumTermGoal}
+                                  🗓️ {t('goals.mediumTermShort')} : {workout.mediumTermGoal}
                                 </p>
                               )}
                             </div>
@@ -2866,7 +2887,7 @@ const MyMusicCoach = () => {
                             </div>
                             <div className="flex items-center gap-1">
                               <Activity className="w-4 h-4" />
-                              <span>{workout.exercises.length} exercices</span>
+                              <span>{t('workout.exerciseCount', { count: workout.exercises.length })}</span>
                             </div>
                           </div>
                         </div>
@@ -2916,9 +2937,9 @@ const MyMusicCoach = () => {
                         className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-5 shadow-md border-2 border-gray-200 dark:border-gray-700"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-bold text-gray-700 dark:text-gray-300">{workout.name}</h3>
+                          <h3 className="font-bold text-gray-700 dark:text-gray-300">{workoutName(workout)}</h3>
                           <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full">
-                            {workout.category}
+                            {translateCategory(workout.category)}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -2928,7 +2949,7 @@ const MyMusicCoach = () => {
                           </div>
                           <div className="flex items-center gap-1">
                             <Activity className="w-4 h-4" />
-                            <span>{workout.exercises.length} exercices</span>
+                            <span>{t('workout.exerciseCount', { count: workout.exercises.length })}</span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -3045,14 +3066,14 @@ const MyMusicCoach = () => {
 
                 {/* Navigation mois */}
                 <div className="flex items-center justify-between mb-4">
-                  <button onClick={prevMonth} aria-label="Mois précédent" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
+                  <button onClick={prevMonth} aria-label={t('stats.previousMonth')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
                     <ChevronLeft aria-hidden="true" className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   </button>
                   <span className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{monthLabel}</span>
                   <button
                     onClick={nextMonth}
                     disabled={isCurrentMonth}
-                    aria-label="Mois suivant"
+                    aria-label={t('stats.nextMonth')}
                     className={`p-2 rounded-xl transition-colors ${isCurrentMonth ? 'opacity-25 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                   >
                     <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -3181,13 +3202,13 @@ const MyMusicCoach = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-gray-100">{session.workoutName}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{session.date} à {session.time}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.dateAtTime', { date: formatDisplayDate(session.date), time: session.time })}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => startEditSession(session)}
                         className="p-2 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 dark:bg-purple-900/30 rounded-lg transition-colors"
-                        aria-label="Modifier"
+                        aria-label={t('common.edit')}
                       >
                         <Edit2 aria-hidden="true" className="w-4 h-4" />
                       </button>
@@ -3242,7 +3263,7 @@ const MyMusicCoach = () => {
                     return (
                       <div key={exercise.id} className="border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-4">
                         <div className="mb-4">
-                          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{exercise.name}</h3>
+                          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{exerciseName(exercise)}</h3>
                           <div className="flex items-center gap-3 text-sm">
                             <span className="text-gray-600 dark:text-gray-400">
                               {t('stats.base')}: {exercise.baseTempo} BPM
@@ -3305,9 +3326,9 @@ const MyMusicCoach = () => {
                           
                           {/* Légende des dates */}
                           <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            <span>{history[0].date}</span>
+                            <span>{formatDisplayDate(history[0].date)}</span>
                             {history.length > 1 && (
-                              <span>{history[history.length - 1].date}</span>
+                              <span>{formatDisplayDate(history[history.length - 1].date)}</span>
                             )}
                           </div>
                         </div>
@@ -3315,15 +3336,15 @@ const MyMusicCoach = () => {
                         {/* Statistiques */}
                         <div className="grid grid-cols-3 gap-2 mt-4">
                           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 text-center">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Min</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">{t('stats.min')}</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{minTempo} BPM</p>
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 text-center">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Max</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">{t('stats.max')}</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{maxTempo} BPM</p>
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 text-center">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Enregistrements</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">{t('stats.records')}</p>
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{history.length}</p>
                           </div>
                         </div>
@@ -3487,7 +3508,7 @@ const MyMusicCoach = () => {
                 {notificationPermission === 'granted' && !settings.notifications && (
                   <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-xl p-3">
                     <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                      ℹ️ Les notifications sont désactivées. Active-les pour recevoir des rappels.
+                      ℹ️ {t('settings.notificationsOff')}
                     </p>
                   </div>
                 )}
@@ -3502,9 +3523,7 @@ const MyMusicCoach = () => {
                       {t('settings.mobileOnly')}
                     </p>
                     <p className="text-xs text-blue-700 dark:text-blue-300">
-                      {settings.language === 'fr'
-                        ? "Les notifications et rappels quotidiens sont disponibles uniquement sur l'application Android (APK). Cette fonctionnalité n'est pas disponible sur iOS ou en version web."
-                        : "Notifications and daily reminders are only available on the Android app (APK). This feature is not available on iOS or web version."}
+                      {t('settings.mobileOnlyDesc')}
                     </p>
                   </div>
                 </div>
@@ -3515,7 +3534,7 @@ const MyMusicCoach = () => {
           {/* Section Son du Métronome */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-              <img src="/metronome.svg" alt="Metronome" className="w-5 h-5" style={{filter: 'invert(27%) sepia(95%) saturate(4925%) hue-rotate(258deg) brightness(87%) contrast(97%)'}} />
+              <img src="/metronome.svg" alt="" aria-hidden="true" className="w-5 h-5" style={{filter: 'invert(27%) sepia(95%) saturate(4925%) hue-rotate(258deg) brightness(87%) contrast(97%)'}} />
               {t('settings.metronomeSound')}
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -3577,10 +3596,10 @@ const MyMusicCoach = () => {
 
           {/* À propos */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{settings.language === 'fr' ? 'À propos' : 'About'}</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{t('settings.about')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2">
-                <span className="text-gray-600 dark:text-gray-400">{settings.language === 'fr' ? 'Version' : 'Version'}</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('settings.version')}</span>
                 <span className="font-medium text-gray-900 dark:text-gray-100">1.0.0</span>
               </div>
               <button
@@ -3588,7 +3607,7 @@ const MyMusicCoach = () => {
                 className="w-full flex items-center justify-between py-3 px-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
               >
                 <span className="text-gray-700 dark:text-gray-300 font-medium">
-                  {settings.language === 'fr' ? 'Politique de confidentialité' : 'Privacy Policy'}
+                  {t('settings.privacyPolicy')}
                 </span>
                 <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               </button>
@@ -3613,9 +3632,7 @@ const MyMusicCoach = () => {
             <button
               onClick={async () => {
                 if (window.confirm(t('settings.resetConfirm'))) {
-                  if (window.confirm(settings.language === 'fr'
-                    ? 'Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVoulez-vous vraiment tout supprimer ?'
-                    : 'Final confirmation: this action is IRREVERSIBLE.\n\nDo you really want to delete everything?')) {
+                  if (window.confirm(t('settings.resetFinalConfirm'))) {
                     await clearAppStorage();
                     window.location.reload();
                   }
@@ -3684,7 +3701,7 @@ const MyMusicCoach = () => {
                   type="text"
                   name="name"
                   required
-                  defaultValue={editingExercise?.name || ''}
+                  defaultValue={exerciseName(editingExercise) || ''}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
                   placeholder={t('exercise.namePlaceholder')}
                 />
@@ -3799,7 +3816,7 @@ const MyMusicCoach = () => {
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
                 >
                   {exerciseCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>{translateCategory(cat)}</option>
                   ))}
                 </select>
               </div>
@@ -3827,7 +3844,7 @@ const MyMusicCoach = () => {
                   name="description"
                   required
                   rows="3"
-                  defaultValue={editingExercise?.description || ''}
+                  defaultValue={exerciseDescription(editingExercise) || ''}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
                   placeholder={t('exercise.descriptionPlaceholder')}
                 />
@@ -3906,10 +3923,10 @@ const MyMusicCoach = () => {
                 className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
               >
                 <span className="text-xl">←</span>
-                <span className="font-medium">Retour</span>
+                <span className="font-medium">{t('common.back')}</span>
               </button>
               <h2 className="text-lg font-bold">
-                {editingWorkout ? 'Modifier' : 'Nouvelle'} session
+                {editingWorkout ? t('workout.editTitle') : t('workout.new')}
               </h2>
               <div className="w-20"></div>
             </div>
@@ -3932,20 +3949,20 @@ const MyMusicCoach = () => {
           >
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{overflowY: 'scroll', WebkitOverflowScrolling: 'touch'}}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom de la session</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('workout.sessionName')}</label>
                 <input
                   type="text"
                   name="name"
                   required
-                  defaultValue={editingWorkout?.name}
+                  defaultValue={workoutName(editingWorkout)}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
-                  placeholder="Ma routine quotidienne..."
+                  placeholder={t('workout.namePlaceholder')}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Durée estimée</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('workout.estimatedDuration')}</label>
                   <input
                     type="text"
                     name="duration"
@@ -3956,14 +3973,14 @@ const MyMusicCoach = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('workout.category')}</label>
                   <input
                     type="text"
                     name="category"
                     required
-                    defaultValue={editingWorkout?.category}
+                    defaultValue={editingWorkout ? translateCategory(editingWorkout.category) : undefined}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
-                    placeholder="Technique"
+                    placeholder={t('workout.categoryPlaceholder')}
                   />
                 </div>
               </div>
@@ -3991,7 +4008,7 @@ const MyMusicCoach = () => {
               </div>
 
               <div className="pb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Exercices</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('workout.selectExercises')}</label>
                 <div className="space-y-2">
                   {exercises.map(ex => (
                     <label
@@ -4006,7 +4023,7 @@ const MyMusicCoach = () => {
                         className="w-5 h-5 text-purple-600 dark:text-purple-400 rounded focus:ring-purple-500 dark:focus:ring-purple-400"
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{ex.name}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{exerciseName(ex)}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{ex.duration}</p>
                       </div>
                     </label>
@@ -4058,7 +4075,7 @@ const MyMusicCoach = () => {
                 }}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
               >
-                {editingWorkout ? '✓ Sauvegarder' : '✓ Créer la session'}
+                {editingWorkout ? `✓ ${t('workout.save')}` : `✓ ${t('workout.createSession')}`}
               </button>
 
               {editingWorkout && (
@@ -4099,11 +4116,11 @@ const MyMusicCoach = () => {
                 >
                   ← {t('exercise.back')}
                 </button>
-                <h3 className="font-bold text-lg flex-1 text-center">{selectedExercise.name}</h3>
+                <h3 className="font-bold text-lg flex-1 text-center">{exerciseName(selectedExercise)}</h3>
                 <div className="relative">
                   <button
                     onClick={() => setShowExerciseMenu(!showExerciseMenu)}
-                    aria-label="Plus d'options"
+                    aria-label={t('common.moreOptions')}
                     className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                   >
                     <MoreVertical aria-hidden="true" className="w-5 h-5" />
@@ -4147,9 +4164,9 @@ const MyMusicCoach = () => {
                     selectedExercise.difficulty === 'Intermédiaire' ? 'bg-yellow-400 text-yellow-900' :
                     'bg-red-400 text-red-900'
                   }`}>
-                    {selectedExercise.difficulty}
+                    {translateDifficulty(selectedExercise.difficulty)}
                   </span>
-                  <span className="text-purple-100 text-sm">{selectedExercise.category}</span>
+                  <span className="text-purple-100 text-sm">{translateCategory(selectedExercise.category)}</span>
                 </div>
                 {/* Widget timer alarme dans le header */}
                 {activeWorkout && activeWorkout.exercises.includes(selectedExercise.id) && (
@@ -4216,7 +4233,7 @@ const MyMusicCoach = () => {
                         <circle cx="14" cy="14.5" r="1.2" fill="white"/>
                         <rect x="12.5" y="2" width="3" height="2.5" rx="1" fill="white"/>
                       </svg>
-                      <span className="text-xs font-bold">START</span>
+                      <span className="text-xs font-bold uppercase">{t('timer.start')}</span>
                     </button>
                   )
                 )}
@@ -4252,7 +4269,7 @@ const MyMusicCoach = () => {
                       <>
                         <img 
                           src={selectedExercise.fileData.data} 
-                          alt={selectedExercise.name}
+                          alt={exerciseName(selectedExercise)}
                           className="max-w-full h-auto rounded-xl mb-4 shadow-md"
                         />
                         <a
@@ -4292,7 +4309,7 @@ const MyMusicCoach = () => {
 
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                   <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3">{t('exercise.description')}</h4>
-                  <p className="text-gray-600 dark:text-gray-400">{selectedExercise.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{exerciseDescription(selectedExercise)}</p>
                 </div>
 
                 {/* Notification de fin de chrono */}
@@ -4353,7 +4370,7 @@ const MyMusicCoach = () => {
                     ) : (
                       <>
                         <p className="font-bold text-gray-900 dark:text-gray-100 text-lg mb-1">{selectedExercise.duration}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{selectedExercise.sets}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{formatSets(selectedExercise.sets)}</p>
                         <button
                           onClick={() => startTimer(selectedExercise)}
                           className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors"
@@ -4456,7 +4473,7 @@ const MyMusicCoach = () => {
                             const isImprovement = olderEntry && entry.tempo > olderEntry.tempo;
                             return (
                               <div key={idx} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">{entry.date}</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">{formatDisplayDate(entry.date)}</span>
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-gray-900 dark:text-gray-100">{entry.tempo} BPM</span>
                                   {isImprovement && (
@@ -4618,7 +4635,7 @@ const MyMusicCoach = () => {
                             }}
                             className="w-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
                           >
-                            Marquer comme sauté
+                            {t('editSession.markSkipped')}
                           </button>
                         </div>
                       );
@@ -4639,7 +4656,7 @@ const MyMusicCoach = () => {
                             }}
                             className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
                           >
-                            Marquer comme validé
+                            {t('editSession.markCompleted')}
                           </button>
                         </div>
                       );
@@ -4654,7 +4671,7 @@ const MyMusicCoach = () => {
                           className="flex-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-4 rounded-xl font-bold hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
                         >
                           <X aria-hidden="true" className="w-5 h-5" />
-                          Sauté
+                          {t('editSession.skipped')}
                         </button>
                         <button
                           onClick={() => {
@@ -4663,7 +4680,7 @@ const MyMusicCoach = () => {
                           className="flex-[2] bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                         >
                           <Check aria-hidden="true" className="w-6 h-6" />
-                          Validé
+                          {t('editSession.completed')}
                         </button>
                       </div>
                     );
@@ -4704,7 +4721,7 @@ const MyMusicCoach = () => {
                 <h2 className="text-xl font-bold">🏆 {t('stats.allBadges')}</h2>
                 <button
                   onClick={() => setShowAllBadges(false)}
-                  aria-label="Fermer"
+                  aria-label={t('common.close')}
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
                   <X aria-hidden="true" className="w-6 h-6" />
@@ -4767,17 +4784,17 @@ const MyMusicCoach = () => {
           >
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-3xl">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">📊 Exporter le rapport</h2>
+                <h2 className="text-xl font-bold">📊 {t('report.exportTitle')}</h2>
                 <button
                   onClick={() => setShowExportModal(false)}
-                  aria-label="Fermer"
+                  aria-label={t('common.close')}
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
                   <X aria-hidden="true" className="w-6 h-6" />
                 </button>
               </div>
               <p className="text-blue-100 text-sm mt-1">
-                Choisis la période à inclure
+                {t('report.choosePeriod')}
               </p>
             </div>
             <div className="p-4 space-y-3">
@@ -4785,29 +4802,29 @@ const MyMusicCoach = () => {
                 onClick={() => generateProgressReport(1)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/40 dark:hover:to-purple-800/40 rounded-xl font-medium text-purple-800 dark:text-purple-300 transition-all flex items-center justify-between"
               >
-                <span>📅 7 derniers jours</span>
-                <span className="text-purple-500 text-sm">1 semaine</span>
+                <span>📅 {t('report.lastDays', { count: 7 })}</span>
+                <span className="text-purple-500 text-sm">{t('report.weeks', { count: 1 })}</span>
               </button>
               <button
                 onClick={() => generateProgressReport(2)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/40 dark:hover:to-blue-800/40 rounded-xl font-medium text-blue-800 dark:text-blue-200 transition-all flex items-center justify-between"
               >
-                <span>📅 14 derniers jours</span>
-                <span className="text-blue-500 text-sm">2 semaines</span>
+                <span>📅 {t('report.lastDays', { count: 14 })}</span>
+                <span className="text-blue-500 text-sm">{t('report.weeks', { count: 2 })}</span>
               </button>
               <button
                 onClick={() => generateProgressReport(3)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 hover:from-green-100 hover:to-green-200 dark:hover:from-green-900/40 dark:hover:to-green-800/40 rounded-xl font-medium text-green-800 dark:text-green-300 transition-all flex items-center justify-between"
               >
-                <span>📅 21 derniers jours</span>
-                <span className="text-green-500 text-sm">3 semaines</span>
+                <span>📅 {t('report.lastDays', { count: 21 })}</span>
+                <span className="text-green-500 text-sm">{t('report.weeks', { count: 3 })}</span>
               </button>
               <button
                 onClick={() => generateProgressReport(4)}
                 className="w-full py-4 px-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 hover:from-orange-100 hover:to-orange-200 dark:hover:from-orange-900/40 dark:hover:to-orange-800/40 rounded-xl font-medium text-orange-800 dark:text-orange-300 transition-all flex items-center justify-between"
               >
-                <span>📅 28 derniers jours</span>
-                <span className="text-orange-500 text-sm">4 semaines</span>
+                <span>📅 {t('report.lastDays', { count: 28 })}</span>
+                <span className="text-orange-500 text-sm">{t('report.weeks', { count: 4 })}</span>
               </button>
             </div>
           </div>
@@ -4829,11 +4846,11 @@ const MyMusicCoach = () => {
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-3xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">
-                  {settings.language === 'fr' ? '🔒 Politique de confidentialité' : '🔒 Privacy Policy'}
+                  🔒 {t('settings.privacyPolicy')}
                 </h2>
                 <button
                   onClick={() => setShowPrivacyPolicy(false)}
-                  aria-label="Fermer"
+                  aria-label={t('common.close')}
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
                   <X aria-hidden="true" className="w-6 h-6" />
@@ -4841,69 +4858,30 @@ const MyMusicCoach = () => {
               </div>
             </div>
             <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4 text-sm text-gray-700 dark:text-gray-300">
-              {settings.language === 'fr' ? (
-                <>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Dernière mise à jour : Février 2026</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs">{t('privacy.updated')}</p>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">1. Données collectées</h3>
-                  <p>MyMusicCoach ne collecte <strong>aucune donnée personnelle</strong> et n'envoie aucune information à des serveurs externes.</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s1Title')}</h3>
+              <p>{renderBold(t('privacy.s1Body'))}</p>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">2. Stockage local</h3>
-                  <p>Toutes vos données (exercices, sessions, paramètres) sont stockées <strong>uniquement sur votre appareil</strong> dans la mémoire locale du navigateur (IndexedDB).</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s2Title')}</h3>
+              <p>{renderBold(t('privacy.s2Body'))}</p>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">3. Données stockées</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Vos exercices personnalisés</li>
-                    <li>Vos sessions d'entraînement</li>
-                    <li>Votre historique de progression</li>
-                    <li>Vos préférences (nom, langue, rappels)</li>
-                    <li>Les tempos enregistrés</li>
-                  </ul>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s3Title')}</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                {[1, 2, 3, 4, 5].map(i => <li key={i}>{t(`privacy.s3Item${i}`)}</li>)}
+              </ul>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">4. Partage de données</h3>
-                  <p>Aucune donnée n'est partagée avec des tiers. La fonction d'export génère un fichier que <strong>vous seul contrôlez</strong>.</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s4Title')}</h3>
+              <p>{renderBold(t('privacy.s4Body'))}</p>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">5. Notifications</h3>
-                  <p>Les notifications de rappel sont gérées localement sur votre appareil. Aucune information n'est transmise.</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s5Title')}</h3>
+              <p>{t('privacy.s5Body')}</p>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">6. Suppression des données</h3>
-                  <p>Vous pouvez supprimer toutes vos données à tout moment via l'option "Réinitialiser l'application" dans les paramètres.</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s6Title')}</h3>
+              <p>{t('privacy.s6Body')}</p>
 
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">7. Contact</h3>
-                  <p>Pour toute question concernant cette politique, contactez-nous à : <span className="text-purple-600 dark:text-purple-400">mymusiccoach.app@gmail.com</span></p>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs">Last updated: February 2026</p>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">1. Data Collection</h3>
-                  <p>MyMusicCoach does <strong>not collect any personal data</strong> and does not send any information to external servers.</p>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">2. Local Storage</h3>
-                  <p>All your data (exercises, sessions, settings) is stored <strong>only on your device</strong> in the browser's local storage (IndexedDB).</p>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">3. Stored Data</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Your custom exercises</li>
-                    <li>Your practice sessions</li>
-                    <li>Your progress history</li>
-                    <li>Your preferences (name, language, reminders)</li>
-                    <li>Recorded tempos</li>
-                  </ul>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">4. Data Sharing</h3>
-                  <p>No data is shared with third parties. The export function generates a file that <strong>only you control</strong>.</p>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">5. Notifications</h3>
-                  <p>Reminder notifications are handled locally on your device. No information is transmitted.</p>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">6. Data Deletion</h3>
-                  <p>You can delete all your data at any time using the "Reset Application" option in settings.</p>
-
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">7. Contact</h3>
-                  <p>For any questions about this policy, contact us at: <span className="text-purple-600 dark:text-purple-400">mymusiccoach.app@gmail.com</span></p>
-                </>
-              )}
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s7Title')}</h3>
+              <p>{t('privacy.s7Body')} <span className="text-purple-600 dark:text-purple-400">mymusiccoach.app@gmail.com</span></p>
             </div>
           </div>
         </div>
@@ -4915,20 +4893,20 @@ const MyMusicCoach = () => {
           <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md sm:max-w-lg landscape:max-w-lg w-full shadow-2xl" role="dialog" aria-modal="true">
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-3xl">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl font-bold">Importer une session</h2>
+                <h2 className="text-xl font-bold">{t('import.title')}</h2>
                 <button
                   onClick={() => {
                     setShowImportModal(false);
                     setImportFile(null);
                   }}
-                  aria-label="Fermer"
+                  aria-label={t('common.close')}
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
                 >
                   <X aria-hidden="true" className="w-6 h-6" />
                 </button>
               </div>
               <p className="text-blue-100 text-sm">
-                Importe une session partagée par ton prof ou un autre musicien
+                {t('import.subtitle')}
               </p>
             </div>
 
@@ -4938,10 +4916,10 @@ const MyMusicCoach = () => {
                   <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
-                      Comment ça marche ?
+                      {t('import.howItWorks')}
                     </p>
                     <p className="text-xs text-blue-700 dark:text-blue-300">
-                      Sélectionne un fichier .json exporté depuis MyMusicCoach. La session et tous ses exercices seront automatiquement ajoutés à ton application.
+                      {t('import.explanation')}
                     </p>
                   </div>
                 </div>
@@ -4949,7 +4927,7 @@ const MyMusicCoach = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Fichier de session (.json)
+                  {t('import.fileLabel')}
                 </label>
                 <input
                   type="file"
@@ -4961,7 +4939,7 @@ const MyMusicCoach = () => {
 
               <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-xl p-3">
                 <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                  💡 <strong>Astuce :</strong> Demande à ton prof d'exporter une session et de t'envoyer le fichier .json par email ou messagerie.
+                  💡 <strong>{t('import.tipLabel')}</strong> {t('import.tip')}
                 </p>
               </div>
             </div>
@@ -4974,7 +4952,7 @@ const MyMusicCoach = () => {
                 }}
                 className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600 transition-colors"
               >
-                Annuler
+                {t('import.cancel')}
               </button>
             </div>
           </div>
@@ -4988,12 +4966,12 @@ const MyMusicCoach = () => {
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-t-3xl">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-white font-bold text-xl">Modifier la session</h2>
-                  <p className="text-purple-200 text-sm">{editingSession.date} à {editingSession.time}</p>
+                  <h2 className="text-white font-bold text-xl">{t('workout.editTitle')}</h2>
+                  <p className="text-purple-200 text-sm">{t('common.dateAtTime', { date: formatDisplayDate(editingSession.date), time: editingSession.time })}</p>
                 </div>
                 <button
                   onClick={() => { setEditingSession(null); setEditingSessionProgress({}); }}
-                  aria-label="Fermer"
+                  aria-label={t('common.close')}
                   className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
                 >
                   <X aria-hidden="true" className="w-5 h-5 text-white" />
@@ -5004,7 +4982,7 @@ const MyMusicCoach = () => {
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Clique sur un exercice pour voir ses détails et modifier son statut ou ajouter un tempo.
+                {t('editSession.hint')}
               </p>
 
               {(() => {
@@ -5012,7 +4990,7 @@ const MyMusicCoach = () => {
                 if (!workout) {
                   return (
                     <div className="text-center py-8">
-                      <p className="text-gray-500 dark:text-gray-400">La session originale n'existe plus.</p>
+                      <p className="text-gray-500 dark:text-gray-400">{t('messages.sessionNoLongerExists')}</p>
                     </div>
                   );
                 }
@@ -5036,14 +5014,14 @@ const MyMusicCoach = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm font-bold text-purple-600 dark:text-purple-400">#{index + 1}</span>
-                            <h3 className="font-bold text-gray-900 dark:text-gray-100">{exercise.name}</h3>
+                            <h3 className="font-bold text-gray-900 dark:text-gray-100">{exerciseName(exercise)}</h3>
                           </div>
                           <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                             <span className="flex items-center gap-1">
                               <Clock className="w-4 h-4" />
                               {exercise.duration}
                             </span>
-                            <span>{exercise.sets}</span>
+                            <span>{formatSets(exercise.sets)}</span>
                           </div>
                         </div>
                         <div
@@ -5073,7 +5051,7 @@ const MyMusicCoach = () => {
                 onClick={updateSession}
                 className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold shadow-lg mt-6"
               >
-                Enregistrer les modifications
+                {t('exercise.saveChanges')}
               </button>
             </div>
           </div>
@@ -5085,7 +5063,7 @@ const MyMusicCoach = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-xl" role="dialog" aria-modal="true">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-5">
-              <h2 className="text-white font-bold text-lg">Exporter le fichier</h2>
+              <h2 className="text-white font-bold text-lg">{t('export.title')}</h2>
               <p className="text-purple-200 text-sm mt-1">{exportModalData.fileName}</p>
             </div>
 
@@ -5098,8 +5076,8 @@ const MyMusicCoach = () => {
                   <Download aria-hidden="true" className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-gray-900 dark:text-gray-100">Télécharger</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sauvegarder dans Téléchargements</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{t('export.download')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('export.saveToDownloads')}</p>
                 </div>
               </button>
 
@@ -5111,8 +5089,8 @@ const MyMusicCoach = () => {
                   <Upload aria-hidden="true" className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-gray-900 dark:text-gray-100">Partager</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Envoyer par email, Drive, etc.</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{t('export.share')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('export.shareDesc')}</p>
                 </div>
               </button>
 
@@ -5120,7 +5098,7 @@ const MyMusicCoach = () => {
                 onClick={() => setExportModalData(null)}
                 className="w-full p-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-300 font-medium"
               >
-                Annuler
+                {t('export.cancel')}
               </button>
             </div>
           </div>

@@ -72,7 +72,10 @@
     "deletedSession": "Deleted session",
     "saveSchedule": "Save schedule",
     "noSessionsYet": "You haven't created any sessions yet. Create one in your library to schedule it here.",
-    "createSession": "Create a session"
+    "createSession": "Create a session",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "removeSession": "Remove session"
   },
   "workout": {
     "new": "New session",
@@ -102,10 +105,13 @@
     "mediumTermGoal": "28-day goal",
     "mediumTermGoalPlaceholder": "What do you want to achieve this month?",
     "back": "Back",
-    "exerciseCount": "{count} exercises",
+    "exerciseCount": "{count} exercise | {count} exercises",
     "viewDetails": "View details",
     "exercisesHandled": "{done}/{total} exercises handled",
-    "finishSession": "Finish session"
+    "finishSession": "Finish session",
+    "editTitle": "Edit session",
+    "namePlaceholder": "My daily routine...",
+    "categoryPlaceholder": "Technique"
   },
   "exercise": {
     "new": "New exercise",
@@ -188,7 +194,9 @@
     "exercisesTab": "Exercises",
     "sessionsTab": "Sessions",
     "exercisesHint": "Create your exercises here, then assemble them into sessions.",
-    "sessionsHint": "Create a session by combining your exercises, or import one directly."
+    "sessionsHint": "Create a session by combining your exercises, or import one directly.",
+    "createExercise": "Create an exercise",
+    "createSession": "Create a session"
   },
   "stats": {
     "title": "Statistics",
@@ -228,7 +236,12 @@
     "exerciseCompleted": "exercise completed",
     "exercisesCompleted": "exercises completed",
     "exerciseSkipped": "exercise skipped",
-    "exercisesSkipped": "exercises skipped"
+    "exercisesSkipped": "exercises skipped",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "min": "Min",
+    "max": "Max",
+    "records": "Records"
   },
   "settings": {
     "title": "Settings",
@@ -270,7 +283,13 @@
       "hihat": "Hi-Hat",
       "rimshot": "Rimshot"
     },
-    "restartTutorial": "Replay tutorial"
+    "restartTutorial": "Replay tutorial",
+    "notificationsOff": "Notifications are turned off. Turn them on to get reminders.",
+    "mobileOnlyDesc": "Notifications and daily reminders are only available in the Android app. This feature is not available on iOS or on the web version.",
+    "about": "About",
+    "version": "Version",
+    "privacyPolicy": "Privacy Policy",
+    "resetFinalConfirm": "Final confirmation: this action is IRREVERSIBLE.\n\nDo you really want to delete everything?"
   },
   "onboarding": {
     "step1Title": "Welcome to MyMusicCoach!",
@@ -380,21 +399,36 @@
     "goodLuck": "Good luck!",
     "exercisesToPractice": "{count} exercise(s) to practice.",
     "dailyReminder": "Time to practice! Open the app to see your session.",
-    "invalidSession": "Invalid session"
+    "invalidSession": "Invalid session",
+    "fileSaved": "File saved: {name}",
+    "copiedPaste": "Content copied! Paste it into Files or Notes with the name: {name}",
+    "exportPrepError": "Error while preparing the data",
+    "workoutExportError": "Export error: {error}",
+    "notificationsHello": "Hi {name}! Notifications are enabled.",
+    "dailyReminderTitle": "MyMusicCoach - Today's session"
   },
   "export": {
     "title": "Export file",
     "chooseMethod": "Choose how to export",
     "saveToDownloads": "Save to Downloads",
     "share": "Share",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "download": "Download",
+    "shareDesc": "Send by email, Drive, etc.",
+    "dialogTitle": "Share file"
   },
   "import": {
     "title": "Import session",
     "selectFile": "Select a .json file exported from MyMusicCoach",
     "chooseFile": "Choose file",
     "import": "Import",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "subtitle": "Import a session shared by your teacher or another musician",
+    "howItWorks": "How does it work?",
+    "explanation": "Select a .json file exported from MyMusicCoach. The session and all its exercises will be added to your app.",
+    "fileLabel": "Session file (.json)",
+    "tipLabel": "Tip:",
+    "tip": "Ask your teacher to export a session and send you the .json file by email or messaging app."
   },
   "report": {
     "title": "Progress Report",
@@ -406,7 +440,37 @@
     "recentSessions": "Recent sessions",
     "tempoProgress": "Tempo progress by exercise",
     "noTempoData": "No tempo data recorded",
-    "generatedWith": "Generated with MyMusicCoach"
+    "generatedWith": "Generated with MyMusicCoach",
+    "exportTitle": "Export report",
+    "choosePeriod": "Choose the period to include",
+    "lastDays": "Last {count} days",
+    "weeks": "{count} week | {count} weeks",
+    "period": "Period",
+    "howToTitle": "How to save as PDF?",
+    "howToStep1": "Click the purple button above (or press Ctrl+P / Cmd+P).",
+    "howToStep2": "In the window that opens, choose \"Save as PDF\" as the printer.",
+    "howToStep3": "Click \"Save\".",
+    "howToStep4": "Your PDF report is ready to share with your teacher! 🎓",
+    "periodStats": "Statistics for the period",
+    "sessionsPracticed": "Sessions practiced",
+    "bestStreak": "Best streak (days in a row)",
+    "daysWithPractice": "Days with practice",
+    "sessionHistory": "Session history",
+    "colDate": "Date",
+    "colSession": "Session",
+    "colCompleted": "Completed",
+    "colSkipped": "Skipped",
+    "colTotal": "Total",
+    "colExercise": "Exercise",
+    "colBaseTempo": "Base tempo",
+    "colLastTempo": "Latest tempo",
+    "colProgress": "Progress",
+    "colRecords": "Records",
+    "observations": "Student's observations",
+    "unknownExercise": "Unknown exercise",
+    "footer1": "Report generated by MyMusicCoach - Music coaching app",
+    "footer2": "You can share this report with your teacher to track your progress.",
+    "filePrefix": "Report"
   },
   "common": {
     "yes": "Yes",
@@ -421,13 +485,55 @@
     "next": "Next",
     "min": "min",
     "series": "sets",
-    "example": "Example"
+    "example": "Example",
+    "moreOptions": "More options",
+    "dateAtTime": "{date} at {time}",
+    "setsCount": "{count} set | {count} sets"
   },
   "timer": {
     "finished": "Time's up!",
-    "wellDone": "Well done! Keep practicing 🎵"
+    "wellDone": "Well done! Keep practicing 🎵",
+    "start": "Start"
   },
   "goals": {
-    "myGoal": "My goal:"
+    "myGoal": "My goal:",
+    "shortTermShort": "7d",
+    "mediumTermShort": "28d"
+  },
+  "editSession": {
+    "hint": "Tap an exercise to see its details, change its status or add a tempo.",
+    "markSkipped": "Mark as skipped",
+    "markCompleted": "Mark as completed",
+    "skipped": "Skipped",
+    "completed": "Completed"
+  },
+  "examples": {
+    "exercise1Name": "Technical warm-up",
+    "exercise1Desc": "Warm-up exercise to get ready for your session.",
+    "exercise2Name": "Rhythm exercise",
+    "exercise2Desc": "Work on your sense of rhythm.",
+    "workout1Name": "Beginner routine",
+    "workout2Name": "Blues improvisation"
+  },
+  "privacy": {
+    "updated": "Last updated: February 2026",
+    "s1Title": "1. Data collection",
+    "s1Body": "MyMusicCoach does **not collect any personal data** and does not send any information to external servers.",
+    "s2Title": "2. Local storage",
+    "s2Body": "All your data (exercises, sessions, settings) is stored **only on your device** in the browser's local storage (IndexedDB).",
+    "s3Title": "3. Stored data",
+    "s3Item1": "Your custom exercises",
+    "s3Item2": "Your practice sessions",
+    "s3Item3": "Your progress history",
+    "s3Item4": "Your preferences (name, language, reminders)",
+    "s3Item5": "Recorded tempos",
+    "s4Title": "4. Data sharing",
+    "s4Body": "No data is shared with third parties. The export feature creates a file that **only you control**.",
+    "s5Title": "5. Notifications",
+    "s5Body": "Reminders are handled locally on your device. No information is transmitted.",
+    "s6Title": "6. Data deletion",
+    "s6Body": "You can delete all your data at any time with the \"Reset application\" option in the settings.",
+    "s7Title": "7. Contact",
+    "s7Body": "For any question about this policy, write to us at:"
   }
 }

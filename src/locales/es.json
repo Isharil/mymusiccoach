@@ -72,7 +72,10 @@
     "deletedSession": "Sesión eliminada",
     "saveSchedule": "Guardar horario",
     "noSessionsYet": "Aún no has creado ninguna sesión. Crea una en tu biblioteca para poder programarla aquí.",
-    "createSession": "Crear una sesión"
+    "createSession": "Crear una sesión",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "removeSession": "Quitar sesión"
   },
   "workout": {
     "new": "Nueva sesión",
@@ -102,10 +105,13 @@
     "mediumTermGoal": "Objetivo 28 días",
     "mediumTermGoalPlaceholder": "¿Qué quieres lograr este mes?",
     "back": "Volver",
-    "exerciseCount": "{count} ejercicios",
+    "exerciseCount": "{count} ejercicio | {count} ejercicios",
     "viewDetails": "Ver detalles",
     "exercisesHandled": "{done}/{total} ejercicios tratados",
-    "finishSession": "Finalizar sesión"
+    "finishSession": "Finalizar sesión",
+    "editTitle": "Editar sesión",
+    "namePlaceholder": "Mi rutina diaria...",
+    "categoryPlaceholder": "Técnica"
   },
   "exercise": {
     "new": "Nuevo ejercicio",
@@ -188,7 +194,9 @@
     "exercisesTab": "Ejercicios",
     "sessionsTab": "Sesiones",
     "exercisesHint": "Crea tus ejercicios aquí y luego combínalos en sesiones.",
-    "sessionsHint": "Crea una sesión combinando tus ejercicios, o importa una directamente."
+    "sessionsHint": "Crea una sesión combinando tus ejercicios, o importa una directamente.",
+    "createExercise": "Crear un ejercicio",
+    "createSession": "Crear una sesión"
   },
   "stats": {
     "title": "Estadísticas",
@@ -228,7 +236,12 @@
     "exerciseCompleted": "ejercicio completado",
     "exercisesCompleted": "ejercicios completados",
     "exerciseSkipped": "ejercicio omitido",
-    "exercisesSkipped": "ejercicios omitidos"
+    "exercisesSkipped": "ejercicios omitidos",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "min": "Mín",
+    "max": "Máx",
+    "records": "Registros"
   },
   "settings": {
     "title": "Ajustes",
@@ -270,7 +283,13 @@
       "hihat": "Hi-Hat",
       "rimshot": "Rimshot"
     },
-    "restartTutorial": "Ver tutorial de nuevo"
+    "restartTutorial": "Ver tutorial de nuevo",
+    "notificationsOff": "Las notificaciones están desactivadas. Actívalas para recibir recordatorios.",
+    "mobileOnlyDesc": "Las notificaciones y los recordatorios diarios solo están disponibles en la app de Android. Esta función no está disponible en iOS ni en la versión web.",
+    "about": "Acerca de",
+    "version": "Versión",
+    "privacyPolicy": "Política de privacidad",
+    "resetFinalConfirm": "Última confirmación: esta acción es IRREVERSIBLE.\n\n¿De verdad quieres borrarlo todo?"
   },
   "onboarding": {
     "step1Title": "Bienvenido a MyMusicCoach!",
@@ -380,21 +399,36 @@
     "goodLuck": "¡Buena suerte!",
     "exercisesToPractice": "{count} ejercicio(s) para practicar.",
     "dailyReminder": "¡Es hora de practicar! Abre la app para ver tu sesión.",
-    "invalidSession": "Sesión no válida"
+    "invalidSession": "Sesión no válida",
+    "fileSaved": "Archivo guardado: {name}",
+    "copiedPaste": "¡Contenido copiado! Pégalo en Archivos o Notas con el nombre: {name}",
+    "exportPrepError": "Error al preparar los datos",
+    "workoutExportError": "Error al exportar: {error}",
+    "notificationsHello": "¡Hola {name}! Las notificaciones están activadas.",
+    "dailyReminderTitle": "MyMusicCoach - Sesión del día"
   },
   "export": {
     "title": "Exportar archivo",
     "chooseMethod": "Elige cómo exportar",
     "saveToDownloads": "Guardar en Descargas",
     "share": "Compartir",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "download": "Descargar",
+    "shareDesc": "Enviar por email, Drive, etc.",
+    "dialogTitle": "Compartir archivo"
   },
   "import": {
     "title": "Importar sesión",
     "selectFile": "Selecciona un archivo .json exportado de MyMusicCoach",
     "chooseFile": "Elegir archivo",
     "import": "Importar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "subtitle": "Importa una sesión compartida por tu profesor u otro músico",
+    "howItWorks": "¿Cómo funciona?",
+    "explanation": "Selecciona un archivo .json exportado desde MyMusicCoach. La sesión y todos sus ejercicios se añadirán a tu app.",
+    "fileLabel": "Archivo de sesión (.json)",
+    "tipLabel": "Consejo:",
+    "tip": "Pide a tu profesor que exporte una sesión y te envíe el archivo .json por email o mensajería."
   },
   "report": {
     "title": "Informe de progreso",
@@ -406,7 +440,37 @@
     "recentSessions": "Sesiones recientes",
     "tempoProgress": "Progreso de tempo por ejercicio",
     "noTempoData": "Sin datos de tempo registrados",
-    "generatedWith": "Generado con MyMusicCoach"
+    "generatedWith": "Generado con MyMusicCoach",
+    "exportTitle": "Exportar el informe",
+    "choosePeriod": "Elige el periodo que quieres incluir",
+    "lastDays": "Últimos {count} días",
+    "weeks": "{count} semana | {count} semanas",
+    "period": "Periodo",
+    "howToTitle": "¿Cómo guardar en PDF?",
+    "howToStep1": "Haz clic en el botón morado de arriba (o pulsa Ctrl+P / Cmd+P).",
+    "howToStep2": "En la ventana que se abre, elige «Guardar como PDF» como impresora.",
+    "howToStep3": "Haz clic en «Guardar».",
+    "howToStep4": "¡Tu informe PDF está listo para compartir con tu profesor! 🎓",
+    "periodStats": "Estadísticas del periodo",
+    "sessionsPracticed": "Sesiones practicadas",
+    "bestStreak": "Mejor racha (días seguidos)",
+    "daysWithPractice": "Días con práctica",
+    "sessionHistory": "Historial de sesiones",
+    "colDate": "Fecha",
+    "colSession": "Sesión",
+    "colCompleted": "Completados",
+    "colSkipped": "Saltados",
+    "colTotal": "Total",
+    "colExercise": "Ejercicio",
+    "colBaseTempo": "Tempo base",
+    "colLastTempo": "Último tempo",
+    "colProgress": "Progreso",
+    "colRecords": "Registros",
+    "observations": "Observaciones del alumno",
+    "unknownExercise": "Ejercicio desconocido",
+    "footer1": "Informe generado por MyMusicCoach - App de coaching musical",
+    "footer2": "Puedes compartir este informe con tu profesor para seguir tu progreso.",
+    "filePrefix": "Informe"
   },
   "common": {
     "yes": "Sí",
@@ -421,13 +485,55 @@
     "next": "Siguiente",
     "min": "min",
     "series": "series",
-    "example": "Ejemplo"
+    "example": "Ejemplo",
+    "moreOptions": "Más opciones",
+    "dateAtTime": "{date} a las {time}",
+    "setsCount": "{count} serie | {count} series"
   },
   "timer": {
     "finished": "¡Tiempo terminado!",
-    "wellDone": "¡Bien hecho! Sigue practicando 🎵"
+    "wellDone": "¡Bien hecho! Sigue practicando 🎵",
+    "start": "Iniciar"
   },
   "goals": {
-    "myGoal": "Mi objetivo:"
+    "myGoal": "Mi objetivo:",
+    "shortTermShort": "7 d",
+    "mediumTermShort": "28 d"
+  },
+  "editSession": {
+    "hint": "Toca un ejercicio para ver sus detalles, cambiar su estado o añadir un tempo.",
+    "markSkipped": "Marcar como saltado",
+    "markCompleted": "Marcar como completado",
+    "skipped": "Saltado",
+    "completed": "Completado"
+  },
+  "examples": {
+    "exercise1Name": "Calentamiento técnico",
+    "exercise1Desc": "Ejercicio de calentamiento para preparar tu sesión.",
+    "exercise2Name": "Ejercicio de ritmo",
+    "exercise2Desc": "Trabajo del sentido del ritmo.",
+    "workout1Name": "Rutina principiante",
+    "workout2Name": "Improvisación blues"
+  },
+  "privacy": {
+    "updated": "Última actualización: febrero de 2026",
+    "s1Title": "1. Datos recopilados",
+    "s1Body": "MyMusicCoach **no recopila ningún dato personal** y no envía ninguna información a servidores externos.",
+    "s2Title": "2. Almacenamiento local",
+    "s2Body": "Todos tus datos (ejercicios, sesiones, ajustes) se almacenan **solo en tu dispositivo** en el almacenamiento local del navegador (IndexedDB).",
+    "s3Title": "3. Datos almacenados",
+    "s3Item1": "Tus ejercicios personalizados",
+    "s3Item2": "Tus sesiones de práctica",
+    "s3Item3": "Tu historial de progreso",
+    "s3Item4": "Tus preferencias (nombre, idioma, recordatorios)",
+    "s3Item5": "Los tempos registrados",
+    "s4Title": "4. Compartir datos",
+    "s4Body": "No se comparte ningún dato con terceros. La función de exportación crea un archivo que **solo tú controlas**.",
+    "s5Title": "5. Notificaciones",
+    "s5Body": "Los recordatorios se gestionan localmente en tu dispositivo. No se transmite ninguna información.",
+    "s6Title": "6. Eliminación de datos",
+    "s6Body": "Puedes borrar todos tus datos en cualquier momento con la opción «Restablecer la app» en los ajustes.",
+    "s7Title": "7. Contacto",
+    "s7Body": "Para cualquier pregunta sobre esta política, escríbenos a:"
   }
 }
