@@ -10,7 +10,7 @@ import { useTheme } from './hooks/useTheme';
 import { useFileExport } from './hooks/useFileExport';
 import { useTimer } from './hooks/useTimer';
 import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE } from './constants/appData';
-import { getCycleWeekNumber, getDayKey, getMondayOf } from './utils/practiceStats';
+import { getCycleWeekNumber, getDayKey, getMondayOf, normalizeDate } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { buildProgressReport } from './utils/progressReport';
 import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
@@ -19,6 +19,13 @@ import {
   MAX_ATTACHMENT_MB, MAX_ATTACHMENT_SIZE, deleteAttachment, deleteOrphanAttachments, loadAttachment,
   moveInlineFiles, saveAttachment
 } from './utils/attachments';
+
+// Insère une entrée d'historique à sa place chronologique (une pratique libre peut être datée dans le passé)
+const insertChronologically = (history, entry) => {
+  const sortKey = (s) => `${normalizeDate(s.date)} ${s.time || ''}`;
+  const index = history.findIndex(s => sortKey(s) > sortKey(entry));
+  return index < 0 ? [...history, entry] : [...history.slice(0, index), entry, ...history.slice(index)];
+};
 
 // Erreur de lecture d'une sauvegarde (utils/backup.js) -> message affiché
 const BACKUP_ERROR_MESSAGES = {
@@ -46,6 +53,7 @@ import ExportChoiceModal from './components/modals/ExportChoiceModal';
 import Toasts from './components/Toasts';
 import BottomNav from './components/BottomNav';
 import Onboarding from './components/Onboarding';
+import FreePracticeModal from './components/modals/FreePracticeModal';
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -96,6 +104,8 @@ const MyMusicCoach = () => {
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showFreePractice, setShowFreePractice] = useState(false);
+  const [editingFreePractice, setEditingFreePractice] = useState(null); // entrée d'historique modifiée
   const [toasts, setToasts] = useState([]);
 
   // Fonction pour afficher un toast (remplace alert())
@@ -403,7 +413,58 @@ const MyMusicCoach = () => {
   };
 
   // Fonction pour démarrer l'édition d'une session terminée
+  // ===== PRATIQUE LIBRE (hors sessions du planning) =====
+  const openFreePractice = (entry = null) => {
+    setEditingFreePractice(entry);
+    setShowFreePractice(true);
+  };
+
+  const closeFreePractice = () => {
+    setShowFreePractice(false);
+    setEditingFreePractice(null);
+  };
+
+  // Entrée d'historique sans session : compte pour la série, le calendrier et le temps de pratique
+  const saveFreePractice = ({ name, date, durationMinutes, category, note }) => {
+    const now = new Date();
+    const fields = {
+      date,
+      workoutName: name || t('freePractice.title'),
+      durationMinutes,
+      category: category || undefined,
+      note: note || undefined,
+    };
+    if (editingFreePractice) {
+      const updated = { ...editingFreePractice, ...fields };
+      setSessionHistory(prev => insertChronologically(prev.filter(s => s.id !== updated.id), updated));
+    } else {
+      const entry = {
+        id: sessionHistory.reduce((max, s) => Math.max(max, Number(s.id) || 0), 0) + 1,
+        time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        workoutId: null,
+        free: true,
+        completed: 0,
+        skipped: 0,
+        total: 0,
+        notes: {},
+        ...fields,
+      };
+      setSessionHistory(prev => insertChronologically(prev, entry));
+    }
+    closeFreePractice();
+  };
+
+  const deleteFreePractice = (id) => {
+    if (!window.confirm(t('freePractice.deleteConfirm'))) return;
+    setSessionHistory(prev => prev.filter(s => s.id !== id));
+    closeFreePractice();
+  };
+
   const startEditSession = (session) => {
+    if (session.free) {
+      openFreePractice(session);
+      return;
+    }
     const workout = workouts.find(w => w.id === session.workoutId);
     if (!workout) {
       showToast(t('messages.sessionNoLongerExists'), 'error');
@@ -777,7 +838,9 @@ const MyMusicCoach = () => {
     translateDifficulty, updateExercise, updateSession, uploadedFile, viewingWeek, weeklySchedule, workoutName,
     workoutProgress, workouts,
     // Temps de pratique
-    editingSessionDuration, setEditingSessionDuration, formatMinutes
+    editingSessionDuration, setEditingSessionDuration, formatMinutes,
+    // Pratique libre
+    openFreePractice, closeFreePractice, saveFreePractice, deleteFreePractice, editingFreePractice
   };
 
   return (
@@ -808,6 +871,7 @@ const MyMusicCoach = () => {
         {showAllBadges && <BadgesModal />}
         {showExportModal && <ReportPeriodModal />}
         {showPrivacyPolicy && <PrivacyPolicyModal />}
+        {showFreePractice && <FreePracticeModal />}
         {showImportModal && <ImportSessionModal />}
         {editingSession && !selectedExercise && <EditSessionModal />}
         {exportModalData && <ExportChoiceModal />}

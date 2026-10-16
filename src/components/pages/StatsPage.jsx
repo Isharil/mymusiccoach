@@ -8,7 +8,7 @@ const StatsPage = () => {
     calendarMonth, calendarYear, earnedBadges, exerciseName, exercises, formatDisplayDate, formatMinutes,
     getBadgeDescription, getBadgeName, isDarkMode, sessionHistory, setCalendarMonth, setCalendarYear,
     setShowAllBadges, setShowAllHistory, setShowExportModal, settings, showAllHistory,
-    startEditSession, stats, t
+    startEditSession, stats, t, translateCategory
   } = useApp();
 
   return (
@@ -256,15 +256,26 @@ const StatsPage = () => {
                 {session.durationMinutes > 0 && (
                   <span className="text-purple-600 dark:text-purple-400 font-medium">⏱ {formatMinutes(session.durationMinutes)}</span>
                 )}
-                <span className="text-green-600 dark:text-green-400 font-medium">
-                  ✓ {session.completed} {session.completed > 1 ? t('stats.exercisesCompleted') : t('stats.exerciseCompleted')}
-                </span>
-                {session.skipped > 0 && (
-                  <span className="text-gray-500 dark:text-gray-400">
-                    × {session.skipped} {session.skipped > 1 ? t('stats.exercisesSkipped') : t('stats.exerciseSkipped')}
+                {session.free ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                    ✎ {t('freePractice.title')}{session.category ? ` · ${translateCategory(session.category)}` : ''}
                   </span>
+                ) : (
+                  <>
+                    <span className="text-green-600 dark:text-green-400 font-medium">
+                      ✓ {session.completed} {session.completed > 1 ? t('stats.exercisesCompleted') : t('stats.exerciseCompleted')}
+                    </span>
+                    {session.skipped > 0 && (
+                      <span className="text-gray-500 dark:text-gray-400">
+                        × {session.skipped} {session.skipped > 1 ? t('stats.exercisesSkipped') : t('stats.exerciseSkipped')}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
+              {session.note && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic mt-2">{session.note}</p>
+              )}
             </div>
           ))}
           {sessionHistory.length > 1 && (

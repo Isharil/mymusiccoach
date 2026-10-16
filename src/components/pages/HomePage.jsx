@@ -1,4 +1,4 @@
-import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music } from 'lucide-react';
+import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music, PenLine } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import PracticeTimeSummary from '../PracticeTimeSummary';
 
@@ -6,7 +6,7 @@ const HomePage = () => {
   const {
     earnedBadges, exerciseName, exercises, getBadgeDescription, getBadgeName,
     getCompletedSessionForWorkout, getCurrentDay, getCurrentWeekNumber, getTodayWorkouts,
-    isTodaySessionCompleted, isWorkoutCompletedToday, nextBadge, setActiveTab, setLibrarySubTab,
+    isTodaySessionCompleted, isWorkoutCompletedToday, nextBadge, openFreePractice, setActiveTab, setLibrarySubTab,
     setShowMetronome, setShowSchedule, setViewingWeek, settings, startEditSession, startWorkout,
     stats, t, translateDifficulty, weeklySchedule, workoutName, workouts
   } = useApp();
@@ -269,6 +269,19 @@ const HomePage = () => {
           <div className="text-left">
             <p className="font-bold text-lg">{t('metronome.title')}</p>
             <p className="text-sm text-white/80">{t('home.metronomeDesc')}</p>
+          </div>
+          <ChevronRight aria-hidden="true" className="w-6 h-6 ml-auto" />
+        </button>
+        <button
+          onClick={() => openFreePractice()}
+          className="mt-3 w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
+        >
+          <div className="bg-white/20 rounded-xl p-3">
+            <PenLine aria-hidden="true" className="w-7 h-7" />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-lg">{t('freePractice.logButton')}</p>
+            <p className="text-sm text-white/80">{t('freePractice.logDesc')}</p>
           </div>
           <ChevronRight aria-hidden="true" className="w-6 h-6 ml-auto" />
         </button>

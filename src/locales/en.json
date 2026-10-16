@@ -201,7 +201,9 @@
     "exercisesHint": "Create your exercises here, then assemble them into sessions.",
     "sessionsHint": "Create a session by combining your exercises, or import one directly.",
     "createExercise": "Create an exercise",
-    "createSession": "Create a session"
+    "createSession": "Create a session",
+    "startSession": "Start",
+    "startSessionNamed": "Start session {name}"
   },
   "stats": {
     "title": "Statistics",
@@ -563,5 +565,20 @@
     "noData": "Finish a session to see your practice time.",
     "sessionDuration": "Practice time",
     "measuredHint": "Measured since the start of the session. Adjust it if you took a break."
+  },
+  "freePractice": {
+    "title": "Free practice",
+    "editTitle": "Edit free practice",
+    "subtitle": "Practice outside your sessions: a piece, improv, a jam...",
+    "logButton": "Log free practice",
+    "logDesc": "Piece, improv, jam, rehearsal...",
+    "name": "Title (optional)",
+    "namePlaceholder": "E.g. Jam with friends",
+    "date": "Date",
+    "note": "Note (optional)",
+    "notePlaceholder": "What you worked on, what went well...",
+    "save": "Save",
+    "delete": "Delete this entry",
+    "deleteConfirm": "Delete this practice from your history?"
   }
 }

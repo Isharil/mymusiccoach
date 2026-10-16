@@ -1,4 +1,4 @@
-import { Clock, Plus, Book, Video, FileText, Activity, Trash2, Music, Archive, Upload } from 'lucide-react';
+import { Clock, Plus, Book, Video, FileText, Activity, Trash2, Music, Archive, Upload, Play } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
 
@@ -6,9 +6,9 @@ const LibraryPage = () => {
   const {
     archivedWorkouts, deleteWorkout, deletedExercises, exerciseName, exercises, exportWorkout,
     formatSets, libraryFilter, librarySubTab, permanentlyDeleteExercise, permanentlyDeleteWorkout,
-    restoreExercise, restoreWorkout, setEditingWorkout, setLibraryFilter, setLibrarySubTab,
+    restoreExercise, restoreWorkout, setActiveTab, setEditingWorkout, setLibraryFilter, setLibrarySubTab,
     setSelectedExercise, setShowArchive, setShowCreateExercise, setShowCreateWorkout,
-    setShowImportModal, setShowTrash, showArchive, showTrash, t, translateCategory,
+    setShowImportModal, setShowTrash, showArchive, showTrash, startWorkout, t, translateCategory,
     translateDifficulty, workoutName, workouts
   } = useApp();
 
@@ -354,6 +354,19 @@ const LibraryPage = () => {
 
                     {/* Boutons en bas à droite */}
                     <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                      {/* Pratique hors planning : la session démarre tout de suite */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startWorkout(workout);
+                          setActiveTab('home');
+                        }}
+                        aria-label={t('library.startSessionNamed', { name: workoutName(workout) })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-all"
+                      >
+                        <Play aria-hidden="true" className="w-3.5 h-3.5" />
+                        <span>{t('library.startSession')}</span>
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

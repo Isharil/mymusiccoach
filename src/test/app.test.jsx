@@ -197,6 +197,64 @@ describe('MyMusicCoach', () => {
     await stored('mmc_exercises', (list) => list?.[0]?.targetTempo === 82);
   });
 
+  it('démarre une session hors planning depuis la bibliothèque', async () => {
+    const { user } = await startApp();
+
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Sessions' }));
+    await user.click(screen.getByRole('button', { name: 'Start session Blues improvisation' }));
+
+    expect(screen.getByRole('heading', { name: 'Blues improvisation' })).toBeTruthy();
+    const active = await stored('mmc_activeWorkout', (w) => w?.id === 2);
+    expect(active.startedAt).toBe(MONDAY.getTime());
+  });
+
+  it('note, modifie et supprime une pratique libre', async () => {
+    await set('mmc_sessionHistory', [
+      { id: 1, date: '2026-10-11', time: '09:00', workoutId: 1, workoutName: 'Beginner routine', completed: 2, skipped: 0, total: 2, durationMinutes: 20 },
+    ]);
+    const { user } = await startApp();
+
+    await user.click(screen.getByRole('button', { name: /Log free practice/ }));
+    const dialog = screen.getByRole('dialog', { name: 'Free practice' });
+    await user.type(within(dialog).getByLabelText('Title (optional)'), 'Jam with friends');
+    const date = within(dialog).getByLabelText('Date');
+    await user.clear(date);
+    await user.type(date, '2026-10-10');
+    const duration = within(dialog).getByLabelText('Practice time');
+    await user.clear(duration);
+    await user.type(duration, '45');
+    await user.selectOptions(within(dialog).getByLabelText('Category'), 'Morceaux');
+    await user.type(within(dialog).getByLabelText('Note (optional)'), 'Blues in A');
+    await user.click(within(dialog).getByRole('button', { name: /Save/ }));
+
+    // Rangée avant la session du 11 octobre
+    const history = await stored('mmc_sessionHistory', (h) => h?.length === 2);
+    expect(history[0]).toMatchObject({
+      date: '2026-10-10', workoutName: 'Jam with friends', free: true, durationMinutes: 45,
+      category: 'Morceaux', note: 'Blues in A', workoutId: null,
+    });
+
+    // Historique des stats : affichage puis modification
+    await user.click(nav('Stats'));
+    await user.click(screen.getByRole('button', { name: /Show more/ }));
+    expect(screen.getByText('Blues in A')).toBeTruthy();
+    expect(screen.getByText(/Free practice · Pieces/)).toBeTruthy();
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[1]);
+    const editDialog = screen.getByRole('dialog', { name: 'Edit free practice' });
+    const editDuration = within(editDialog).getByLabelText('Practice time');
+    await user.clear(editDuration);
+    await user.type(editDuration, '30');
+    await user.click(within(editDialog).getByRole('button', { name: /Save/ }));
+    await stored('mmc_sessionHistory', (h) => h?.[0]?.durationMinutes === 30);
+
+    // Suppression
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[1]);
+    await user.click(screen.getByRole('button', { name: 'Delete this entry' }));
+    const remaining = await stored('mmc_sessionHistory', (h) => h?.length === 1);
+    expect(remaining[0].id).toBe(1);
+  });
+
   it('met un exercice à la corbeille puis le restaure', async () => {
     const { user } = await startApp();
 

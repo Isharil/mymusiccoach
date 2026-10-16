@@ -321,10 +321,11 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
             ${reportData.recentSessions.map(session => `
               <tr>
                 <td>${escapeHtml(formatDate(session.date))} ${escapeHtml(session.time)}</td>
-                <td><strong>${escapeHtml(session.workoutName)}</strong></td>
+                <td><strong>${escapeHtml(session.workoutName)}</strong>${session.free ? ` <em>(${tr('freePractice.title')})</em>` : ''}</td>
+                ${session.free ? '<td>-</td><td>-</td><td>-</td>' : `
                 <td><span class="badge badge-success">${Number(session.completed) || 0}</span></td>
                 <td>${session.skipped > 0 ? `<span class="badge badge-warning">${Number(session.skipped)}</span>` : '-'}</td>
-                <td>${Number(session.total) || 0}</td>
+                <td>${Number(session.total) || 0}</td>`}
                 <td>${session.durationMinutes ? escapeHtml(formatMinutes(session.durationMinutes)) : '-'}</td>
               </tr>
             `).join('')}
@@ -333,16 +334,21 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
       </div>
 
       ${(() => {
-        const sessionsWithNotes = reportData.recentSessions.filter(s => s.notes && Object.keys(s.notes).length > 0);
+        // Notes par exercice des sessions, et note globale d'une pratique libre
+        const noteEntriesOf = (session) => [
+          ...Object.entries(session.notes || {}).map(([exId, note]) => {
+            const exercise = exercises.find(e => e.id === parseInt(exId));
+            return [exercise ? exerciseName(exercise) : t('report.unknownExercise'), note];
+          }),
+          ...(session.note ? [[t('freePractice.title'), session.note]] : []),
+        ];
+        const sessionsWithNotes = reportData.recentSessions.filter(s => noteEntriesOf(s).length > 0);
         if (sessionsWithNotes.length === 0) return '';
         return `
       <div class="section">
         <h2>📝 ${tr('report.observations')}</h2>
         ${sessionsWithNotes.map(session => {
-          const noteEntries = Object.entries(session.notes);
-          return noteEntries.map(([exId, note]) => {
-            const exercise = exercises.find(e => e.id === parseInt(exId));
-            const name = exercise ? exerciseName(exercise) : t('report.unknownExercise');
+          return noteEntriesOf(session).map(([name, note]) => {
             return `
             <div class="observation-card">
               <div class="date">📅 ${escapeHtml(formatDate(session.date))} ${escapeHtml(session.time)} — ${escapeHtml(session.workoutName)}</div>

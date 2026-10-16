@@ -201,7 +201,9 @@
     "exercisesHint": "Crea tus ejercicios aquí y luego combínalos en sesiones.",
     "sessionsHint": "Crea una sesión combinando tus ejercicios, o importa una directamente.",
     "createExercise": "Crear un ejercicio",
-    "createSession": "Crear una sesión"
+    "createSession": "Crear una sesión",
+    "startSession": "Iniciar",
+    "startSessionNamed": "Iniciar la sesión {name}"
   },
   "stats": {
     "title": "Estadísticas",
@@ -563,5 +565,20 @@
     "noData": "Termina una sesión para ver tu tiempo de práctica.",
     "sessionDuration": "Tiempo de práctica",
     "measuredHint": "Medido desde el inicio de la sesión. Corrígelo si hiciste una pausa."
+  },
+  "freePractice": {
+    "title": "Práctica libre",
+    "editTitle": "Editar práctica libre",
+    "subtitle": "Una práctica fuera de tus sesiones: pieza, improvisación, jam...",
+    "logButton": "Registrar práctica libre",
+    "logDesc": "Pieza, improvisación, jam, ensayo...",
+    "name": "Título (opcional)",
+    "namePlaceholder": "Ej.: Jam con amigos",
+    "date": "Fecha",
+    "note": "Nota (opcional)",
+    "notePlaceholder": "En qué trabajaste, qué salió bien...",
+    "save": "Guardar",
+    "delete": "Eliminar esta entrada",
+    "deleteConfirm": "¿Eliminar esta práctica del historial?"
   }
 }

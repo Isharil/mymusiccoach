@@ -201,7 +201,9 @@
     "exercisesHint": "Erstelle hier deine Übungen und kombiniere sie dann zu Sitzungen.",
     "sessionsHint": "Erstelle eine Sitzung aus deinen Übungen oder importiere eine direkt.",
     "createExercise": "Übung erstellen",
-    "createSession": "Session erstellen"
+    "createSession": "Session erstellen",
+    "startSession": "Starten",
+    "startSessionNamed": "Session {name} starten"
   },
   "stats": {
     "title": "Statistiken",
@@ -563,5 +565,20 @@
     "noData": "Beende eine Session, um deine Übungszeit zu sehen.",
     "sessionDuration": "Übungszeit",
     "measuredHint": "Seit Beginn der Session gemessen. Korrigiere sie, wenn du eine Pause gemacht hast."
+  },
+  "freePractice": {
+    "title": "Freies Üben",
+    "editTitle": "Freies Üben bearbeiten",
+    "subtitle": "Üben außerhalb deiner Sessions: Stück, Improvisation, Jam...",
+    "logButton": "Freies Üben eintragen",
+    "logDesc": "Stück, Improvisation, Jam, Probe...",
+    "name": "Titel (optional)",
+    "namePlaceholder": "z. B. Jam mit Freunden",
+    "date": "Datum",
+    "note": "Notiz (optional)",
+    "notePlaceholder": "Woran du gearbeitet hast, was gut lief...",
+    "save": "Speichern",
+    "delete": "Diesen Eintrag löschen",
+    "deleteConfirm": "Dieses Üben aus dem Verlauf löschen?"
   }
 }

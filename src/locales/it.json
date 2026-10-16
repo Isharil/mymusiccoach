@@ -201,7 +201,9 @@
     "exercisesHint": "Crea i tuoi esercizi qui, poi combinali in sessioni.",
     "sessionsHint": "Crea una sessione combinando i tuoi esercizi, o importane una direttamente.",
     "createExercise": "Crea un esercizio",
-    "createSession": "Crea una sessione"
+    "createSession": "Crea una sessione",
+    "startSession": "Avvia",
+    "startSessionNamed": "Avvia la sessione {name}"
   },
   "stats": {
     "title": "Statistiche",
@@ -563,5 +565,20 @@
     "noData": "Completa una sessione per vedere il tuo tempo di pratica.",
     "sessionDuration": "Tempo di pratica",
     "measuredHint": "Misurato dall'inizio della sessione. Correggilo se hai fatto una pausa."
+  },
+  "freePractice": {
+    "title": "Pratica libera",
+    "editTitle": "Modifica pratica libera",
+    "subtitle": "Una pratica fuori dalle tue sessioni: brano, improvvisazione, jam...",
+    "logButton": "Registra una pratica libera",
+    "logDesc": "Brano, improvvisazione, jam, prova...",
+    "name": "Titolo (facoltativo)",
+    "namePlaceholder": "Es: Jam con gli amici",
+    "date": "Data",
+    "note": "Nota (facoltativa)",
+    "notePlaceholder": "Su cosa hai lavorato, cosa è andato bene...",
+    "save": "Salva",
+    "delete": "Elimina questa voce",
+    "deleteConfirm": "Eliminare questa pratica dalla cronologia?"
   }
 }
