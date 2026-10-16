@@ -411,7 +411,8 @@
     "backupIsSessionFile": "Ce fichier contient une session partagée. Importe-le depuis Bibliothèque > Sessions.",
     "backupNotABackup": "Ce fichier n'est pas une sauvegarde MyMusicCoach.",
     "backupNewerVersion": "Cette sauvegarde vient d'une version plus récente de l'app. Mets à jour MyMusicCoach pour l'importer.",
-    "backupConfirm": "Sauvegarde du {date}\nExercices : {exercises} · Sessions : {workouts} · Historique : {sessions}\n\nElle remplacera tes données actuelles. Continuer ?"
+    "backupConfirm": "Sauvegarde du {date}\nExercices : {exercises} · Sessions : {workouts} · Historique : {sessions}\n\nElle remplacera tes données actuelles. Continuer ?",
+    "fileTooLarge": "Fichier trop volumineux (maximum {max} Mo)."
   },
   "export": {
     "title": "Exporter le fichier",

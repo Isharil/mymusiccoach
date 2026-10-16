@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { clear, get, set } from 'idb-keyval';
 import { BACKUP_FORMAT_VERSION, createBackup, parseBackup } from './backup';
 import { exportAppData, importAppData } from '../hooks/useIndexedDB';
+import { loadAttachment, saveAttachment } from './attachments';
 
 const exercises = [{ id: 1, name: 'Scales', sets: '3 séries', tempoHistory: [] }];
 const workouts = [{ id: 1, name: 'Routine', exercises: [1] }];
@@ -34,6 +35,15 @@ describe('createBackup / parseBackup', () => {
     const result = parseBackup(old);
     expect(result.ok).toBe(true);
     expect(result.values).toEqual({ exercises, settings, activeWorkout: null });
+  });
+
+  it('vérifie la section des fichiers joints', () => {
+    const base = { exercises: JSON.stringify(exercises) };
+    const ok = parseBackup(JSON.stringify({ ...base, files: { a1: { name: 'x.pdf', data: 'data:,' } } }));
+    expect(ok.files).toEqual({ a1: { name: 'x.pdf', data: 'data:,' } });
+    expect(parseBackup(JSON.stringify(base)).files).toBeNull();
+    expect(parseBackup(JSON.stringify({ ...base, files: { a1: { name: 'x.pdf' } } })))
+      .toEqual({ ok: false, error: 'invalid', key: 'files' });
   });
 
   it('ignore les clés inconnues', () => {
@@ -71,8 +81,10 @@ describe('createBackup / parseBackup', () => {
 describe('exportAppData / importAppData', () => {
   beforeEach(() => clear());
 
-  it('restaure les données exportées', async () => {
-    await set('mmc_exercises', exercises);
+  it('restaure les données exportées, fichiers joints compris', async () => {
+    const attachment = await saveAttachment({ name: 'score.pdf', data: 'data:application/pdf;base64,JVBERi0=' });
+    const withFile = [{ ...exercises[0], attachment }];
+    await set('mmc_exercises', withFile);
     await set('mmc_workouts', workouts);
     await set('mmc_sessionHistory', sessionHistory);
     await set('mmc_settings', settings);
@@ -81,9 +93,14 @@ describe('exportAppData / importAppData', () => {
     await clear();
     await set('mmc_exercises', [{ id: 9, name: 'Autre appareil' }]);
     await set('mmc_activeWorkout', { id: 9, name: 'En cours', exercises: [] });
+    const otherFile = await saveAttachment({ name: 'autre.png', data: 'data:image/png;base64,AA==' });
 
-    await importAppData(parseBackup(text).values);
-    expect(await get('mmc_exercises')).toEqual(exercises);
+    const backup = parseBackup(text);
+    await importAppData(backup.values, backup.files);
+    expect(await get('mmc_exercises')).toEqual(withFile);
+    expect(await loadAttachment(attachment.id)).toMatchObject({ name: 'score.pdf' });
+    // Les fichiers de l'appareil sont remplacés par ceux de la sauvegarde
+    expect(await loadAttachment(otherFile.id)).toBeUndefined();
     expect(await get('mmc_workouts')).toEqual(workouts);
     expect(await get('mmc_settings')).toEqual(settings);
     // La session en cours de l'appareil n'est pas mélangée aux données restaurées

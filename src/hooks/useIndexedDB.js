@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { get, set, del } from 'idb-keyval';
 import { BACKUP_KEYS, createBackup } from '../utils/backup';
+import { deleteAllAttachments, exportAttachments, importAttachments } from '../utils/attachments';
 
 // Liste des clés utilisées par l'application
 const APP_KEYS = [
@@ -158,6 +159,7 @@ export async function clearAppStorage() {
     for (const key of APP_KEYS) {
       await del(key);
     }
+    await deleteAllAttachments();
     // Aussi nettoyer localStorage pour être sûr
     APP_KEYS.forEach(key => {
       try {
@@ -181,7 +183,7 @@ export async function exportAppData(appVersion) {
     for (const key of BACKUP_KEYS) {
       values[key] = await get(`mmc_${key}`);
     }
-    return createBackup(values, { appVersion });
+    return createBackup(values, { appVersion, files: await exportAttachments() });
   } catch (error) {
     console.error('Erreur lors de l\'export:', error);
     return null;
@@ -195,8 +197,14 @@ const TRANSIENT_KEYS = ['activeWorkout', 'workoutProgress', 'currentTempo', 'exe
 /**
  * Écrit dans IndexedDB les données d'une sauvegarde déjà vérifiée par parseBackup.
  * Les données absentes de la sauvegarde sont conservées, sauf la session en cours.
+ * @param {Object|null} files - pièces jointes de la sauvegarde ; null pour une ancienne sauvegarde
+ *   (fichiers encore dans les exercices, rangés à part au prochain démarrage)
  */
-export async function importAppData(values) {
+export async function importAppData(values, files = null) {
+  if (files) {
+    await deleteAllAttachments();
+    await importAttachments(files);
+  }
   for (const key of BACKUP_KEYS) {
     if (key in values) {
       await set(`mmc_${key}`, values[key]);

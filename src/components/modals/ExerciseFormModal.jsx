@@ -1,14 +1,44 @@
 import { Check } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants/appData';
-import { normalizeExerciseFields } from '../../utils/exercises';
 import { useApp } from '../../context/AppContext';
 
 const ExerciseFormModal = () => {
   const {
-    createExercise, editingExercise, exerciseDescription, exerciseName, exercises, handleFileUpload,
-    newExerciseType, setEditingExercise, setExercises, setNewExerciseType, setShowCreateExercise,
-    setUploadedFile, showToast, t, translateCategory, uploadedFile
+    createExercise, editingExercise, exerciseDescription, exerciseName, handleFileUpload,
+    newExerciseType, setEditingExercise, setNewExerciseType, setShowCreateExercise,
+    setUploadedFile, showToast, t, translateCategory, updateExercise, uploadedFile
   } = useApp();
+
+  // Enregistrement commun au bouton et à la touche Entrée (création ou modification)
+  const saveExercise = (form) => {
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get('name'),
+      duration: formData.get('duration'),
+      sets: formData.get('sets'),
+      type: newExerciseType || 'none',
+      difficulty: formData.get('difficulty'),
+      baseTempo: parseInt(formData.get('baseTempo')),
+      category: formData.get('category'),
+      description: formData.get('description'),
+      videoUrl: formData.get('videoUrl') || undefined,
+    };
+
+    if (!data.name || !data.duration || !data.sets) {
+      showToast(t('exercise.fillRequired'), 'warning');
+      return;
+    }
+
+    if (editingExercise) {
+      updateExercise(editingExercise, data);
+    } else {
+      createExercise(data);
+    }
+    setEditingExercise(null);
+    setShowCreateExercise(false);
+    setUploadedFile(null);
+    setNewExerciseType('none');
+  };
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen" role="dialog" aria-modal="true">
@@ -34,21 +64,7 @@ const ExerciseFormModal = () => {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-
-          const formData = new FormData(e.target);
-          const data = {
-            name: formData.get('name'),
-            duration: formData.get('duration'),
-            sets: formData.get('sets'),
-            type: newExerciseType || 'none',
-            difficulty: formData.get('difficulty'),
-            baseTempo: parseInt(formData.get('baseTempo')),
-            category: formData.get('category'),
-            description: formData.get('description'),
-            videoUrl: formData.get('videoUrl') || undefined,
-          };
-
-          createExercise(data);
+          saveExercise(e.target);
         }}
         className="flex-1 flex flex-col min-h-0"
       >
@@ -146,10 +162,11 @@ const ExerciseFormModal = () => {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 {t('exercise.acceptedFormats')}
               </p>
-              {uploadedFile && (
+              {/* Nouveau fichier choisi, ou fichier déjà joint à l'exercice modifié */}
+              {(uploadedFile || editingExercise?.attachment) && (
                 <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-2">
                   <Check className="w-4 h-4" />
-                  {t('exercise.fileAdded', { name: uploadedFile.name })}
+                  {t('exercise.fileAdded', { name: (uploadedFile ?? editingExercise.attachment).name })}
                 </p>
               )}
             </div>
@@ -220,48 +237,7 @@ const ExerciseFormModal = () => {
               e.stopPropagation();
 
               const form = e.target.closest('form');
-              if (!form) {
-                return;
-              }
-
-              const formData = new FormData(form);
-              const data = {
-                name: formData.get('name'),
-                duration: formData.get('duration'),
-                sets: formData.get('sets'),
-                type: newExerciseType || 'none',
-                difficulty: formData.get('difficulty'),
-                baseTempo: parseInt(formData.get('baseTempo')),
-                category: formData.get('category'),
-                description: formData.get('description'),
-                videoUrl: formData.get('videoUrl') || undefined,
-              };
-
-              if (!data.name || !data.duration || !data.sets) {
-                showToast(t('exercise.fillRequired'), 'warning');
-                return;
-              }
-
-              if (editingExercise) {
-                // Mode édition: mettre à jour l'exercice existant
-                const normalizedData = normalizeExerciseFields(data);
-                const updatedExercise = {
-                  ...editingExercise,
-                  ...normalizedData,
-                  fileData: uploadedFile || editingExercise.fileData,
-                  isExample: false,
-                };
-                setExercises(exercises.map(ex =>
-                  ex.id === editingExercise.id ? updatedExercise : ex
-                ));
-                setEditingExercise(null);
-              } else {
-                // Mode création
-                createExercise(data);
-              }
-              setShowCreateExercise(false);
-              setUploadedFile(null);
-              setNewExerciseType('none');
+              if (form) saveExercise(form);
             }}
             className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-lg"
           >

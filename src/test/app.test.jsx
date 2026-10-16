@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, within, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { clear, get } from 'idb-keyval';
+import { clear, get, set } from 'idb-keyval';
 import App from '../App';
 
 // Lundi 12 octobre 2026 : avec le planning par défaut, la session du jour est "Beginner routine"
@@ -231,6 +231,75 @@ describe('MyMusicCoach', () => {
     await user.upload(input, backupFile(backup));
     expect(await screen.findByText(/Data imported/)).toBeTruthy();
     await stored('mmc_exercises', (list) => list?.length === 1 && list[0].name === 'Restored exercise');
+  });
+
+  it('joint un fichier à un exercice, le stocke à part et le partage avec la session', async () => {
+    const { user, container } = await startApp();
+    const field = (name) => container.querySelector(`[name="${name}"]`);
+
+    // Création d'un exercice avec un PDF
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Create an exercise' }));
+    await user.type(field('name'), 'Sight reading');
+    await user.type(field('duration'), '10');
+    await user.type(field('sets'), '1');
+    await user.type(field('description'), 'Page 12');
+    await user.click(screen.getByRole('button', { name: 'File' }));
+    const pdf = new File(['%PDF-1.4 test'], 'etude.pdf', { type: 'application/pdf' });
+    await user.upload(screen.getByRole('dialog').querySelector('input[type="file"]'), pdf);
+    expect(await screen.findByText(/etude\.pdf/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /Create exercise/ }));
+
+    // L'exercice ne contient qu'une référence, le fichier est sous sa propre clé
+    const exercises = await stored('mmc_exercises', (list) => list?.length === 3 && !!list[2].attachment);
+    expect(exercises[2]).not.toHaveProperty('fileData');
+    const file = await get(`mmc_file_${exercises[2].attachment.id}`);
+    expect(file).toMatchObject({ name: 'etude.pdf', data: expect.stringMatching(/^data:application\/pdf/) });
+
+    // La fiche de l'exercice affiche le fichier
+    await user.click(await screen.findByText('Sight reading'));
+    expect(await screen.findByRole('link', { name: 'Download PDF' })).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '← Back' }));
+
+    // Une session contenant cet exercice est partagée avec le fichier
+    await user.click(screen.getByRole('button', { name: 'Sessions' }));
+    await user.click(screen.getByRole('button', { name: 'Create a session' }));
+    await user.type(field('name'), 'Reading');
+    await user.type(field('duration'), '10 min');
+    await user.type(field('category'), 'Theory');
+    await user.click(screen.getByRole('checkbox', { name: /Sight reading/ }));
+    await user.click(screen.getByRole('button', { name: /Create session/ }));
+
+    let downloadedHref = null;
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () { downloadedHref = this.href; });
+    const card = (await screen.findByText('Reading')).closest('.rounded-xl');
+    await user.click(within(card).getByRole('button', { name: 'Export' }));
+    await waitFor(() => expect(downloadedHref).not.toBeNull());
+    const shared = JSON.parse(decodeURIComponent(downloadedHref.split(',').slice(1).join(',')));
+    expect(shared.exercises[0]).toMatchObject({ name: 'Sight reading', fileData: { name: 'etude.pdf' } });
+    expect(shared.exercises[0]).not.toHaveProperty('attachment');
+
+    // Réimport : le fichier est de nouveau rangé à part
+    await user.click(screen.getByRole('button', { name: 'Import session' }));
+    await user.upload(
+      screen.getByRole('dialog').querySelector('input[type="file"]'),
+      new File([JSON.stringify(shared)], 'session.json', { type: 'application/json' })
+    );
+    const afterImport = await stored('mmc_exercises', (list) => list?.length === 4);
+    expect(afterImport[3].attachment.id).not.toBe(exercises[2].attachment.id);
+    expect(afterImport[3]).not.toHaveProperty('fileData');
+    expect(await get(`mmc_file_${afterImport[3].attachment.id}`)).toMatchObject({ name: 'etude.pdf' });
+  });
+
+  it('range à part au démarrage les fichiers stockés dans les exercices (ancien format)', async () => {
+    await set('mmc_exercises', [
+      { id: 1, name: 'Old exercise', type: 'file', fileData: { name: 'old.png', data: 'data:image/png;base64,iVBORw0KGgo=' }, tempoHistory: [] },
+    ]);
+    await startApp();
+
+    const exercises = await stored('mmc_exercises', (list) => !!list?.[0]?.attachment);
+    expect(exercises[0]).not.toHaveProperty('fileData');
+    expect(await get(`mmc_file_${exercises[0].attachment.id}`)).toMatchObject({ name: 'old.png' });
   });
 
   it('change la langue', async () => {

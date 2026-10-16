@@ -1,6 +1,7 @@
 import { Check, Clock, TrendingUp, Video, FileText, Activity, X, Edit2, Trash2, Music, MoreVertical } from 'lucide-react';
-import Metronome from '../../components/Metronome';
+import Metronome from '../Metronome';
 import { formatTime } from '../../utils/exercises';
+import { useAttachment } from '../../hooks/useAttachment';
 import { useApp } from '../../context/AppContext';
 
 const ExerciseDetailModal = () => {
@@ -10,10 +11,13 @@ const ExerciseDetailModal = () => {
     metronomeTempo, pauseTimer, resumeTimer, saveTempo, selectedExercise, setCurrentTempo,
     setEditingExercise, setEditingSessionProgress, setExerciseNotes, setExercises, setMetronomeTempo,
     setNewExerciseType, setSelectedExercise, setShowCreateExercise, setShowExerciseMenu,
-    setTimerFinished, setUploadedFile, setWorkoutProgress, settings, showExerciseMenu, startTimer,
+    setTimerFinished, setWorkoutProgress, settings, showExerciseMenu, startTimer,
     stopTimer, t, timerActive, timerFinished, timerPaused, timerSeconds, translateCategory,
     translateDifficulty, workoutProgress, workouts
   } = useApp();
+
+  // Fichier joint, chargé à part (ancien format fileData tant que la migration n'a pas tourné)
+  const attachedFile = useAttachment(selectedExercise.attachment) ?? selectedExercise.fileData ?? null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
@@ -48,9 +52,6 @@ const ExerciseDetailModal = () => {
                       setShowExerciseMenu(false);
                       setEditingExercise(selectedExercise);
                       setNewExerciseType(selectedExercise.type || 'none');
-                      if (selectedExercise.fileData) {
-                        setUploadedFile(selectedExercise.fileData);
-                      }
                       setShowCreateExercise(true);
                       setSelectedExercise(null);
                     }}
@@ -178,19 +179,19 @@ const ExerciseDetailModal = () => {
               </a>
             )}
 
-            {selectedExercise.type === 'file' && selectedExercise.fileData && (
+            {selectedExercise.type === 'file' && attachedFile && (
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 text-center shadow-lg">
                 {/* Vérifier si c'est une image pour l'afficher directement */}
-                {selectedExercise.fileData.name.match(/\.(jpg|jpeg|png)$/i) ? (
+                {attachedFile.name.match(/\.(jpg|jpeg|png)$/i) ? (
                   <>
                     <img 
-                      src={selectedExercise.fileData.data} 
+                      src={attachedFile.data} 
                       alt={exerciseName(selectedExercise)}
                       className="max-w-full h-auto rounded-xl mb-4 shadow-md"
                     />
                     <a
-                      href={selectedExercise.fileData.data}
-                      download={selectedExercise.fileData.name}
+                      href={attachedFile.data}
+                      download={attachedFile.name}
                       className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
                     >
                       {t('exercise.downloadImage')}
@@ -199,22 +200,22 @@ const ExerciseDetailModal = () => {
                 ) : (
                   <>
                     {/* Icône différente selon le type de fichier */}
-                    {selectedExercise.fileData.name.match(/\.(gp5|gpx|gp)$/i) ? (
+                    {attachedFile.name.match(/\.(gp5|gpx|gp)$/i) ? (
                       <Music className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
                     ) : (
                       <FileText className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
                     )}
-                    <p className="text-gray-700 dark:text-gray-300 font-medium mb-4">{selectedExercise.fileData.name}</p>
+                    <p className="text-gray-700 dark:text-gray-300 font-medium mb-4">{attachedFile.name}</p>
                     <a
-                      href={selectedExercise.fileData.data}
-                      download={selectedExercise.fileData.name}
+                      href={attachedFile.data}
+                      download={attachedFile.name}
                       className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
                     >
-                      {selectedExercise.fileData.name.match(/\.(gp5|gpx|gp)$/i)
+                      {attachedFile.name.match(/\.(gp5|gpx|gp)$/i)
                         ? t('exercise.downloadGuitarPro')
-                        : selectedExercise.fileData.name.match(/\.(pdf)$/i)
+                        : attachedFile.name.match(/\.(pdf)$/i)
                         ? t('exercise.downloadPdf')
-                        : selectedExercise.fileData.name.match(/\.(musicxml|xml)$/i)
+                        : attachedFile.name.match(/\.(musicxml|xml)$/i)
                         ? t('exercise.downloadScore')
                         : t('exercise.downloadFile')}
                     </a>

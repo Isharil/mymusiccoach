@@ -1,9 +1,11 @@
 // Format des sauvegardes complètes (Réglages > Exporter / Importer une sauvegarde).
 //
-// Fichier JSON : un en-tête (appName, formatVersion, appVersion, exportDate) puis une entrée
-// par donnée, dont la valeur est elle-même sérialisée en JSON (format historique, conservé
-// pour que les anciennes versions de l'app puissent encore relire une sauvegarde récente).
-// Les sauvegardes antérieures, sans en-tête, sont considérées comme formatVersion 1.
+// Fichier JSON : un en-tête (appName, formatVersion, appVersion, exportDate), une entrée par
+// donnée dont la valeur est elle-même sérialisée en JSON (format historique), et une section
+// `files` pour les pièces jointes.
+// Les sauvegardes antérieures, sans en-tête, sont considérées comme formatVersion 1 et restent
+// lisibles. L'inverse n'est pas vrai : les versions de l'app antérieures à la 1.11 refusent ce
+// format (sans rien modifier) ; il faut une app à jour pour restaurer une sauvegarde récente.
 
 export const BACKUP_APP_NAME = 'MyMusicCoach';
 export const BACKUP_FORMAT_VERSION = 2;
@@ -32,14 +34,19 @@ const VALIDATORS = {
 
 export const BACKUP_KEYS = Object.keys(VALIDATORS);
 
+// Pièces jointes (utils/attachments.js) : { id: { name, data } }, stockées hors des exercices
+const isFileMap = (v) => isObject(v) &&
+  Object.values(v).every(f => isObject(f) && typeof f.name === 'string' && typeof f.data === 'string');
+
 // Une sauvegarde doit contenir au moins une de ces données
 const CORE_KEYS = ['exercises', 'workouts', 'sessionHistory', 'settings'];
 
 /**
  * Crée le contenu d'un fichier de sauvegarde.
  * @param {Object} values - données par clé courte (exercises, workouts...) ; undefined = ignorée
+ * @param {Object} [options.files] - pièces jointes { id: { name, data } }
  */
-export const createBackup = (values, { appVersion, now = new Date() } = {}) => {
+export const createBackup = (values, { files, appVersion, now = new Date() } = {}) => {
   const data = {
     appName: BACKUP_APP_NAME,
     formatVersion: BACKUP_FORMAT_VERSION,
@@ -49,12 +56,19 @@ export const createBackup = (values, { appVersion, now = new Date() } = {}) => {
   for (const key of BACKUP_KEYS) {
     if (values[key] !== undefined) data[key] = JSON.stringify(values[key]);
   }
+  if (files && Object.keys(files).length > 0) {
+    // Seuls le nom et le contenu sont utiles pour restaurer
+    data.files = Object.fromEntries(Object.entries(files).map(([id, f]) => [id, { name: f.name, data: f.data }]));
+  }
   return JSON.stringify(data, null, 2);
 };
 
 /**
  * Lit et vérifie un fichier de sauvegarde, sans rien écrire.
- * @returns {{ ok: true, values: Object, summary: Object } | { ok: false, error: string, key?: string }}
+ * @returns {{ ok: true, values: Object, files: Object|null, summary: Object }
+ *   | { ok: false, error: string, key?: string }}
+ *   files : pièces jointes, ou null pour une sauvegarde qui n'en a pas de section
+ *           (anciennes sauvegardes : les fichiers sont alors dans les exercices)
  *   error : 'invalid' (illisible ou endommagé), 'sessionFile' (fichier de session partagée),
  *           'notABackup', 'newerVersion'
  */
@@ -98,9 +112,14 @@ export const parseBackup = (text) => {
     return { ok: false, error: 'notABackup' };
   }
 
+  if (data.files !== undefined && !isFileMap(data.files)) {
+    return { ok: false, error: 'invalid', key: 'files' };
+  }
+
   return {
     ok: true,
     values,
+    files: data.files ?? null,
     summary: {
       exportDate: typeof data.exportDate === 'string' ? data.exportDate : null,
       exercises: values.exercises?.length ?? 0,

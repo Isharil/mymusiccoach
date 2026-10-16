@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence } from './hooks/useIndexedDB';
 import { App as CapacitorApp } from '@capacitor/app';
 import Metronome from './components/Metronome';
@@ -14,6 +14,10 @@ import { getCycleWeekNumber, getDayKey, getMondayOf } from './utils/practiceStat
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { buildProgressReport } from './utils/progressReport';
 import { parseBackup } from './utils/backup';
+import {
+  MAX_ATTACHMENT_MB, MAX_ATTACHMENT_SIZE, deleteAttachment, deleteOrphanAttachments, loadAttachment,
+  moveInlineFiles, saveAttachment
+} from './utils/attachments';
 
 // Erreur de lecture d'une sauvegarde (utils/backup.js) -> message affiché
 const BACKUP_ERROR_MESSAGES = {
@@ -130,6 +134,33 @@ const MyMusicCoach = () => {
     if (needsMigration) setWeeklySchedule(migrated);
   }, [weeklyScheduleLoading, weeklySchedule, setWeeklySchedule]);
 
+  // Migration (une fois par lancement) : fichiers joints sortis des exercices (ancien champ fileData),
+  // puis suppression des fichiers que plus aucun exercice ne référence
+  const attachmentsCheckedRef = useRef(false);
+  useEffect(() => {
+    if (exercisesLoading || deletedExercisesLoading || attachmentsCheckedRef.current) return;
+    attachmentsCheckedRef.current = true;
+    const startedAt = Date.now();
+
+    // Remplace uniquement les exercices migrés : la liste a pu changer pendant la migration
+    const applyMigrated = (setList, migrated) => {
+      const byId = new Map(migrated.filter(ex => ex.attachment).map(ex => [ex.id, ex]));
+      setList(prev => prev.map(ex => (ex.fileData && byId.has(ex.id) ? byId.get(ex.id) : ex)));
+    };
+
+    (async () => {
+      try {
+        const active = await moveInlineFiles(exercises);
+        if (active.changed) applyMigrated(setExercises, active.exercises);
+        const deleted = await moveInlineFiles(deletedExercises);
+        if (deleted.changed) applyMigrated(setDeletedExercises, deleted.exercises);
+        await deleteOrphanAttachments([active.exercises, deleted.exercises], startedAt);
+      } catch (error) {
+        console.error('Erreur migration des pièces jointes:', error);
+      }
+    })();
+  }, [exercisesLoading, deletedExercisesLoading, exercises, deletedExercises, setExercises, setDeletedExercises]);
+
   // Migration depuis localStorage et demande de persistance au démarrage
   useEffect(() => {
     const initializeStorage = async () => {
@@ -223,7 +254,7 @@ const MyMusicCoach = () => {
       }
 
       try {
-        await importAppData(backup.values);
+        await importAppData(backup.values, backup.files);
         showToast(t('messages.dataImported'), 'success');
         setTimeout(() => window.location.reload(), 1500);
       } catch (error) {
@@ -454,6 +485,8 @@ const MyMusicCoach = () => {
 
   const permanentlyDeleteExercise = (exerciseId) => {
     if (window.confirm(t('messages.deleteExerciseConfirm'))) {
+      const exercise = deletedExercises.find(ex => ex.id === exerciseId);
+      if (exercise?.attachment) deleteAttachment(exercise.attachment.id);
       setDeletedExercises(deletedExercises.filter(ex => ex.id !== exerciseId));
     }
   };
@@ -504,9 +537,15 @@ const MyMusicCoach = () => {
     }
   };
 
+  // Fichier choisi dans le formulaire d'exercice : gardé en mémoire jusqu'à l'enregistrement
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      showToast(t('messages.fileTooLarge', { max: MAX_ATTACHMENT_MB }), 'error');
+      e.target.value = '';
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -518,23 +557,34 @@ const MyMusicCoach = () => {
     reader.readAsDataURL(file);
   };
 
-  const createExercise = (formData) => {
-    const normalizedData = normalizeExerciseFields(formData);
+  // Enregistre le fichier choisi dans le formulaire (s'il y en a un) et renvoie sa référence
+  const storeUploadedFile = (type) =>
+    uploadedFile && type === 'file' ? saveAttachment(uploadedFile) : Promise.resolve(null);
+
+  const createExercise = async (formData) => {
+    const id = getNextExerciseId();
+    const attachment = await storeUploadedFile(formData.type);
     const newExercise = {
-      id: getNextExerciseId(),
-      ...normalizedData,
+      id,
+      ...normalizeExerciseFields(formData),
+      ...(attachment && { attachment }),
       tempoHistory: []
     };
+    setExercises(prev => [...prev, newExercise]);
+  };
 
-    // Ajouter les données du fichier si uploadé
-    if (uploadedFile && formData.type === 'file') {
-      newExercise.fileData = uploadedFile;
+  const updateExercise = async (exercise, formData) => {
+    const attachment = await storeUploadedFile(formData.type);
+    if (attachment && exercise.attachment) {
+      await deleteAttachment(exercise.attachment.id);
     }
-
-    setExercises([...exercises, newExercise]);
-    setShowCreateExercise(false);
-    setNewExerciseType('none');
-    setUploadedFile(null); // Réinitialiser le fichier uploadé
+    const updated = {
+      ...exercise,
+      ...normalizeExerciseFields(formData),
+      ...(attachment && { attachment }),
+      isExample: false,
+    };
+    setExercises(prev => prev.map(ex => (ex.id === exercise.id ? updated : ex)));
   };
 
   const createOrUpdateWorkout = (workoutData) => {
@@ -561,20 +611,23 @@ const MyMusicCoach = () => {
       }
 
       // Récupérer les exercices de la session
-      const workoutExercises = workout.exercises.map(exId => {
+      const workoutExercises = (await Promise.all(workout.exercises.map(async exId => {
         const exercise = exercises.find(ex => ex.id === exId);
         if (!exercise) return null;
-        // Retirer l'ID pour éviter les conflits lors de l'import
+        // Retirer l'ID (conflits à l'import) et la référence locale à la pièce jointe
         // eslint-disable-next-line no-unused-vars
-        const { id, ...exerciseData } = exercise;
+        const { id, attachment, ...exerciseData } = exercise;
+        // Le fichier joint voyage avec la session (format fileData, lisible par toutes les versions)
+        const file = attachment ? await loadAttachment(attachment.id) : null;
         // Le contenu d'exemple est exporté dans la langue affichée
         return {
           ...exerciseData,
+          ...(file && { fileData: file }),
           name: exerciseName(exercise),
           description: exerciseDescription(exercise),
           isExample: false
         };
-      }).filter(Boolean);
+      }))).filter(Boolean);
 
       // Créer l'objet à exporter
       const exportData = {
@@ -610,7 +663,7 @@ const MyMusicCoach = () => {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const importData = JSON.parse(event.target.result);
 
@@ -626,35 +679,30 @@ const MyMusicCoach = () => {
           }
         }
 
-        // Importer les exercices
-        const newExercises = [];
-        const exerciseIdMapping = {}; // Ancien ID -> Nouveau ID
+        // Importer les exercices avec de nouveaux ids
         const firstNewExerciseId = getNextExerciseId();
-
-        importData.exercises.forEach((exerciseData, index) => {
-          const newId = firstNewExerciseId + index;
-          const newExercise = {
-            id: newId,
-            ...exerciseData,
-            tempoHistory: exerciseData.tempoHistory || []
-          };
-          newExercises.push(newExercise);
-          exerciseIdMapping[index] = newId; // Mapper l'index à l'ID
+        const workoutId = getNextWorkoutId();
+        const newExercises = importData.exercises.map((exerciseData, index) => {
+          // Une éventuelle référence de pièce jointe désigne un fichier de l'autre appareil
+          // eslint-disable-next-line no-unused-vars
+          const { attachment, ...data } = exerciseData;
+          return { ...data, id: firstNewExerciseId + index, tempoHistory: data.tempoHistory || [] };
         });
 
-        // Ajouter les exercices
-        setExercises([...exercises, ...newExercises]);
+        // Les fichiers joints arrivent dans l'exercice (fileData) : on les range à part
+        const { exercises: storedExercises } = await moveInlineFiles(newExercises);
+        setExercises(prev => [...prev, ...storedExercises]);
 
         // Créer la session avec les nouveaux IDs
         const newWorkout = {
-          id: getNextWorkoutId(),
+          id: workoutId,
           name: importData.workout.name,
           duration: importData.workout.duration,
           category: importData.workout.category,
-          exercises: newExercises.map(ex => ex.id)
+          exercises: storedExercises.map(ex => ex.id)
         };
 
-        setWorkouts([...workouts, newWorkout]);
+        setWorkouts(prev => [...prev, newWorkout]);
 
         setShowImportModal(false);
 
@@ -714,7 +762,7 @@ const MyMusicCoach = () => {
     setWorkoutProgress, setWorkouts, settings, shareFile, showAllHistory, showArchive,
     showExerciseMenu, showToast, showTrash, startEditSession, startTimer, startWorkout, stats,
     stopTimer, t, timerActive, timerFinished, timerPaused, timerSeconds, toasts, translateCategory,
-    translateDifficulty, updateSession, uploadedFile, viewingWeek, weeklySchedule, workoutName,
+    translateDifficulty, updateExercise, updateSession, uploadedFile, viewingWeek, weeklySchedule, workoutName,
     workoutProgress, workouts
   };
 
