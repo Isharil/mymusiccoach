@@ -289,7 +289,9 @@
     "about": "Über",
     "version": "Version",
     "privacyPolicy": "Datenschutzerklärung",
-    "resetFinalConfirm": "Letzte Bestätigung: Diese Aktion kann NICHT rückgängig gemacht werden.\n\nMöchtest du wirklich alles löschen?"
+    "resetFinalConfirm": "Letzte Bestätigung: Diese Aktion kann NICHT rückgängig gemacht werden.\n\nMöchtest du wirklich alles löschen?",
+    "buildDate": "Erstellt am {date}",
+    "versionMismatch": "Der App-Code ({web}) passt nicht zur installierten Android-Version ({native}). Führe „npm run android“ aus und installiere die App über Android Studio neu."
   },
   "onboarding": {
     "step1Title": "Willkommen bei MyMusicCoach!",

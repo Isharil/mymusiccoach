@@ -4,6 +4,7 @@ import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, re
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import Metronome from './components/Metronome';
 import { useTranslation } from './hooks/useTranslation';
@@ -433,6 +434,15 @@ const MyMusicCoach = () => {
 
   // Fonctions de notification avec Capacitor LocalNotifications
   const isNativePlatform = Capacitor.isNativePlatform();
+
+  // Version de l'app native installée (Android), pour vérifier que le code web embarqué est à jour
+  const [nativeAppInfo, setNativeAppInfo] = useState(null);
+  useEffect(() => {
+    if (!isNativePlatform) return;
+    CapacitorApp.getInfo()
+      .then(setNativeAppInfo)
+      .catch(error => console.error('Erreur lecture version native:', error));
+  }, [isNativePlatform]);
 
   const requestNotificationPermission = async () => {
     if (!isNativePlatform) {
@@ -3598,10 +3608,30 @@ const MyMusicCoach = () => {
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{t('settings.about')}</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-start justify-between py-2 gap-4">
                 <span className="text-gray-600 dark:text-gray-400">{t('settings.version')}</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">1.0.0</span>
+                <div className="text-right">
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
+                    {__APP_VERSION__}
+                    {nativeAppInfo?.build && (
+                      <span className="text-gray-500 dark:text-gray-400 font-normal"> ({nativeAppInfo.build})</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t('settings.buildDate', {
+                      date: new Date(__BUILD_DATE__).toLocaleString(settings.language || 'en', { dateStyle: 'medium', timeStyle: 'short' })
+                    })}
+                  </p>
+                </div>
               </div>
+              {/* Le code web embarqué ne correspond pas à l'app installée : build/sync oublié */}
+              {nativeAppInfo?.version && nativeAppInfo.version !== __APP_VERSION__ && (
+                <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-xl p-3">
+                  <p className="text-xs text-amber-800 dark:text-amber-300">
+                    ⚠️ {t('settings.versionMismatch', { web: __APP_VERSION__, native: nativeAppInfo.version })}
+                  </p>
+                </div>
+              )}
               <button
                 onClick={() => setShowPrivacyPolicy(true)}
                 className="w-full flex items-center justify-between py-3 px-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
