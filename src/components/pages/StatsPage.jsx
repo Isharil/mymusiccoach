@@ -308,6 +308,13 @@ const StatsPage = () => {
                         <span className="text-gray-600 dark:text-gray-400">
                           {t('stats.base')}: {exercise.baseTempo} BPM
                         </span>
+                        {exercise.targetTempo > 0 && (
+                          <span className={exercise.tempoHistory.at(-1).tempo >= exercise.targetTempo
+                            ? 'text-green-600 dark:text-green-400 font-medium'
+                            : 'text-purple-600 dark:text-purple-400'}>
+                            🎯 {exercise.targetTempo} BPM
+                          </span>
+                        )}
                         {progression > 0 && (
                           <span className="text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
                             <TrendingUp className="w-4 h-4" />

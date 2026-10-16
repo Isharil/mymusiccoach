@@ -177,7 +177,12 @@
     "baseTempoHint": "mettre 0 si non applicable",
     "acceptedFormats": "Formats acceptés : PDF, Images (PNG/JPEG), Partitions (MusicXML), Guitar Pro (GP5/GPX/GP)",
     "fileAdded": "Fichier ajouté : {name}",
-    "fillRequired": "Veuillez remplir tous les champs obligatoires"
+    "fillRequired": "Veuillez remplir tous les champs obligatoires",
+    "targetTempo": "Tempo cible (BPM)",
+    "targetTempoHint": "optionnel",
+    "targetTempoLabel": "Tempo cible",
+    "targetReached": "Tempo cible atteint ! 🎉",
+    "suggestedTempo": "Aujourd'hui, essaie {tempo} BPM : tes deux dernières séances étaient au point."
   },
   "library": {
     "title": "Bibliothèque",

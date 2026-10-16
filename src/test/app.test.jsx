@@ -170,6 +170,33 @@ describe('MyMusicCoach', () => {
     await stored('mmc_weeklySchedule', (s) => s?.semaine1?.lundi?.join(',') === '1,3');
   });
 
+  it('suit la progression vers le tempo cible et suggère le tempo suivant', async () => {
+    await set('mmc_exercises', [{
+      id: 1, name: 'Arpeggios', duration: '5 min', sets: '3 séries', type: 'none', difficulty: 'Débutant',
+      category: 'Technique', description: '', baseTempo: 60, targetTempo: 100,
+      tempoHistory: [{ date: '2026-10-08', tempo: 80 }, { date: '2026-10-10', tempo: 80 }],
+    }]);
+    const { user, container } = await startApp();
+
+    await user.click(nav('Library'));
+    expect(screen.getByText(/60 → 100 BPM/)).toBeTruthy();
+    await user.click(screen.getByText('Arpeggios'));
+
+    expect(screen.getByText('80 / 100 BPM')).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Target tempo' }).getAttribute('aria-valuenow')).toBe('50');
+    expect(screen.getByText(/Today, try 85 BPM/)).toBeTruthy();
+
+    // Modification du tempo cible
+    await user.click(screen.getByRole('button', { name: 'More options' }));
+    await user.click(screen.getByRole('button', { name: /Edit exercise/ }));
+    const target = container.querySelector('[name="targetTempo"]');
+    expect(target.value).toBe('100');
+    await user.clear(target);
+    await user.type(target, '82');
+    await user.click(screen.getByRole('button', { name: /Save changes/ }));
+    await stored('mmc_exercises', (list) => list?.[0]?.targetTempo === 82);
+  });
+
   it('met un exercice à la corbeille puis le restaure', async () => {
     const { user } = await startApp();
 

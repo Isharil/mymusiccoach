@@ -202,7 +202,7 @@ const LibraryPage = () => {
                         {exercise.baseTempo > 0 && (
                           <span className="flex items-center gap-1">
                             <Activity className="w-4 h-4" />
-                            {exercise.baseTempo} BPM
+                            {exercise.targetTempo > 0 ? `${exercise.baseTempo} → ${exercise.targetTempo}` : exercise.baseTempo} BPM
                           </span>
                         )}
                       </div>

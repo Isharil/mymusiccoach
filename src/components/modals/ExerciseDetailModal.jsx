@@ -2,6 +2,7 @@ import { Check, Clock, TrendingUp, Video, FileText, Activity, X, Edit2, Trash2, 
 import Metronome from '../Metronome';
 import { formatTime } from '../../utils/exercises';
 import { useAttachment } from '../../hooks/useAttachment';
+import { suggestNextTempo, tempoProgress } from '../../utils/tempo';
 import { useApp } from '../../context/AppContext';
 
 const ExerciseDetailModal = () => {
@@ -18,6 +19,10 @@ const ExerciseDetailModal = () => {
 
   // Fichier joint, chargé à part (ancien format fileData tant que la migration n'a pas tourné)
   const attachedFile = useAttachment(selectedExercise.attachment) ?? selectedExercise.fileData ?? null;
+
+  // Tempo à travailler aujourd'hui et progression vers le tempo cible
+  const tempoSuggestion = suggestNextTempo(selectedExercise);
+  const targetProgress = tempoProgress(selectedExercise);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
@@ -307,13 +312,44 @@ const ExerciseDetailModal = () => {
               )}
             </div>
 
-            {/* Métronome compact */}
+            {/* Tempo cible et tempo suggéré pour cette séance */}
+            {(targetProgress || tempoSuggestion?.increased) && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md border-2 border-purple-200 dark:border-purple-700 space-y-3">
+                {targetProgress && (
+                  <div>
+                    <div className="flex justify-between items-baseline text-sm mb-2">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">🎯 {t('exercise.targetTempoLabel')}</span>
+                      <span className="font-bold text-gray-900 dark:text-gray-100">{targetProgress.current} / {targetProgress.target} BPM</span>
+                    </div>
+                    <div
+                      className="h-3 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={targetProgress.percent}
+                      aria-label={t('exercise.targetTempoLabel')}
+                    >
+                      <div
+                        className={`h-full rounded-full ${targetProgress.reached ? 'bg-green-500' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`}
+                        style={{ width: `${targetProgress.percent}%` }}
+                      />
+                    </div>
+                    {targetProgress.reached && (
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-2">{t('exercise.targetReached')}</p>
+                    )}
+                  </div>
+                )}
+                {tempoSuggestion?.increased && (
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    ⬆️ {t('exercise.suggestedTempo', { tempo: tempoSuggestion.tempo })}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Métronome compact, réglé sur le tempo suggéré */}
             <Metronome
-              initialTempo={
-                selectedExercise.tempoHistory?.length > 0
-                  ? selectedExercise.tempoHistory[selectedExercise.tempoHistory.length - 1].tempo
-                  : (selectedExercise.baseTempo > 0 ? selectedExercise.baseTempo : 120)
-              }
+              initialTempo={tempoSuggestion?.tempo ?? 120}
               compact={true}
               t={t}
               soundType={settings.metronomeSound}

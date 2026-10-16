@@ -3,7 +3,7 @@ export const maxIdOf = (items) => items.reduce((max, item) => Math.max(max, Numb
 
 // Normalise les champs durée, séries et tempo saisis dans le formulaire
 export const normalizeExerciseFields = (data) => {
-  let { duration, sets, baseTempo, ...rest } = data;
+  let { duration, sets, baseTempo, targetTempo, ...rest } = data;
 
   // Normaliser la durée: extraire le nombre, limiter à 60 min, ajouter "min"
   if (duration) {
@@ -31,7 +31,13 @@ export const normalizeExerciseFields = (data) => {
     baseTempo = isNaN(tempoValue) ? 0 : Math.min(300, Math.max(0, tempoValue));
   }
 
-  return { ...rest, duration, sets, baseTempo };
+  // Tempo cible : mêmes limites (0 = pas de cible)
+  if (targetTempo !== undefined) {
+    const tempoValue = parseInt(targetTempo);
+    targetTempo = isNaN(tempoValue) ? 0 : Math.min(300, Math.max(0, tempoValue));
+  }
+
+  return { ...rest, duration, sets, baseTempo, ...(targetTempo !== undefined && { targetTempo }) };
 };
 
 // "5 min" -> 300 secondes

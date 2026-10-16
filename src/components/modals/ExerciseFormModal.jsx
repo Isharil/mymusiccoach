@@ -19,6 +19,7 @@ const ExerciseFormModal = () => {
       type: newExerciseType || 'none',
       difficulty: formData.get('difficulty'),
       baseTempo: parseInt(formData.get('baseTempo')),
+      targetTempo: formData.get('targetTempo'),
       category: formData.get('category'),
       description: formData.get('description'),
       videoUrl: formData.get('videoUrl') || undefined,
@@ -214,6 +215,23 @@ const ExerciseFormModal = () => {
               defaultValue={editingExercise?.baseTempo ?? 60}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
               placeholder="60"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="target-tempo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              🎯 {t('exercise.targetTempo')}
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({t('exercise.targetTempoHint')})</span>
+            </label>
+            <input
+              id="target-tempo"
+              type="number"
+              name="targetTempo"
+              min="0"
+              max="300"
+              defaultValue={editingExercise?.targetTempo || ''}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
+              placeholder="120"
             />
           </div>
 
