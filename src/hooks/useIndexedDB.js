@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { get, set, del, keys, clear } from 'idb-keyval';
+import { get, set, del } from 'idb-keyval';
 
 // Liste des clés utilisées par l'application
 const APP_KEYS = [
@@ -80,7 +80,7 @@ export async function checkStoragePersistence() {
   if (navigator.storage && navigator.storage.persisted) {
     try {
       return await navigator.storage.persisted();
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -113,7 +113,8 @@ export function useIndexedDB(key, initialValue) {
             setStoredValue(value);
           } else {
             // Si aucune valeur n'existe, sauvegarder la valeur initiale
-            await set(key, initialValue);
+            // (via la ref : la valeur passée au hook peut être recréée à chaque rendu)
+            await set(key, valueRef.current);
           }
           setIsLoading(false);
         }
@@ -160,7 +161,9 @@ export async function clearAppStorage() {
     APP_KEYS.forEach(key => {
       try {
         window.localStorage.removeItem(key);
-      } catch (e) {}
+      } catch {
+        // localStorage indisponible (navigation privée...) : rien à nettoyer
+      }
     });
   } catch (error) {
     console.error('Erreur lors de la suppression des données:', error);

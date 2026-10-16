@@ -36,6 +36,12 @@ const daysBetween = (from, to) => {
   return Math.round((toUtc - fromUtc) / MS_PER_DAY);
 };
 
+// Lundi de la semaine d'une date, au format "YYYY-MM-DD"
+export const getMondayOf = (date) => {
+  const daysSinceMonday = (date.getDay() + 6) % 7; // dimanche -> 6
+  return toLocalDateStr(new Date(date.getFullYear(), date.getMonth(), date.getDate() - daysSinceMonday));
+};
+
 // Clé du jour utilisée dans le planning ('lundi', 'mardi', ...)
 export const getDayKey = (date) => DAY_KEYS[date.getDay()];
 

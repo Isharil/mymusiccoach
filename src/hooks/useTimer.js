@@ -194,7 +194,7 @@ export const useTimer = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [releaseWakeLock, requestWakeLock, updateTimer]);
+  }, [releaseWakeLock, requestWakeLock, updateTimer, playTimerFinishedSound]);
 
   // Nettoyer le timer quand on quitte la page
   useEffect(() => {

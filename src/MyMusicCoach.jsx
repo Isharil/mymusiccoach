@@ -10,7 +10,7 @@ import { useTheme } from './hooks/useTheme';
 import { useFileExport } from './hooks/useFileExport';
 import { useTimer } from './hooks/useTimer';
 import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE } from './constants/appData';
-import { getCycleWeekNumber } from './utils/practiceStats';
+import { getCycleWeekNumber, getDayKey, getMondayOf } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { buildProgressReport } from './utils/progressReport';
 import { AppContext } from './context/AppContext';
@@ -119,7 +119,7 @@ const MyMusicCoach = () => {
       }
     }
     if (needsMigration) setWeeklySchedule(migrated);
-  }, [weeklyScheduleLoading]);
+  }, [weeklyScheduleLoading, weeklySchedule, setWeeklySchedule]);
 
   // Migration depuis localStorage et demande de persistance au démarrage
   useEffect(() => {
@@ -212,34 +212,18 @@ const MyMusicCoach = () => {
     reader.readAsText(file);
   };
 
-  // Fonction pour obtenir le jour actuel
-  const getCurrentDay = () => {
-    const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-    const today = new Date();
-    return days[today.getDay()];
-  };
+  // Jour actuel, sous la forme des clés du planning ('lundi', 'mardi', ...)
+  const getCurrentDay = () => getDayKey(new Date());
 
-  // Fonction pour obtenir le lundi de la semaine en cours
-  const getMondayOfCurrentWeek = () => {
-    const today = new Date();
-    const day = today.getDay(); // 0=dim, 1=lun, ...
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(today);
-    monday.setDate(diff);
-    return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
-  };
-
-  // Auto-initialisation du cycleStartDate au premier lancement
+  // Auto-initialisation du cycleStartDate au premier lancement : lundi de la semaine en cours
   useEffect(() => {
-    if (settingsLoading) return;
-    if (!settings.cycleStartDate) {
-      setSettings({ ...settings, cycleStartDate: getMondayOfCurrentWeek() });
-    }
-  }, [settingsLoading]);
+    if (settingsLoading || settings.cycleStartDate) return;
+    setSettings(prev => ({ ...prev, cycleStartDate: getMondayOf(new Date()) }));
+  }, [settingsLoading, settings.cycleStartDate, setSettings]);
 
-  // Fonction pour obtenir la semaine actuelle du cycle de 4 semaines (1-4)
+  // Semaine actuelle du cycle de 4 semaines (1-4)
   const getCurrentWeekNumber = () => {
-    return getCycleWeekNumber(new Date(), settings.cycleStartDate || getMondayOfCurrentWeek());
+    return getCycleWeekNumber(new Date(), settings.cycleStartDate || getMondayOf(new Date()));
   };
 
   // Fonction pour obtenir la date d'aujourd'hui au format ISO (heure locale, pas UTC)

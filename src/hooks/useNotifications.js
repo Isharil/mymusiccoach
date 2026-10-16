@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -59,7 +59,7 @@ export const useNotifications = ({ settings, t, showToast }) => {
     }
   };
 
-  const scheduleDailyReminder = async () => {
+  const scheduleDailyReminder = useCallback(async () => {
     if (!isNativePlatform) return;
     if (!settings.notifications || !settings.reminderEnabled) return;
 
@@ -100,9 +100,9 @@ export const useNotifications = ({ settings, t, showToast }) => {
     } catch (error) {
       console.error('Erreur planification rappel:', error);
     }
-  };
+  }, [isNativePlatform, settings.notifications, settings.reminderEnabled, settings.practiceReminder, t]);
 
-  const cancelDailyReminder = async () => {
+  const cancelDailyReminder = useCallback(async () => {
     if (!isNativePlatform) return;
 
     try {
@@ -111,7 +111,7 @@ export const useNotifications = ({ settings, t, showToast }) => {
     } catch (error) {
       console.error('Erreur annulation rappel:', error);
     }
-  };
+  }, [isNativePlatform]);
 
   // Envoyer une notification immédiate (pour session terminée, etc.)
   const sendImmediateNotification = async (title, body, id = 9998) => {
@@ -152,7 +152,7 @@ export const useNotifications = ({ settings, t, showToast }) => {
     };
 
     checkPermissions();
-  }, []);
+  }, [isNativePlatform]);
 
   // Mettre à jour le rappel quotidien quand les settings changent
   useEffect(() => {
@@ -170,7 +170,7 @@ export const useNotifications = ({ settings, t, showToast }) => {
     };
 
     updateReminder();
-  }, [settings.notifications, settings.practiceReminder, settings.reminderEnabled]);
+  }, [isNativePlatform, settings.notifications, settings.reminderEnabled, scheduleDailyReminder, cancelDailyReminder]);
 
   return { isNativePlatform, notificationPermission, requestNotificationPermission, sendTestNotification, sendImmediateNotification };
 };

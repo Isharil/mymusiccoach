@@ -69,9 +69,8 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
   // Notifier le parent quand le tempo change
   useEffect(() => {
     if (onTempoChange) onTempoChange(tempo);
-  }, [tempo]);
+  }, [tempo, onTempoChange]);
   const [currentBeat, setCurrentBeat] = useState(0);
-  const [currentSubBeat, setCurrentSubBeat] = useState(0);
   const [subdivision, setSubdivision] = useState(SUBDIVISIONS[0]);
   const [beatsPerMeasure, setBeatsPerMeasure] = useState(4);
   const [beatUnit, setBeatUnit] = useState(4);
@@ -350,14 +349,14 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
   const rafRef = useRef(null);
 
   // Boucle RAF pour mettre à jour l'affichage visuel sans perturber l'audio
-  const drawVisual = useCallback(() => {
+  const drawVisual = useCallback(function draw() {
     const audioContext = audioContextRef.current;
     if (!audioContext) return;
     const currentTime = audioContext.currentTime;
     while (visualQueueRef.current.length > 0 && visualQueueRef.current[0].time <= currentTime) {
       setCurrentBeat(visualQueueRef.current.shift().beat);
     }
-    rafRef.current = requestAnimationFrame(drawVisual);
+    rafRef.current = requestAnimationFrame(draw);
   }, []);
 
   // Scheduler pour le timing précis
@@ -445,7 +444,6 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       visualQueueRef.current = [];
       setIsPlaying(false);
       setCurrentBeat(0);
-      setCurrentSubBeat(0);
       currentBeatRef.current = 0;
       currentSubBeatRef.current = 0;
     } else {
@@ -461,7 +459,7 @@ const Metronome = ({ initialTempo = 120, compact = false, onClose, t = (key) => 
       rafRef.current = requestAnimationFrame(drawVisual);
       setIsPlaying(true);
     }
-  }, [isPlaying, scheduler, getAudioContext]);
+  }, [isPlaying, scheduler, getAudioContext, drawVisual]);
 
   // Mettre à jour le scheduler quand les paramètres changent
   useEffect(() => {

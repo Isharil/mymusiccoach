@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeStreaks,
   getCycleWeekNumber,
+  getMondayOf,
   getScheduledWorkoutIds,
   normalizeDate,
   parseLocalDate,
@@ -24,6 +25,18 @@ describe('dates locales', () => {
     expect(date.getDate()).toBe(5);
     expect(date.getHours()).toBe(0);
     expect(toLocalDateStr(date)).toBe('2026-03-05');
+  });
+});
+
+describe('getMondayOf', () => {
+  it('renvoie le lundi de la semaine', () => {
+    expect(getMondayOf(d('2026-10-12'))).toBe('2026-10-12'); // lundi
+    expect(getMondayOf(d('2026-10-15'))).toBe('2026-10-12'); // jeudi
+    expect(getMondayOf(d('2026-10-18'))).toBe('2026-10-12'); // dimanche
+  });
+
+  it('change de mois si besoin', () => {
+    expect(getMondayOf(d('2026-11-01'))).toBe('2026-10-26');
   });
 });
 
