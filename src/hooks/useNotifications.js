@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { isReminderId, planReminders } from '../utils/reminders';
 
-// Notifications locales (Android uniquement) : permission, rappel quotidien, notifications ponctuelles
-export const useNotifications = ({ settings, t, showToast }) => {
+// Notifications locales (Android uniquement) : permission, rappels de pratique, notifications ponctuelles
+export const useNotifications = ({ settings, t, showToast, weeklySchedule, workouts, sessionHistory, workoutName }) => {
   const isNativePlatform = Capacitor.isNativePlatform();
 
   const [notificationPermission, setNotificationPermission] = useState(
@@ -30,8 +31,8 @@ export const useNotifications = ({ settings, t, showToast }) => {
 
       if (result.display === 'granted') {
         await sendTestNotification();
-        // Planifier le rappel quotidien
-        await scheduleDailyReminder();
+        // Programmer les rappels
+        await scheduleReminders();
       }
     } catch (error) {
       console.error('Erreur permissions notification:', error);
@@ -59,59 +60,59 @@ export const useNotifications = ({ settings, t, showToast }) => {
     }
   };
 
-  const scheduleDailyReminder = useCallback(async () => {
+  // Annule tous les rappels programmés (y compris l'ancien rappel quotidien répété)
+  const cancelReminders = useCallback(async () => {
+    if (!isNativePlatform) return;
+
+    try {
+      const { notifications } = await LocalNotifications.getPending();
+      const ids = notifications.map(n => n.id).filter(isReminderId);
+      if (ids.length > 0) {
+        await LocalNotifications.cancel({ notifications: ids.map(id => ({ id })) });
+      }
+    } catch (error) {
+      console.error('Erreur annulation rappels:', error);
+    }
+  }, [isNativePlatform]);
+
+  // Programme les rappels des prochains jours (voir utils/reminders.js)
+  const scheduleReminders = useCallback(async () => {
     if (!isNativePlatform) return;
     if (!settings.notifications || !settings.reminderEnabled) return;
 
     try {
-      // Annuler les anciennes notifications planifiées
-      await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
-
-      // Parser l'heure du rappel
-      const [hours, minutes] = settings.practiceReminder.split(':').map(Number);
-
-      // Créer la date du prochain rappel
-      const now = new Date();
-      const scheduledDate = new Date();
-      scheduledDate.setHours(hours, minutes, 0, 0);
-
-      // Si l'heure est déjà passée aujourd'hui, planifier pour demain
-      if (scheduledDate <= now) {
-        scheduledDate.setDate(scheduledDate.getDate() + 1);
-      }
+      await cancelReminders();
+      const reminders = planReminders({
+        now: new Date(),
+        time: settings.practiceReminder,
+        weeklySchedule,
+        workouts,
+        cycleStartDate: settings.cycleStartDate,
+        sessionHistory,
+      });
+      if (reminders.length === 0) return;
 
       await LocalNotifications.schedule({
-        notifications: [{
+        notifications: reminders.map(reminder => ({
+          id: reminder.id,
           title: `🎵 ${t('messages.dailyReminderTitle')}`,
-          body: t('messages.dailyReminder'),
-          id: 1,
-          schedule: {
-            at: scheduledDate,
-            repeats: true,
-            every: 'day'
-          },
+          // Les sessions prévues ce jour-là, sinon le message général
+          body: reminder.workouts.length > 0
+            ? t('messages.reminderWithSessions', { sessions: reminder.workouts.map(workoutName).join(', ') })
+            : t('messages.dailyReminder'),
+          schedule: { at: reminder.at, allowWhileIdle: true },
           sound: null,
           smallIcon: 'ic_stat_music_note',
           largeIcon: 'ic_launcher'
-        }]
+        }))
       });
-
-      console.log('Rappel quotidien planifié pour:', scheduledDate);
     } catch (error) {
-      console.error('Erreur planification rappel:', error);
+      console.error('Erreur planification rappels:', error);
     }
-  }, [isNativePlatform, settings.notifications, settings.reminderEnabled, settings.practiceReminder, t]);
-
-  const cancelDailyReminder = useCallback(async () => {
-    if (!isNativePlatform) return;
-
-    try {
-      await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
-      console.log('Rappel quotidien annulé');
-    } catch (error) {
-      console.error('Erreur annulation rappel:', error);
-    }
-  }, [isNativePlatform]);
+  }, [
+    isNativePlatform, settings.notifications, settings.reminderEnabled, settings.practiceReminder,
+    settings.cycleStartDate, weeklySchedule, workouts, sessionHistory, t, workoutName, cancelReminders
+  ]);
 
   // Envoyer une notification immédiate (pour session terminée, etc.)
   const sendImmediateNotification = async (title, body, id = 9998) => {
@@ -154,23 +155,24 @@ export const useNotifications = ({ settings, t, showToast }) => {
     checkPermissions();
   }, [isNativePlatform]);
 
-  // Mettre à jour le rappel quotidien quand les settings changent
+  // Reprogrammer les rappels à l'ouverture et à chaque changement utile
+  // (réglages, planning, sessions, pratique enregistrée aujourd'hui)
   useEffect(() => {
     if (!isNativePlatform) return;
 
-    const updateReminder = async () => {
+    const updateReminders = async () => {
       if (settings.notifications && settings.reminderEnabled) {
         const permStatus = await LocalNotifications.checkPermissions();
         if (permStatus.display === 'granted') {
-          await scheduleDailyReminder();
+          await scheduleReminders();
         }
       } else {
-        await cancelDailyReminder();
+        await cancelReminders();
       }
     };
 
-    updateReminder();
-  }, [isNativePlatform, settings.notifications, settings.reminderEnabled, scheduleDailyReminder, cancelDailyReminder]);
+    updateReminders();
+  }, [isNativePlatform, settings.notifications, settings.reminderEnabled, scheduleReminders, cancelReminders]);
 
   return { isNativePlatform, notificationPermission, requestNotificationPermission, sendTestNotification, sendImmediateNotification };
 };

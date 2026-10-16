@@ -204,7 +204,7 @@ const MyMusicCoach = () => {
 
   // Notifications locales (Android)
   const { isNativePlatform, notificationPermission, requestNotificationPermission, sendTestNotification, sendImmediateNotification } =
-    useNotifications({ settings, t, showToast });
+    useNotifications({ settings, t, showToast, weeklySchedule, workouts, sessionHistory, workoutName });
 
   // Version de l'app native installée (Android), pour vérifier que le code web embarqué est à jour
   const [nativeAppInfo, setNativeAppInfo] = useState(null);

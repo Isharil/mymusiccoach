@@ -1,9 +1,10 @@
-import { createElement } from 'react';
+import { createElement, useMemo } from 'react';
 import { CATEGORY_KEYS, DIFFICULTY_KEYS, EXAMPLE_EXERCISE_KEYS, EXAMPLE_WORKOUT_KEYS } from '../constants/appData';
 import { parseLocalDate } from '../utils/practiceStats';
 
 // Fonctions d'affichage dépendant de la langue choisie
-export const useDisplayHelpers = (t, language) => {
+// Mémorisées par langue : des fonctions stables évitent de relancer les effets qui les utilisent
+export const useDisplayHelpers = (t, language) => useMemo(() => {
   // Les catégories inconnues (session en texte libre, import) restent telles quelles
   const translateCategory = (cat) => CATEGORY_KEYS[cat] ? t(`categories.${CATEGORY_KEYS[cat]}`) : cat;
   const translateDifficulty = (diff) => DIFFICULTY_KEYS[diff] ? t(`difficulties.${DIFFICULTY_KEYS[diff]}`) : diff;
@@ -32,4 +33,4 @@ export const useDisplayHelpers = (t, language) => {
   );
 
   return { translateCategory, translateDifficulty, exerciseName, exerciseDescription, workoutName, formatSets, formatDisplayDate, renderBold };
-};
+}, [t, language]);

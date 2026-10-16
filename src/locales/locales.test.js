@@ -10,6 +10,20 @@ const flatten = (obj, prefix = '') => Object.entries(obj).flatMap(([key, value])
 
 const reference = Object.fromEntries(flatten(translations.en));
 
+// Clés utilisées dans le code : t('section.cle') et tr('section.cle') écrits en toutes lettres
+const sourceFiles = import.meta.glob(['../**/*.{js,jsx}', '!../**/*.test.{js,jsx}'], { query: '?raw', import: 'default', eager: true });
+const usedKeys = new Set(
+  Object.values(sourceFiles).flatMap(code => [...code.matchAll(/\btr?\(\s*'([a-zA-Z0-9]+\.[a-zA-Z0-9.]+)'/g)].map(m => m[1]))
+);
+
+describe('clés utilisées dans le code', () => {
+  it('existent toutes dans les traductions', () => {
+    expect(usedKeys.size).toBeGreaterThan(100);
+    const missing = [...usedKeys].filter(key => !(key in reference));
+    expect(missing).toEqual([]);
+  });
+});
+
 describe('fichiers de traduction', () => {
   it('chaque langue proposée a un fichier', () => {
     for (const { code } of availableLanguages) {

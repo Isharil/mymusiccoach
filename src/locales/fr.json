@@ -255,7 +255,7 @@
     "yourName": "Ton prénom",
     "language": "Langue",
     "dailyReminder": "Rappel quotidien",
-    "reminderTime": "Tu recevras un rappel chaque jour à cette heure",
+    "reminderTime": "Rappel à cette heure les jours où une session est prévue (tous les jours si ton planning est vide), sauf si tu as déjà pratiqué.",
     "notifications": "Notifications",
     "allowed": "Autorisées",
     "blocked": "Bloquées",
@@ -422,7 +422,8 @@
     "backupNotABackup": "Ce fichier n'est pas une sauvegarde MyMusicCoach.",
     "backupNewerVersion": "Cette sauvegarde vient d'une version plus récente de l'app. Mets à jour MyMusicCoach pour l'importer.",
     "backupConfirm": "Sauvegarde du {date}\nExercices : {exercises} · Sessions : {workouts} · Historique : {sessions}\n\nElle remplacera tes données actuelles. Continuer ?",
-    "fileTooLarge": "Fichier trop volumineux (maximum {max} Mo)."
+    "fileTooLarge": "Fichier trop volumineux (maximum {max} Mo).",
+    "reminderWithSessions": "C'est l'heure de pratiquer ! Au programme : {sessions}"
   },
   "export": {
     "title": "Exporter le fichier",
