@@ -47,7 +47,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Notifications de session** : Début et fin de session
 
 ### Multilingue
-- **Français** et **Anglais** disponibles
+- **Français**, **anglais**, **allemand**, **italien** et **espagnol** disponibles
 - Changement de langue instantané dans les réglages
 - Facile à étendre avec d'autres langues
 
@@ -87,28 +87,60 @@ npm run build
 ## Build Android
 
 ```bash
-# Synchroniser avec Capacitor
-npx cap sync android
+# Build web + synchronisation Capacitor
+npm run android
 
 # Ouvrir dans Android Studio
 npx cap open android
+```
+
+### Faire une release
+
+La version de `package.json` est la seule source de vérité : elle est affichée dans
+« À propos » et reprise par `android/app/build.gradle` (`versionName`, et
+`versionCode = major * 10000 + minor * 100 + patch`).
+
+```bash
+npm version patch   # ou minor / major : met à jour package.json, commite et crée le tag
+npm run android
 ```
 
 ## Structure du projet
 
 ```
 src/
+├── MyMusicCoach.jsx        # Composant principal : état, actions, contexte, assemblage des écrans
+├── context/
+│   └── AppContext.js       # Contexte partagé avec les pages et fenêtres (useApp)
 ├── components/
+│   ├── pages/              # Accueil, Bibliothèque, Stats, Réglages, Session en cours
+│   ├── modals/             # Fenêtres : exercice, session, planning, rapport, import...
+│   ├── BottomNav.jsx, Onboarding.jsx, Toasts.jsx
 │   └── Metronome.jsx       # Composant métronome
 ├── hooks/
-│   ├── useIndexedDB.js     # Hook de persistance IndexedDB
-│   └── useTranslation.js   # Hook d'internationalisation
-├── locales/
-│   ├── fr.json             # Traductions françaises
-│   ├── en.json             # Traductions anglaises
-│   └── index.js            # Export des traductions
-└── MyMusicCoach.jsx        # Composant principal
+│   ├── useIndexedDB.js     # Persistance IndexedDB
+│   ├── useTranslation.js   # Internationalisation (pluriels, repli sur l'anglais)
+│   ├── useDisplayHelpers.js # Affichage selon la langue (catégories, exemples, dates)
+│   ├── usePracticeStats.js # Séries, statistiques et badges
+│   ├── useTimer.js         # Chronomètre d'exercice (Wake Lock)
+│   ├── useNotifications.js # Notifications locales Android
+│   ├── useFileExport.js    # Export de fichiers selon la plateforme
+│   └── useTheme.js         # Thème clair/sombre
+├── constants/appData.js    # Données par défaut, catégories, badges
+├── utils/                  # Fonctions pures : dates/séries, rapport HTML, exercices
+├── locales/                # Traductions (fr, en, de, it, es)
+└── test/                   # Configuration et tests de parcours de l'application
 ```
+
+## Tests
+
+```bash
+npm test            # une passe
+npm run test:watch  # relance à chaque modification
+```
+
+Les tests unitaires (`*.test.js`) couvrent les calculs et les traductions ; `src/test/app.test.jsx`
+rend l'application complète dans un navigateur simulé (jsdom + IndexedDB en mémoire).
 
 ## Ajouter une nouvelle langue
 

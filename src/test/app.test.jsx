@@ -168,6 +168,40 @@ describe('MyMusicCoach', () => {
     expect(screen.getAllByText('Beginner routine (Archive)').length).toBeGreaterThan(0);
   });
 
+  it('importe une session partagée et refuse un fichier non JSON', async () => {
+    const { user } = await startApp();
+
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Sessions' }));
+    await user.click(screen.getByRole('button', { name: 'Import session' }));
+    const input = screen.getByRole('dialog').querySelector('input[type="file"]');
+
+    // Un fichier qui n'est pas du JSON est refusé avec un message
+    // (applyAccept: false pour contourner le filtre .json du sélecteur, comme le ferait un fichier mal nommé)
+    const uploader = userEvent.setup({ applyAccept: false });
+    await uploader.upload(input, new File(['hello'], 'notes.txt', { type: 'text/plain' }));
+    expect(await screen.findByText('File must be in JSON format')).toBeTruthy();
+
+    // Une session exportée par MyMusicCoach est ajoutée avec ses exercices
+    const shared = {
+      version: '1.0',
+      appName: 'MyMusicCoach',
+      workout: { name: 'Shared routine', duration: '15 min', category: 'Technique' },
+      exercises: [{
+        name: 'Shared exercise', duration: '5 min', sets: '2 séries', type: 'none',
+        difficulty: 'Débutant', category: 'Technique', description: 'From my teacher', baseTempo: 70
+      }],
+    };
+    await user.upload(input, new File([JSON.stringify(shared)], 'session.json', { type: 'application/json' }));
+
+    expect(await screen.findByText('Shared routine')).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const workouts = await stored('mmc_workouts', (list) => list?.length === 3);
+    expect(workouts[2]).toMatchObject({ id: 3, name: 'Shared routine', exercises: [3] });
+    const exercises = await stored('mmc_exercises', (list) => list?.length === 3);
+    expect(exercises[2]).toMatchObject({ id: 3, name: 'Shared exercise', tempoHistory: [] });
+  });
+
   it('change la langue', async () => {
     const { user } = await startApp();
 
