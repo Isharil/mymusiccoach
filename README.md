@@ -7,6 +7,8 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 ### Sessions d'entraînement
 - **Planning sur 4 semaines** : Organisez vos sessions sur un cycle de 4 semaines
 - **Session du jour** : Vue rapide de la session programmée
+- **Pratique libre** : Démarrez n'importe quelle session depuis la bibliothèque, ou notez une pratique hors planning (morceau, impro, jam...)
+- **Temps de pratique** : Durée mesurée et modifiable à la fin de chaque session
 - **Suivi de progression** : Marquez les exercices comme complétés ou sautés
 - **Chronomètre intégré** : Timer par exercice avec Wake Lock (continue même si l'écran s'éteint)
 - **Pause/Reprise** : Mettez le chronomètre en pause à tout moment
@@ -17,6 +19,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Niveaux de difficulté** : Débutant, Intermédiaire, Avancé
 - **Pièces jointes** : Lien YouTube ou fichier (PDF, image, audio)
 - **Suivi du tempo** : Enregistrez votre progression de tempo par exercice
+- **Tempo cible** : Progression vers un tempo objectif, avec un tempo suggéré (+5 BPM quand les deux dernières séances sont au point)
 - **Corbeille** : Récupérez les exercices supprimés
 
 ### Métronome
@@ -29,6 +32,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 ### Statistiques et récompenses
 - **Streak (série)** : Compteur de jours consécutifs de pratique
 - **Sessions hebdomadaires** : Nombre de sessions cette semaine
+- **Temps de pratique** : Minutes de la semaine, objectif hebdomadaire et répartition par catégorie
 - **Sessions totales** : Historique complet
 - **Système de badges** :
   - Badges de streak : Première flamme (3j), Semaine parfaite (7j), jusqu'à Légende (100j)
@@ -43,7 +47,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Import de sessions** : Importez des sessions partagées
 
 ### Notifications (Android uniquement)
-- **Rappel quotidien** : Configurable à l'heure de votre choix
+- **Rappels de pratique** : À l'heure de votre choix, les jours où une session est prévue (avec son nom), et pas si vous avez déjà pratiqué
 - **Notifications de session** : Début et fin de session
 
 ### Multilingue

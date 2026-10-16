@@ -74,6 +74,7 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé',
   category: 'Technique' | 'Gammes' | 'Rythme' | 'Théorie' | 'Morceaux' | 'Improvisation' | 'Oreille',
   baseTempo: number,             // 0 = pas de tempo
+  targetTempo?: number,          // tempo cible, 0 ou absent = aucun (utils/tempo.js)
   type: 'none' | 'video' | 'file',
   videoUrl?: string,
   attachment?: { id, name },     // fichier joint, contenu dans mmc_file_<id>
@@ -101,15 +102,41 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   workoutName: string,           // nom au moment de la séance
   completed: number, skipped: number, total: number,
   exerciseProgress: { [exerciseId]: 'completed' | 'skipped' },  // absent des sessions avant la 1.11
+  durationMinutes?: number,      // temps de pratique, absent des sessions avant la 1.12
   notes: { [exerciseId]: string }
+}
+
+// Entrée d'historique d'une pratique libre (hors session) : rangée à sa date
+{
+  id, date, time,
+  free: true,
+  workoutId: null,
+  workoutName: string,           // intitulé saisi, sinon « Pratique libre »
+  completed: 0, skipped: 0, total: 0,
+  durationMinutes: number,
+  category?: string,             // catégorie d'exercice, absente = « autre »
+  note?: string,
+  notes: {}
 }
 
 // Planning : semaine du cycle -> jour -> ids de sessions
 { semaine1: { lundi: [1], mardi: [], ..., dimanche: [] }, semaine2: {...}, semaine3: {...}, semaine4: {...} }
 
-// Session en cours : mmc_workoutProgress
+// Session en cours : mmc_activeWorkout est une copie de la session, avec startedAt (horodatage
+// du début, pour mesurer le temps de pratique) ; mmc_workoutProgress donne le statut des exercices
 { '<workoutId>-<exerciseId>': 'completed' | 'skipped' }
 ```
+
+Réglages notables : `weeklyGoalMinutes` (objectif de pratique hebdomadaire, 0 = aucun),
+`practiceReminder` (heure des rappels), `cycleStartDate` (lundi de la semaine 1 du planning).
+
+### Rappels
+
+Les rappels sont des notifications ponctuelles programmées pour les 28 prochains jours
+(`utils/reminders.js`), uniquement les jours où une session est prévue, et recalculées à chaque
+ouverture de l'app et à chaque changement. Identifiants : `1000` + numéro du jour ; `1` est
+l'ancien rappel quotidien répété, annulé au passage. Les autres notifications utilisent `100`
+(fin de session), `101` (début) et `9999` (test).
 
 ### Migrations au démarrage
 
@@ -158,7 +185,8 @@ npm run lint
 ```
 
 - `utils/*.test.js`, `hooks/*.test.js`, `locales/*.test.js` : tests unitaires (calculs de
-  dates et de séries, rapport, sauvegardes, pièces jointes, traductions).
+  dates et de séries, temps de pratique, tempo cible, rappels, rapport, sauvegardes, pièces jointes,
+  traductions — dont la présence de chaque clé `t('...')` utilisée dans le code).
 - `test/app.test.jsx` : l'application complète est rendue dans jsdom, avec une base IndexedDB
   en mémoire (`fake-indexeddb`). Les scénarios fixent la date au lundi 12 octobre 2026 et
   l'interface est en anglais (langue par défaut). La configuration commune est dans
