@@ -132,6 +132,9 @@ src/
 └── test/                   # Configuration et tests de parcours de l'application
 ```
 
+Le [guide du code source](src/README.md) détaille l'architecture, les données stockées,
+les formats de fichiers et les conventions.
+
 ## Tests
 
 ```bash
