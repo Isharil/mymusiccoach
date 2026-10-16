@@ -202,6 +202,37 @@ describe('MyMusicCoach', () => {
     expect(exercises[2]).toMatchObject({ id: 3, name: 'Shared exercise', tempoHistory: [] });
   });
 
+  it('restaure une sauvegarde après confirmation', async () => {
+    const { user, container } = await startApp();
+    await user.click(nav('Settings'));
+    const input = container.querySelector('input[type="file"][accept=".json"]');
+    const backupFile = (content) => new File([JSON.stringify(content)], 'backup.json', { type: 'application/json' });
+
+    // Un fichier de session envoyé ici par erreur est refusé avec une explication
+    await user.upload(input, backupFile({ version: '1.0', workout: { name: 'R' }, exercises: [] }));
+    expect(await screen.findByText(/This file contains a shared session/)).toBeTruthy();
+
+    const backup = {
+      appName: 'MyMusicCoach',
+      formatVersion: 2,
+      exportDate: '2026-10-01T09:00:00.000Z',
+      exercises: JSON.stringify([{ id: 7, name: 'Restored exercise', tempoHistory: [] }]),
+      sessionHistory: JSON.stringify([{ id: 1, date: '2026-09-30', workoutId: 1 }]),
+    };
+
+    // Annulation : rien n'est écrit
+    window.confirm.mockReturnValueOnce(false);
+    await user.upload(input, backupFile(backup));
+    await waitFor(() => expect(window.confirm).toHaveBeenCalledTimes(1));
+    expect(window.confirm.mock.calls[0][0]).toMatch(/Exercises: 1 · Sessions: 0 · History: 1/);
+    expect((await get('mmc_exercises')).map(e => e.id)).toEqual([1, 2]);
+
+    // Confirmation : les données sont remplacées
+    await user.upload(input, backupFile(backup));
+    expect(await screen.findByText(/Data imported/)).toBeTruthy();
+    await stored('mmc_exercises', (list) => list?.length === 1 && list[0].name === 'Restored exercise');
+  });
+
   it('change la langue', async () => {
     const { user } = await startApp();
 

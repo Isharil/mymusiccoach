@@ -13,6 +13,15 @@ import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE
 import { getCycleWeekNumber, getDayKey, getMondayOf } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { buildProgressReport } from './utils/progressReport';
+import { parseBackup } from './utils/backup';
+
+// Erreur de lecture d'une sauvegarde (utils/backup.js) -> message affiché
+const BACKUP_ERROR_MESSAGES = {
+  invalid: 'messages.backupInvalid',
+  sessionFile: 'messages.backupIsSessionFile',
+  notABackup: 'messages.backupNotABackup',
+  newerVersion: 'messages.backupNewerVersion',
+};
 import { AppContext } from './context/AppContext';
 import HomePage from './components/pages/HomePage';
 import ScheduleModal from './components/modals/ScheduleModal';
@@ -176,7 +185,7 @@ const MyMusicCoach = () => {
   // Fonctions d'export/import des données
   const handleExportData = async () => {
     try {
-      const dataToExport = await exportAppData();
+      const dataToExport = await exportAppData(__APP_VERSION__);
       if (!dataToExport) {
         showToast(t('messages.exportPrepError'), 'error');
         return;
@@ -189,24 +198,37 @@ const MyMusicCoach = () => {
     }
   };
 
+  // Restauration d'une sauvegarde : vérification complète, puis confirmation avant de remplacer les données
   const handleImportData = (event) => {
     const file = event.target.files[0];
+    // Permet de re-sélectionner le même fichier ensuite
+    event.target.value = '';
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async (e) => {
+      const backup = parseBackup(e.target.result);
+      if (!backup.ok) {
+        if (backup.key) console.error(`Sauvegarde refusée : donnée "${backup.key}" invalide`);
+        showToast(t(BACKUP_ERROR_MESSAGES[backup.error]), 'error', 6000);
+        return;
+      }
+
+      const { exportDate, exercises: exerciseCount, workouts: workoutCount, sessions } = backup.summary;
+      const date = exportDate
+        ? new Date(exportDate).toLocaleDateString(settings.language || 'en', { dateStyle: 'long' })
+        : '?';
+      if (!window.confirm(t('messages.backupConfirm', { date, exercises: exerciseCount, workouts: workoutCount, sessions }))) {
+        return;
+      }
+
       try {
-        const result = await importAppData(e.target.result);
-        if (result.success) {
-          showToast(t('messages.dataImported'), 'success');
-          setTimeout(() => window.location.reload(), 1500);
-        } else {
-          console.error(result.message);
-          showToast(t('messages.invalidFile'), 'error');
-        }
+        await importAppData(backup.values);
+        showToast(t('messages.dataImported'), 'success');
+        setTimeout(() => window.location.reload(), 1500);
       } catch (error) {
-        showToast(t('messages.invalidFile'), 'error');
         console.error(error);
+        showToast(t('messages.importError'), 'error');
       }
     };
     reader.readAsText(file);

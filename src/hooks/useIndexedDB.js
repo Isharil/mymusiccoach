@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { get, set, del } from 'idb-keyval';
+import { BACKUP_KEYS, createBackup } from '../utils/backup';
 
 // Liste des clés utilisées par l'application
 const APP_KEYS = [
@@ -171,45 +172,36 @@ export async function clearAppStorage() {
 }
 
 /**
- * Fonction pour exporter toutes les données de l'application
+ * Exporte toutes les données de l'application (format décrit dans utils/backup.js)
+ * @returns {Promise<string|null>} contenu du fichier, ou null en cas d'erreur
  */
-export async function exportAppData() {
+export async function exportAppData(appVersion) {
   try {
-    const data = {
-      exportDate: new Date().toISOString()
-    };
-
-    for (const key of APP_KEYS) {
-      const value = await get(key);
-      if (value !== undefined) {
-        // Stocker directement la valeur (déjà en JSON)
-        data[key.replace('mmc_', '')] = JSON.stringify(value);
-      }
+    const values = {};
+    for (const key of BACKUP_KEYS) {
+      values[key] = await get(`mmc_${key}`);
     }
-
-    return JSON.stringify(data, null, 2);
+    return createBackup(values, { appVersion });
   } catch (error) {
     console.error('Erreur lors de l\'export:', error);
     return null;
   }
 }
 
+// Session en cours : effacée si la sauvegarde n'en contient pas, pour ne pas
+// mélanger une session de l'appareil avec les données restaurées
+const TRANSIENT_KEYS = ['activeWorkout', 'workoutProgress', 'currentTempo', 'exerciseNotes'];
+
 /**
- * Fonction pour importer des données dans l'application
+ * Écrit dans IndexedDB les données d'une sauvegarde déjà vérifiée par parseBackup.
+ * Les données absentes de la sauvegarde sont conservées, sauf la session en cours.
  */
-export async function importAppData(jsonString) {
-  try {
-    const data = JSON.parse(jsonString);
-
-    for (const key of Object.keys(data)) {
-      if (key !== 'exportDate' && data[key]) {
-        const fullKey = key.startsWith('mmc_') ? key : `mmc_${key}`;
-        await set(fullKey, JSON.parse(data[key]));
-      }
+export async function importAppData(values) {
+  for (const key of BACKUP_KEYS) {
+    if (key in values) {
+      await set(`mmc_${key}`, values[key]);
+    } else if (TRANSIENT_KEYS.includes(key)) {
+      await del(`mmc_${key}`);
     }
-
-    return { success: true, message: 'Données importées avec succès' };
-  } catch (error) {
-    return { success: false, message: `Erreur d'importation: ${error.message}` };
   }
 }

@@ -406,7 +406,12 @@
     "exportPrepError": "Error al preparar los datos",
     "workoutExportError": "Error al exportar: {error}",
     "notificationsHello": "¡Hola {name}! Las notificaciones están activadas.",
-    "dailyReminderTitle": "MyMusicCoach - Sesión del día"
+    "dailyReminderTitle": "MyMusicCoach - Sesión del día",
+    "backupInvalid": "Copia de seguridad ilegible o dañada: no se ha modificado ningún dato.",
+    "backupIsSessionFile": "Este archivo contiene una sesión compartida. Impórtalo desde Biblioteca > Sesiones.",
+    "backupNotABackup": "Este archivo no es una copia de seguridad de MyMusicCoach.",
+    "backupNewerVersion": "Esta copia de seguridad procede de una versión más reciente de la app. Actualiza MyMusicCoach para importarla.",
+    "backupConfirm": "Copia del {date}\nEjercicios: {exercises} · Sesiones: {workouts} · Historial: {sessions}\n\nReemplazará tus datos actuales. ¿Continuar?"
   },
   "export": {
     "title": "Exportar archivo",
