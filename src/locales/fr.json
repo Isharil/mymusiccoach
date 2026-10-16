@@ -290,7 +290,6 @@
     "version": "Version",
     "privacyPolicy": "Politique de confidentialité",
     "resetFinalConfirm": "Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVeux-tu vraiment tout supprimer ?",
-    "buildDate": "Compilée le {date}",
     "versionMismatch": "Le code de l'app ({web}) ne correspond pas à la version Android installée ({native}). Lance « npm run android » puis réinstalle depuis Android Studio."
   },
   "onboarding": {

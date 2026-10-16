@@ -290,7 +290,6 @@
     "version": "Versión",
     "privacyPolicy": "Política de privacidad",
     "resetFinalConfirm": "Última confirmación: esta acción es IRREVERSIBLE.\n\n¿De verdad quieres borrarlo todo?",
-    "buildDate": "Compilada el {date}",
     "versionMismatch": "El código de la app ({web}) no coincide con la versión de Android instalada ({native}). Ejecuta «npm run android» y reinstala desde Android Studio."
   },
   "onboarding": {

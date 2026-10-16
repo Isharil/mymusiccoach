@@ -3608,21 +3608,9 @@ const MyMusicCoach = () => {
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{t('settings.about')}</h3>
             <div className="space-y-3">
-              <div className="flex items-start justify-between py-2 gap-4">
+              <div className="flex items-center justify-between py-2">
                 <span className="text-gray-600 dark:text-gray-400">{t('settings.version')}</span>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900 dark:text-gray-100">
-                    {__APP_VERSION__}
-                    {nativeAppInfo?.build && (
-                      <span className="text-gray-500 dark:text-gray-400 font-normal"> ({nativeAppInfo.build})</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('settings.buildDate', {
-                      date: new Date(__BUILD_DATE__).toLocaleString(settings.language || 'en', { dateStyle: 'medium', timeStyle: 'short' })
-                    })}
-                  </p>
-                </div>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{__APP_VERSION__}</span>
               </div>
               {/* Le code web embarqué ne correspond pas à l'app installée : build/sync oublié */}
               {nativeAppInfo?.version && nativeAppInfo.version !== __APP_VERSION__ && (

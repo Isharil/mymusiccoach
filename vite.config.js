@@ -11,6 +11,5 @@ export default defineConfig({
   base: './',
   define: {
     __APP_VERSION__: JSON.stringify(version),
-    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
 })
