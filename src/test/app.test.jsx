@@ -97,6 +97,39 @@ describe('MyMusicCoach', () => {
     expect(screen.getByText('Beginner routine')).toBeTruthy();
   });
 
+  it('enregistre le temps de pratique et le compare à l\'objectif de la semaine', async () => {
+    const { user } = await startApp();
+
+    await user.click(screen.getByRole('button', { name: 'Start session' }));
+    for (const index of [0, 1]) {
+      await user.click(screen.getAllByRole('button', { name: 'View details' })[index]);
+      await user.click(screen.getByRole('button', { name: 'Validate exercise' }));
+    }
+
+    // Durée mesurée (la date est figée dans les tests : 1 min), corrigée à la main
+    const duration = screen.getByLabelText('Practice time');
+    expect(duration.value).toBe('1');
+    await user.clear(duration);
+    await user.type(duration, '25');
+    await user.click(screen.getByRole('button', { name: 'Finish session' }));
+
+    const history = await stored('mmc_sessionHistory', (h) => h?.length === 1);
+    expect(history[0].durationMinutes).toBe(25);
+
+    // Objectif hebdomadaire
+    await user.click(nav('Settings'));
+    await user.type(screen.getByLabelText(/Weekly practice goal/), '60');
+    await user.click(nav('Home'));
+    expect(screen.getByText('/ 1 h', { exact: false })).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Weekly goal' }).getAttribute('aria-valuenow')).toBe('25');
+
+    // Stats : durée dans l'historique et répartition par catégorie (exercices de 5 et 8 min)
+    await user.click(nav('Stats'));
+    expect(screen.getByText('⏱ 25 min')).toBeTruthy();
+    expect(screen.getByText('Breakdown over 28 days')).toBeTruthy();
+    expect(screen.getAllByText('Technique').length).toBeGreaterThan(0);
+  });
+
   it('crée un exercice puis une session, et la programme dans le planning', async () => {
     const { user, container } = await startApp();
     const field = (name) => container.querySelector(`[name="${name}"]`);

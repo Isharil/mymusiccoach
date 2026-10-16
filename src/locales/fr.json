@@ -290,7 +290,9 @@
     "version": "Version",
     "privacyPolicy": "Politique de confidentialité",
     "resetFinalConfirm": "Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVeux-tu vraiment tout supprimer ?",
-    "versionMismatch": "Le code de l'app ({web}) ne correspond pas à la version Android installée ({native}). Lance « npm run android » puis réinstalle depuis Android Studio."
+    "versionMismatch": "Le code de l'app ({web}) ne correspond pas à la version Android installée ({native}). Lance « npm run android » puis réinstalle depuis Android Studio.",
+    "weeklyGoal": "Objectif de pratique hebdomadaire",
+    "weeklyGoalHint": "En minutes, du lundi au dimanche. Laisse vide pour ne pas fixer d'objectif."
   },
   "onboarding": {
     "step1Title": "Bienvenue dans MyMusicCoach !",
@@ -362,7 +364,8 @@
     "theory": "Théorie",
     "pieces": "Morceaux",
     "improvisation": "Improvisation",
-    "earTraining": "Oreille"
+    "earTraining": "Oreille",
+    "other": "Autre"
   },
   "difficulties": {
     "beginner": "Débutant",
@@ -477,7 +480,8 @@
     "unknownExercise": "Exercice inconnu",
     "footer1": "Rapport généré par MyMusicCoach - Application de coaching musical",
     "footer2": "Ce rapport peut être partagé avec ton professeur pour suivre ta progression.",
-    "filePrefix": "Rapport"
+    "filePrefix": "Rapport",
+    "colDuration": "Durée"
   },
   "common": {
     "yes": "Oui",
@@ -542,5 +546,17 @@
     "s6Body": "Tu peux supprimer toutes tes données à tout moment avec l'option « Réinitialiser l'application » dans les réglages.",
     "s7Title": "7. Contact",
     "s7Body": "Pour toute question sur cette politique, écris-nous à :"
+  },
+  "practice": {
+    "title": "Temps de pratique",
+    "thisWeek": "Cette semaine",
+    "last28Days": "28 jours",
+    "weeklyGoal": "Objectif de la semaine",
+    "goalReached": "Objectif de la semaine atteint ! 🎉",
+    "noGoal": "Fixe un objectif hebdomadaire dans les Réglages pour suivre ta progression.",
+    "byCategory": "Répartition sur 28 jours",
+    "noData": "Termine une session pour voir ton temps de pratique.",
+    "sessionDuration": "Durée de pratique",
+    "measuredHint": "Mesurée depuis le début de la session. Corrige-la si tu as fait une pause."
   }
 }

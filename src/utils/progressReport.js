@@ -1,4 +1,5 @@
 import { escapeHtml } from './html';
+import { formatMinutes } from './practiceTime';
 import { normalizeDate, parseLocalDate, toLocalDateStr } from './practiceStats';
 
 /**
@@ -24,6 +25,7 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
   // Calculer les stats pour la période
   const sessionsCount = filteredSessions.length;
   const uniqueDaysWithPractice = new Set(filteredSessions.map(s => s.date)).size;
+  const periodMinutes = filteredSessions.reduce((sum, s) => sum + (Number(s.durationMinutes) || 0), 0);
 
   // Calculer le meilleur streak sur la période sélectionnée
   const periodDays = weeks * 7;
@@ -67,7 +69,8 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
     stats: {
       sessionsCount,
       streak: bestStreakInPeriod,
-      daysWithPractice: uniqueDaysWithPractice
+      daysWithPractice: uniqueDaysWithPractice,
+      minutes: periodMinutes
     },
     recentSessions: filteredSessions,
     exercisesWithProgress: exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0)
@@ -140,7 +143,7 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
         }
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
           gap: 20px;
           margin: 20px 0;
         }
@@ -294,6 +297,10 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
             <h3>${reportData.stats.daysWithPractice}</h3>
             <p>${tr('report.daysWithPractice')}</p>
           </div>
+          <div class="stat-card">
+            <h3>${escapeHtml(formatMinutes(reportData.stats.minutes))}</h3>
+            <p>${tr('practice.title')}</p>
+          </div>
         </div>
       </div>
 
@@ -307,6 +314,7 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
               <th>${tr('report.colCompleted')}</th>
               <th>${tr('report.colSkipped')}</th>
               <th>${tr('report.colTotal')}</th>
+              <th>${tr('report.colDuration')}</th>
             </tr>
           </thead>
           <tbody>
@@ -317,6 +325,7 @@ export const buildProgressReport = ({ weeks, sessionHistory, exercises, settings
                 <td><span class="badge badge-success">${Number(session.completed) || 0}</span></td>
                 <td>${session.skipped > 0 ? `<span class="badge badge-warning">${Number(session.skipped)}</span>` : '-'}</td>
                 <td>${Number(session.total) || 0}</td>
+                <td>${session.durationMinutes ? escapeHtml(formatMinutes(session.durationMinutes)) : '-'}</td>
               </tr>
             `).join('')}
           </tbody>

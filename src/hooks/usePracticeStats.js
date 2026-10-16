@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { BADGES } from '../constants/appData';
 import { computeStreaks, getScheduledWorkoutIds, normalizeDate, parseLocalDate, toLocalDateStr } from '../utils/practiceStats';
+import { practiceTimeStats } from '../utils/practiceTime';
 
 // Statistiques de pratique (séries, sessions récentes) et badges
-export const usePracticeStats = ({ sessionHistory, weeklySchedule, workouts, cycleStartDate, t }) => {
+export const usePracticeStats = ({ sessionHistory, weeklySchedule, workouts, exercises, cycleStartDate, t }) => {
   // Calcul des statistiques réelles (memoïsé pour éviter les recalculs)
   const stats = useMemo(() => {
     const now = new Date();
@@ -63,6 +64,7 @@ export const usePracticeStats = ({ sessionHistory, weeklySchedule, workouts, cyc
     }
 
     return {
+      ...practiceTimeStats({ sessionHistory, exercises, today }), // minutes de pratique
       last7Days: sessionsLast7Days,
       streak: currentStreak, // Streak actuel pour l'accueil
       bestStreak, // Meilleure série de tous les temps (badges acquis définitivement)
@@ -70,7 +72,7 @@ export const usePracticeStats = ({ sessionHistory, weeklySchedule, workouts, cyc
       last28Days: sessionsLast28Days,
       totalSessions: sessionHistory.length // Gardé pour les badges
     };
-  }, [sessionHistory, weeklySchedule, workouts, cycleStartDate]);
+  }, [sessionHistory, weeklySchedule, workouts, exercises, cycleStartDate]);
 
   // Helper pour obtenir le nom et la description traduits d'un badge
   const getBadgeName = (badge) => t(badge.nameKey);

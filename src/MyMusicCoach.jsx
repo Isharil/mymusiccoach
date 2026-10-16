@@ -13,6 +13,7 @@ import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE
 import { getCycleWeekNumber, getDayKey, getMondayOf } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { buildProgressReport } from './utils/progressReport';
+import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
 import { parseBackup } from './utils/backup';
 import {
   MAX_ATTACHMENT_MB, MAX_ATTACHMENT_SIZE, deleteAttachment, deleteOrphanAttachments, loadAttachment,
@@ -67,6 +68,7 @@ const MyMusicCoach = () => {
   const [editingWorkout, setEditingWorkout] = useState(null);
   const [editingSession, setEditingSession] = useState(null);
   const [editingSessionProgress, setEditingSessionProgress] = useState({});
+  const [editingSessionDuration, setEditingSessionDuration] = useState(''); // minutes saisies (texte)
   const [showExerciseMenu, setShowExerciseMenu] = useState(false);
   const [newExerciseType, setNewExerciseType] = useState('none');
   const [editingExercise, setEditingExercise] = useState(null);
@@ -187,7 +189,7 @@ const MyMusicCoach = () => {
 
   // Statistiques et badges
   const { stats, earnedBadges, nextBadge, getBadgeName, getBadgeDescription } = usePracticeStats({
-    sessionHistory, weeklySchedule, workouts, cycleStartDate: settings.cycleStartDate, t
+    sessionHistory, weeklySchedule, workouts, exercises, cycleStartDate: settings.cycleStartDate, t
   });
 
   // Notifications locales (Android)
@@ -342,7 +344,9 @@ const MyMusicCoach = () => {
     setSelectedExercise(updatedExercise);
   };
 
-  const saveSession = (workout) => {
+  // durationMinutes : durée saisie à la fin de la session ; à défaut, temps écoulé depuis le début
+  // (ou durée prévue des exercices validés pour une session commencée avant la mesure du temps)
+  const saveSession = (workout, durationMinutes = null) => {
     const now = new Date();
     // Utiliser la date locale (pas UTC) pour éviter les décalages de fuseau horaire
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -378,6 +382,10 @@ const MyMusicCoach = () => {
       skipped,
       total: workoutExercises.length,
       exerciseProgress,
+      durationMinutes: durationMinutes
+        ?? (workout.startedAt
+          ? elapsedMinutes(workout.startedAt)
+          : plannedMinutes(Object.keys(exerciseProgress).filter(id => exerciseProgress[id] === 'completed').map(Number), exercises)),
       notes: sessionNotes // Notes/observations de l'élève
     };
 
@@ -423,6 +431,7 @@ const MyMusicCoach = () => {
 
     setEditingSession(session);
     setEditingSessionProgress(progress);
+    setEditingSessionDuration(session.durationMinutes ? String(session.durationMinutes) : '');
   };
 
   // Fonction pour sauvegarder les modifications d'une session
@@ -443,7 +452,9 @@ const MyMusicCoach = () => {
           ...session,
           completed,
           skipped,
-          exerciseProgress: { ...editingSessionProgress }
+          exerciseProgress: { ...editingSessionProgress },
+          // Durée modifiée ; si le champ est vide ou invalide, on garde l'ancienne
+          durationMinutes: parseMinutesInput(editingSessionDuration) ?? session.durationMinutes
         };
       }
       return session;
@@ -456,7 +467,8 @@ const MyMusicCoach = () => {
 
   // Fonction pour démarrer une session avec notification
   const startWorkout = (workout) => {
-    setActiveWorkout(workout);
+    // L'heure de début sert à mesurer le temps de pratique
+    setActiveWorkout({ ...workout, startedAt: Date.now() });
 
     // Notification de début de session (uniquement sur mobile natif)
     sendImmediateNotification(
@@ -763,7 +775,9 @@ const MyMusicCoach = () => {
     showExerciseMenu, showToast, showTrash, startEditSession, startTimer, startWorkout, stats,
     stopTimer, t, timerActive, timerFinished, timerPaused, timerSeconds, toasts, translateCategory,
     translateDifficulty, updateExercise, updateSession, uploadedFile, viewingWeek, weeklySchedule, workoutName,
-    workoutProgress, workouts
+    workoutProgress, workouts,
+    // Temps de pratique
+    editingSessionDuration, setEditingSessionDuration, formatMinutes
   };
 
   return (

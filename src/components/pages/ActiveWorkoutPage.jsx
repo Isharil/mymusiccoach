@@ -1,11 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Play, Check, Clock, Activity, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import DurationField from '../DurationField';
+import { elapsedMinutes, parseMinutesInput } from '../../utils/practiceTime';
 
 const ActiveWorkoutPage = () => {
   const {
     activeWorkout, exerciseName, exercises, formatSets, saveSession, setActiveWorkout,
     setSelectedExercise, t, workoutName, workoutProgress
   } = useApp();
+
+  // Durée de pratique : mesurée depuis le début de la session tant qu'elle n'a pas été modifiée
+  const [now, setNow] = useState(() => Date.now());
+  const [durationInput, setDurationInput] = useState(null); // null = valeur mesurée
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+  const measuredMinutes = activeWorkout.startedAt ? elapsedMinutes(activeWorkout.startedAt, now) : null;
+  const durationValue = durationInput ?? (measuredMinutes ? String(measuredMinutes) : '');
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-800 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto" style={{paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)'}}>
@@ -111,8 +124,19 @@ const ActiveWorkoutPage = () => {
                   {t('workout.exercisesHandled', { done: handledCount, total: activeWorkout.exercises.length })}
                 </p>
               )}
+              {allExercisesHandled && (
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                  <DurationField
+                    id="session-duration"
+                    value={durationValue}
+                    onChange={setDurationInput}
+                    label={t('practice.sessionDuration')}
+                    hint={measuredMinutes ? t('practice.measuredHint') : null}
+                  />
+                </div>
+              )}
               <button
-                onClick={() => saveSession(activeWorkout)}
+                onClick={() => saveSession(activeWorkout, parseMinutesInput(durationValue))}
                 disabled={!allExercisesHandled}
                 className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all ${
                   allExercisesHandled

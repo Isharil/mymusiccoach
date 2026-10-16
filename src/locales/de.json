@@ -290,7 +290,9 @@
     "version": "Version",
     "privacyPolicy": "Datenschutzerklärung",
     "resetFinalConfirm": "Letzte Bestätigung: Diese Aktion kann NICHT rückgängig gemacht werden.\n\nMöchtest du wirklich alles löschen?",
-    "versionMismatch": "Der App-Code ({web}) passt nicht zur installierten Android-Version ({native}). Führe „npm run android“ aus und installiere die App über Android Studio neu."
+    "versionMismatch": "Der App-Code ({web}) passt nicht zur installierten Android-Version ({native}). Führe „npm run android“ aus und installiere die App über Android Studio neu.",
+    "weeklyGoal": "Wöchentliches Übungsziel",
+    "weeklyGoalHint": "In Minuten, von Montag bis Sonntag. Leer lassen für kein Ziel."
   },
   "onboarding": {
     "step1Title": "Willkommen bei MyMusicCoach!",
@@ -362,7 +364,8 @@
     "theory": "Theorie",
     "pieces": "Stücke",
     "improvisation": "Improvisation",
-    "earTraining": "Gehörbildung"
+    "earTraining": "Gehörbildung",
+    "other": "Sonstiges"
   },
   "difficulties": {
     "beginner": "Anfänger",
@@ -477,7 +480,8 @@
     "unknownExercise": "Unbekannte Übung",
     "footer1": "Bericht erstellt mit MyMusicCoach - Musik-Coaching-App",
     "footer2": "Du kannst diesen Bericht mit deinem Lehrer teilen, um deinen Fortschritt zu verfolgen.",
-    "filePrefix": "Bericht"
+    "filePrefix": "Bericht",
+    "colDuration": "Dauer"
   },
   "common": {
     "yes": "Ja",
@@ -542,5 +546,17 @@
     "s6Body": "Du kannst alle deine Daten jederzeit über die Option „App zurücksetzen“ in den Einstellungen löschen.",
     "s7Title": "7. Kontakt",
     "s7Body": "Bei Fragen zu dieser Erklärung schreib uns an:"
+  },
+  "practice": {
+    "title": "Übungszeit",
+    "thisWeek": "Diese Woche",
+    "last28Days": "28 Tage",
+    "weeklyGoal": "Wochenziel",
+    "goalReached": "Wochenziel erreicht! 🎉",
+    "noGoal": "Lege in den Einstellungen ein Wochenziel fest, um deinen Fortschritt zu verfolgen.",
+    "byCategory": "Verteilung über 28 Tage",
+    "noData": "Beende eine Session, um deine Übungszeit zu sehen.",
+    "sessionDuration": "Übungszeit",
+    "measuredHint": "Seit Beginn der Session gemessen. Korrigiere sie, wenn du eine Pause gemacht hast."
   }
 }

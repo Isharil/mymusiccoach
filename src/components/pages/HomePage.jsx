@@ -1,5 +1,6 @@
 import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import PracticeTimeSummary from '../PracticeTimeSummary';
 
 const HomePage = () => {
   const {
@@ -300,6 +301,9 @@ const HomePage = () => {
           <p className="text-xs text-gray-600 dark:text-gray-400">{t('home.sessionsLast28Days')}</p>
         </button>
       </div>
+
+      {/* Temps de pratique de la semaine */}
+      <PracticeTimeSummary onClick={() => setActiveTab('stats')} />
 
       {/* Badges et progression */}
       {(earnedBadges.length > 0 || nextBadge) && (

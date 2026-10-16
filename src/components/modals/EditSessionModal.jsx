@@ -1,10 +1,12 @@
 import { Play, Check, Clock, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import DurationField from '../DurationField';
 
 const EditSessionModal = () => {
   const {
-    editingSession, editingSessionProgress, exerciseName, exercises, formatDisplayDate, formatSets,
-    setEditingSession, setEditingSessionProgress, setSelectedExercise, t, updateSession, workouts
+    editingSession, editingSessionDuration, editingSessionProgress, exerciseName, exercises,
+    formatDisplayDate, formatSets, setEditingSession, setEditingSessionDuration,
+    setEditingSessionProgress, setSelectedExercise, t, updateSession, workouts
   } = useApp();
 
   return (
@@ -93,6 +95,13 @@ const EditSessionModal = () => {
               );
             });
           })()}
+
+          <DurationField
+            id="edit-session-duration"
+            value={editingSessionDuration}
+            onChange={setEditingSessionDuration}
+            label={t('practice.sessionDuration')}
+          />
 
           <button
             onClick={updateSession}

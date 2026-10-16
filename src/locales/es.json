@@ -290,7 +290,9 @@
     "version": "Versión",
     "privacyPolicy": "Política de privacidad",
     "resetFinalConfirm": "Última confirmación: esta acción es IRREVERSIBLE.\n\n¿De verdad quieres borrarlo todo?",
-    "versionMismatch": "El código de la app ({web}) no coincide con la versión de Android instalada ({native}). Ejecuta «npm run android» y reinstala desde Android Studio."
+    "versionMismatch": "El código de la app ({web}) no coincide con la versión de Android instalada ({native}). Ejecuta «npm run android» y reinstala desde Android Studio.",
+    "weeklyGoal": "Objetivo de práctica semanal",
+    "weeklyGoalHint": "En minutos, de lunes a domingo. Déjalo vacío para no fijar objetivo."
   },
   "onboarding": {
     "step1Title": "Bienvenido a MyMusicCoach!",
@@ -362,7 +364,8 @@
     "theory": "Teoría",
     "pieces": "Piezas",
     "improvisation": "Improvisación",
-    "earTraining": "Entrenamiento auditivo"
+    "earTraining": "Entrenamiento auditivo",
+    "other": "Otros"
   },
   "difficulties": {
     "beginner": "Principiante",
@@ -477,7 +480,8 @@
     "unknownExercise": "Ejercicio desconocido",
     "footer1": "Informe generado por MyMusicCoach - App de coaching musical",
     "footer2": "Puedes compartir este informe con tu profesor para seguir tu progreso.",
-    "filePrefix": "Informe"
+    "filePrefix": "Informe",
+    "colDuration": "Duración"
   },
   "common": {
     "yes": "Sí",
@@ -542,5 +546,17 @@
     "s6Body": "Puedes borrar todos tus datos en cualquier momento con la opción «Restablecer la app» en los ajustes.",
     "s7Title": "7. Contacto",
     "s7Body": "Para cualquier pregunta sobre esta política, escríbenos a:"
+  },
+  "practice": {
+    "title": "Tiempo de práctica",
+    "thisWeek": "Esta semana",
+    "last28Days": "28 días",
+    "weeklyGoal": "Objetivo semanal",
+    "goalReached": "¡Objetivo semanal alcanzado! 🎉",
+    "noGoal": "Fija un objetivo semanal en Ajustes para seguir tu progreso.",
+    "byCategory": "Reparto en 28 días",
+    "noData": "Termina una sesión para ver tu tiempo de práctica.",
+    "sessionDuration": "Tiempo de práctica",
+    "measuredHint": "Medido desde el inicio de la sesión. Corrígelo si hiciste una pausa."
   }
 }

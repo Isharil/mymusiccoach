@@ -37,6 +37,26 @@ const SettingsPage = () => {
         </div>
 
         <div>
+          <label htmlFor="weekly-goal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">⏱️ {t('settings.weeklyGoal')}</label>
+          <div className="flex items-center gap-2">
+            <input
+              id="weekly-goal"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              max="10080"
+              step="15"
+              value={settings.weeklyGoalMinutes || ''}
+              onChange={(e) => setSettings({ ...settings, weeklyGoalMinutes: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+              placeholder="120"
+              className="w-28 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-center"
+            />
+            <span className="text-gray-600 dark:text-gray-400">min</span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('settings.weeklyGoalHint')}</p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📅 {t('settings.cycleStartDate')}</label>
           <input
             type="date"

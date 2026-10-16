@@ -1,10 +1,11 @@
 import { TrendingUp, FileText, Edit2, Award, ChevronRight, ChevronLeft } from 'lucide-react';
 import { BADGES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
+import PracticeTimeSummary from '../PracticeTimeSummary';
 
 const StatsPage = () => {
   const {
-    calendarMonth, calendarYear, earnedBadges, exerciseName, exercises, formatDisplayDate,
+    calendarMonth, calendarYear, earnedBadges, exerciseName, exercises, formatDisplayDate, formatMinutes,
     getBadgeDescription, getBadgeName, isDarkMode, sessionHistory, setCalendarMonth, setCalendarYear,
     setShowAllBadges, setShowAllHistory, setShowExportModal, settings, showAllHistory,
     startEditSession, stats, t
@@ -52,6 +53,9 @@ const StatsPage = () => {
           <p className="text-xs text-blue-900 dark:text-blue-300">{t('stats.sessionsLast28Days')}</p>
         </div>
       </div>
+
+      {/* Temps de pratique : semaine, objectif, répartition par catégorie */}
+      <PracticeTimeSummary detailed />
 
       {/* Calendrier de pratique */}
       {(() => {
@@ -248,7 +252,10 @@ const StatsPage = () => {
                   <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
-              <div className="flex gap-4 text-sm">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                {session.durationMinutes > 0 && (
+                  <span className="text-purple-600 dark:text-purple-400 font-medium">⏱ {formatMinutes(session.durationMinutes)}</span>
+                )}
                 <span className="text-green-600 dark:text-green-400 font-medium">
                   ✓ {session.completed} {session.completed > 1 ? t('stats.exercisesCompleted') : t('stats.exerciseCompleted')}
                 </span>

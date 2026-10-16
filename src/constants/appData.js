@@ -45,6 +45,7 @@ export const DEFAULT_SETTINGS = {
   language: "en",
   metronomeSound: "click",
   longTermGoal: "",
+  weeklyGoalMinutes: 0, // objectif de pratique hebdomadaire en minutes (0 = aucun)
   cycleStartDate: "",
   onboardingDone: false
 };
