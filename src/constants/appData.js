@@ -36,6 +36,9 @@ export const EXAMPLE_WORKOUT_KEYS = { 1: 'workout1', 2: 'workout2' };
 // Jours du planning, du lundi au dimanche (clés stockées)
 export const SCHEDULE_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
+// Réglages de l'accordeur (settings.tuner) : La de référence, transposition, nom des notes
+export const DEFAULT_TUNER_SETTINGS = { a4: 440, transposition: 'C', notation: 'auto' };
+
 export const DEFAULT_SETTINGS = {
   notifications: true,
   practiceReminder: "18:00",
@@ -46,6 +49,7 @@ export const DEFAULT_SETTINGS = {
   metronomeSound: "click",
   longTermGoal: "",
   weeklyGoalMinutes: 0, // objectif de pratique hebdomadaire en minutes (0 = aucun)
+  tuner: DEFAULT_TUNER_SETTINGS,
   cycleStartDate: "",
   onboardingDone: false
 };

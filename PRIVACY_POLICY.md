@@ -1,6 +1,6 @@
 # Privacy Policy – MyMusicCoach
 
-**Last updated:** February 9, 2026
+**Last updated:** October 17, 2026
 
 ## Introduction
 
@@ -42,6 +42,10 @@ You can delete all your data at any time from within the application by using th
 ## Notifications
 
 If you enable practice reminders, notifications are handled locally on your device. No notification data is sent to external servers.
+
+## Microphone
+
+The microphone (Android permission `RECORD_AUDIO`) is used only by the built-in tuner, and only after you turn the tuner on. Sound is analyzed in real time on your device to recognize the note being played. **Audio is never recorded, stored, or transmitted.** The microphone is released as soon as you stop the tuner, close it, or leave the application.
 
 ## Children's Privacy
 

@@ -127,8 +127,17 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
 { '<workoutId>-<exerciseId>': 'completed' | 'skipped' }
 ```
 
-Réglages notables : `weeklyGoalMinutes` (objectif de pratique hebdomadaire, 0 = aucun),
+Réglages notables : `tuner` (`{ a4, transposition, notation }`, voir `DEFAULT_TUNER_SETTINGS`), `weeklyGoalMinutes` (objectif de pratique hebdomadaire, 0 = aucun),
 `practiceReminder` (heure des rappels), `cycleStartDate` (lundi de la semaine 1 du planning).
+
+### Accordeur
+
+`hooks/useTuner.js` écoute le micro (sans annulation d'écho ni réduction de bruit, qui faussent la
+hauteur) et analyse le son environ 16 fois par seconde avec `utils/pitch.js` : algorithme YIN,
+conversion en note selon le La de référence, transposition (Si♭, Mi♭, Fa). Le micro est libéré à la
+fermeture de l'accordeur et quand l'app passe en arrière-plan. Le nom des notes vient de
+`tuner.noteNames` dans chaque langue ; `tuner.octaveOffset` vaut -1 en français et en italien
+(La3 = 440 Hz). Android : permissions `RECORD_AUDIO` et `MODIFY_AUDIO_SETTINGS` dans le manifeste.
 
 ### Rappels
 

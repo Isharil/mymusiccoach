@@ -535,7 +535,7 @@
     "workout2Name": "Blues improvisation"
   },
   "privacy": {
-    "updated": "Last updated: February 2026",
+    "updated": "Last updated: October 2026",
     "s1Title": "1. Data collection",
     "s1Body": "MyMusicCoach does **not collect any personal data** and does not send any information to external servers.",
     "s2Title": "2. Local storage",
@@ -550,10 +550,12 @@
     "s4Body": "No data is shared with third parties. The export feature creates a file that **only you control**.",
     "s5Title": "5. Notifications",
     "s5Body": "Reminders are handled locally on your device. No information is transmitted.",
-    "s6Title": "6. Data deletion",
+    "s6Title": "7. Data deletion",
     "s6Body": "You can delete all your data at any time with the \"Reset application\" option in the settings.",
-    "s7Title": "7. Contact",
-    "s7Body": "For any question about this policy, write to us at:"
+    "s7Title": "8. Contact",
+    "s7Body": "For any question about this policy, write to us at:",
+    "micTitle": "6. Microphone",
+    "micBody": "The microphone is only used by the tuner, when you turn it on. Sound is analyzed live on your device to recognize the note: it is **never recorded or sent**."
   },
   "practice": {
     "title": "Practice time",
@@ -581,5 +583,38 @@
     "save": "Save",
     "delete": "Delete this entry",
     "deleteConfirm": "Delete this practice from your history?"
+  },
+  "tuner": {
+    "title": "Tuner",
+    "homeDesc": "Every note, for every instrument",
+    "start": "Turn on microphone",
+    "privacyHint": "Sound is analyzed on your device: nothing is recorded or sent.",
+    "stop": "Stop",
+    "listening": "Play a note…",
+    "inTune": "In tune!",
+    "tooHigh": "Too high",
+    "tooLow": "Too low",
+    "centsUnit": "cents",
+    "soundingNote": "Concert pitch: {note} · {frequency} Hz",
+    "reference": "Reference A",
+    "referenceDown": "Lower the reference A",
+    "referenceUp": "Raise the reference A",
+    "transposition": "Instrument",
+    "transpositions": {
+      "C": "In C — piano, guitar, strings, voice, flute…",
+      "Bb": "In B♭ — trumpet, clarinet, tenor sax",
+      "Eb": "In E♭ — alto sax, baritone sax",
+      "F": "In F — horn"
+    },
+    "notation": "Note names",
+    "notationLanguage": "Based on language ({example}…)",
+    "notationLetters": "Letters (C, D, E…)",
+    "playReference": "Play {note} ({frequency} Hz)",
+    "stopReference": "Stop sound",
+    "denied": "Microphone access denied. Allow it in your phone settings (Apps > MyMusicCoach > Permissions), then try again.",
+    "unavailable": "The microphone isn't available on this device or browser.",
+    "error": "Can't use the microphone. Make sure no other app is using it, then try again.",
+    "noteNames": ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"],
+    "octaveOffset": "0"
   }
 }

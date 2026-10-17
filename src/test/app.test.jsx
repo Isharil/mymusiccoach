@@ -283,6 +283,80 @@ describe('MyMusicCoach', () => {
     expect(screen.queryByText('Chords')).toBeNull();
   });
 
+  describe('accordeur', () => {
+    // Micro simulé : joue en continu une note de fréquence connue
+    const installFakeMicrophone = ({ frequency = 440, error = null } = {}) => {
+      const sampleRate = 48000;
+      class FakeAudioContext {
+        sampleRate = sampleRate;
+        destination = {};
+        createAnalyser() {
+          return {
+            fftSize: 2048,
+            getFloatTimeDomainData(buffer) {
+              for (let i = 0; i < buffer.length; i++) buffer[i] = 0.5 * Math.sin(2 * Math.PI * frequency * i / sampleRate);
+            },
+          };
+        }
+        createMediaStreamSource() { return { connect() {} }; }
+        createOscillator() { return { frequency: { value: 0 }, connect: (node) => node, start() {}, stop() {} }; }
+        createGain() { return { gain: { value: 0 }, connect() {} }; }
+        close() { return Promise.resolve(); }
+      }
+      const track = { stop: vi.fn() };
+      const getUserMedia = error
+        ? vi.fn().mockRejectedValue(Object.assign(new Error('refusé'), { name: error }))
+        : vi.fn().mockResolvedValue({ getTracks: () => [track] });
+      window.AudioContext = FakeAudioContext;
+      Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
+      return { track, getUserMedia };
+    };
+
+    afterEach(() => {
+      delete window.AudioContext;
+      delete navigator.mediaDevices;
+    });
+
+    it('reconnaît la note jouée, gère la transposition et libère le micro', async () => {
+      const { track, getUserMedia } = installFakeMicrophone({ frequency: 440 });
+      const { user } = await startApp();
+
+      await user.click(screen.getByRole('button', { name: /Tuner/ }));
+      await user.click(screen.getByRole('button', { name: /Turn on microphone/ }));
+
+      expect(await screen.findByText('In tune!')).toBeTruthy();
+      expect(screen.getByText('A')).toBeTruthy();
+      expect(screen.getByText('440.0 Hz')).toBeTruthy();
+      // Son brut : sans traitements qui faussent la hauteur
+      expect(getUserMedia.mock.calls[0][0].audio).toMatchObject({ echoCancellation: false, noiseSuppression: false });
+
+      // Trompette en Si♭ : le La réel s'écrit Si
+      await user.selectOptions(screen.getByLabelText('Instrument'), 'Bb');
+      expect(await screen.findByText('B')).toBeTruthy();
+      expect(screen.getByText('Concert pitch: A4 · 440.0 Hz')).toBeTruthy();
+
+      // Diapason à 442 Hz : le même son devient trop bas
+      await user.click(screen.getByRole('button', { name: 'Raise the reference A' }));
+      await user.click(screen.getByRole('button', { name: 'Raise the reference A' }));
+      expect(await screen.findByText('Too low (-8 cents)')).toBeTruthy();
+      await stored('mmc_settings', (s) => s?.tuner?.a4 === 442 && s.tuner.transposition === 'Bb');
+
+      // La fermeture libère le micro
+      await user.click(within(screen.getByRole('dialog', { name: 'Tuner' })).getByRole('button', { name: 'Close' }));
+      expect(track.stop).toHaveBeenCalled();
+      expect(screen.queryByRole('dialog', { name: 'Tuner' })).toBeNull();
+    });
+
+    it("explique quoi faire si l'accès au micro est refusé", async () => {
+      installFakeMicrophone({ error: 'NotAllowedError' });
+      const { user } = await startApp();
+
+      await user.click(screen.getByRole('button', { name: /Tuner/ }));
+      await user.click(screen.getByRole('button', { name: /Turn on microphone/ }));
+      expect((await screen.findByRole('alert')).textContent).toMatch(/Microphone access denied/);
+    });
+  });
+
   it('met un exercice à la corbeille puis le restaure', async () => {
     const { user } = await startApp();
 

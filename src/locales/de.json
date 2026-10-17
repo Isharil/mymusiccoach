@@ -535,7 +535,7 @@
     "workout2Name": "Blues-Improvisation"
   },
   "privacy": {
-    "updated": "Zuletzt aktualisiert: Februar 2026",
+    "updated": "Zuletzt aktualisiert: Oktober 2026",
     "s1Title": "1. Erhobene Daten",
     "s1Body": "MyMusicCoach erhebt **keine personenbezogenen Daten** und sendet keine Informationen an externe Server.",
     "s2Title": "2. Lokale Speicherung",
@@ -550,10 +550,12 @@
     "s4Body": "Es werden keine Daten an Dritte weitergegeben. Die Exportfunktion erstellt eine Datei, die **nur du kontrollierst**.",
     "s5Title": "5. Benachrichtigungen",
     "s5Body": "Erinnerungen werden lokal auf deinem Gerät verwaltet. Es werden keine Informationen übertragen.",
-    "s6Title": "6. Löschen der Daten",
+    "s6Title": "7. Löschen der Daten",
     "s6Body": "Du kannst alle deine Daten jederzeit über die Option „App zurücksetzen“ in den Einstellungen löschen.",
-    "s7Title": "7. Kontakt",
-    "s7Body": "Bei Fragen zu dieser Erklärung schreib uns an:"
+    "s7Title": "8. Kontakt",
+    "s7Body": "Bei Fragen zu dieser Erklärung schreib uns an:",
+    "micTitle": "6. Mikrofon",
+    "micBody": "Das Mikrofon wird nur vom Stimmgerät verwendet, wenn du es aktivierst. Der Klang wird live auf deinem Gerät analysiert, um den Ton zu erkennen: Er wird **nie aufgenommen oder gesendet**."
   },
   "practice": {
     "title": "Übungszeit",
@@ -581,5 +583,38 @@
     "save": "Speichern",
     "delete": "Diesen Eintrag löschen",
     "deleteConfirm": "Dieses Üben aus dem Verlauf löschen?"
+  },
+  "tuner": {
+    "title": "Stimmgerät",
+    "homeDesc": "Alle Töne, für alle Instrumente",
+    "start": "Mikrofon aktivieren",
+    "privacyHint": "Der Klang wird auf deinem Gerät analysiert: Nichts wird aufgenommen oder gesendet.",
+    "stop": "Stoppen",
+    "listening": "Spiel einen Ton…",
+    "inTune": "Stimmt!",
+    "tooHigh": "Zu hoch",
+    "tooLow": "Zu tief",
+    "centsUnit": "Cent",
+    "soundingNote": "Klingend: {note} · {frequency} Hz",
+    "reference": "Kammerton A",
+    "referenceDown": "Kammerton senken",
+    "referenceUp": "Kammerton erhöhen",
+    "transposition": "Instrument",
+    "transpositions": {
+      "C": "In C — Klavier, Gitarre, Streicher, Stimme, Flöte…",
+      "Bb": "In B — Trompete, Klarinette, Tenorsaxofon",
+      "Eb": "In Es — Alt- und Baritonsaxofon",
+      "F": "In F — Horn"
+    },
+    "notation": "Tonnamen",
+    "notationLanguage": "Nach Sprache ({example}…)",
+    "notationLetters": "Englische Buchstaben (C, D, E… B)",
+    "playReference": "{note} spielen ({frequency} Hz)",
+    "stopReference": "Ton stoppen",
+    "denied": "Mikrofonzugriff verweigert. Erlaube ihn in den Telefoneinstellungen (Apps > MyMusicCoach > Berechtigungen) und versuche es erneut.",
+    "unavailable": "Das Mikrofon ist auf diesem Gerät oder in diesem Browser nicht verfügbar.",
+    "error": "Das Mikrofon kann nicht verwendet werden. Prüfe, ob keine andere App es nutzt, und versuche es erneut.",
+    "noteNames": ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "H"],
+    "octaveOffset": "0"
   }
 }

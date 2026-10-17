@@ -54,6 +54,7 @@ import Toasts from './components/Toasts';
 import BottomNav from './components/BottomNav';
 import Onboarding from './components/Onboarding';
 import FreePracticeModal from './components/modals/FreePracticeModal';
+import TunerModal from './components/modals/TunerModal';
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -105,6 +106,7 @@ const MyMusicCoach = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showFreePractice, setShowFreePractice] = useState(false);
+  const [showTuner, setShowTuner] = useState(false);
   const [editingFreePractice, setEditingFreePractice] = useState(null); // entrée d'historique modifiée
   const [toasts, setToasts] = useState([]);
 
@@ -840,7 +842,9 @@ const MyMusicCoach = () => {
     // Temps de pratique
     editingSessionDuration, setEditingSessionDuration, formatMinutes,
     // Pratique libre
-    openFreePractice, closeFreePractice, saveFreePractice, deleteFreePractice, editingFreePractice
+    openFreePractice, closeFreePractice, saveFreePractice, deleteFreePractice, editingFreePractice,
+    // Accordeur
+    setShowTuner
   };
 
   return (
@@ -872,6 +876,7 @@ const MyMusicCoach = () => {
         {showExportModal && <ReportPeriodModal />}
         {showPrivacyPolicy && <PrivacyPolicyModal />}
         {showFreePractice && <FreePracticeModal />}
+        {showTuner && <TunerModal />}
         {showImportModal && <ImportSessionModal />}
         {editingSession && !selectedExercise && <EditSessionModal />}
         {exportModalData && <ExportChoiceModal />}

@@ -29,6 +29,14 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Groupings asymétriques** : Pour 5/8 et 7/8 (ex: 3+2, 2+3)
 - **Indicateur visuel** : Affichage des temps avec accent sur le premier temps
 
+### Accordeur
+- **Chromatique** : reconnaît toutes les notes, pour tout instrument (cordes, vents, voix, piano...), d'environ 27 Hz à 4 200 Hz
+- **Justesse** : aiguille en cents, note juste à ±5 cents, fréquence affichée
+- **La de référence** réglable de 415 à 466 Hz, et son de référence
+- **Instruments transpositeurs** : en Ut, Si♭, Mi♭ ou Fa (note écrite et son réel)
+- **Nom des notes** selon la langue (Do Ré Mi, C D E, H en allemand) ou en lettres
+- Le son est analysé sur l'appareil, sans enregistrement
+
 ### Statistiques et récompenses
 - **Streak (série)** : Compteur de jours consécutifs de pratique
 - **Sessions hebdomadaires** : Nombre de sessions cette semaine
@@ -69,7 +77,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Tailwind CSS** pour le style
 - **IndexedDB** (via idb-keyval) pour la persistance des données
 - **Wake Lock API** pour le chronomètre
-- **Web Audio API** pour le métronome
+- **Web Audio API** pour le métronome et l'accordeur (détection de hauteur YIN)
 
 ## Installation
 

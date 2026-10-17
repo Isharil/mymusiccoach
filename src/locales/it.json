@@ -535,7 +535,7 @@
     "workout2Name": "Improvvisazione blues"
   },
   "privacy": {
-    "updated": "Ultimo aggiornamento: febbraio 2026",
+    "updated": "Ultimo aggiornamento: ottobre 2026",
     "s1Title": "1. Dati raccolti",
     "s1Body": "MyMusicCoach **non raccoglie alcun dato personale** e non invia alcuna informazione a server esterni.",
     "s2Title": "2. Archiviazione locale",
@@ -550,10 +550,12 @@
     "s4Body": "Nessun dato viene condiviso con terze parti. La funzione di esportazione crea un file che **controlli solo tu**.",
     "s5Title": "5. Notifiche",
     "s5Body": "I promemoria sono gestiti localmente sul tuo dispositivo. Nessuna informazione viene trasmessa.",
-    "s6Title": "6. Eliminazione dei dati",
+    "s6Title": "7. Eliminazione dei dati",
     "s6Body": "Puoi eliminare tutti i tuoi dati in qualsiasi momento con l'opzione «Reimposta l'app» nelle impostazioni.",
-    "s7Title": "7. Contatti",
-    "s7Body": "Per qualsiasi domanda su questa informativa, scrivici a:"
+    "s7Title": "8. Contatti",
+    "s7Body": "Per qualsiasi domanda su questa informativa, scrivici a:",
+    "micTitle": "6. Microfono",
+    "micBody": "Il microfono è usato solo dall'accordatore, quando lo attivi. Il suono viene analizzato in tempo reale sul tuo dispositivo per riconoscere la nota: **non viene mai registrato né inviato**."
   },
   "practice": {
     "title": "Tempo di pratica",
@@ -581,5 +583,38 @@
     "save": "Salva",
     "delete": "Elimina questa voce",
     "deleteConfirm": "Eliminare questa pratica dalla cronologia?"
+  },
+  "tuner": {
+    "title": "Accordatore",
+    "homeDesc": "Tutte le note, per tutti gli strumenti",
+    "start": "Attiva il microfono",
+    "privacyHint": "Il suono viene analizzato sul tuo dispositivo: niente viene registrato o inviato.",
+    "stop": "Ferma",
+    "listening": "Suona una nota…",
+    "inTune": "Intonato!",
+    "tooHigh": "Troppo alto",
+    "tooLow": "Troppo basso",
+    "centsUnit": "cent",
+    "soundingNote": "Suono reale: {note} · {frequency} Hz",
+    "reference": "La di riferimento",
+    "referenceDown": "Abbassa il La di riferimento",
+    "referenceUp": "Alza il La di riferimento",
+    "transposition": "Strumento",
+    "transpositions": {
+      "C": "In Do — pianoforte, chitarra, archi, voce, flauto…",
+      "Bb": "In Si♭ — tromba, clarinetto, sax tenore",
+      "Eb": "In Mi♭ — sax contralto, sax baritono",
+      "F": "In Fa — corno"
+    },
+    "notation": "Nomi delle note",
+    "notationLanguage": "Secondo la lingua ({example}…)",
+    "notationLetters": "Lettere (C, D, E…)",
+    "playReference": "Suona il {note} ({frequency} Hz)",
+    "stopReference": "Ferma il suono",
+    "denied": "Accesso al microfono negato. Consentilo nelle impostazioni del telefono (App > MyMusicCoach > Autorizzazioni), poi riprova.",
+    "unavailable": "Il microfono non è disponibile su questo dispositivo o browser.",
+    "error": "Impossibile usare il microfono. Verifica che nessun'altra app lo stia usando, poi riprova.",
+    "noteNames": ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"],
+    "octaveOffset": "-1"
   }
 }
