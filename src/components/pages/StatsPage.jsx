@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { TrendingUp, FileText, Edit2, Award, ChevronRight, ChevronLeft } from 'lucide-react';
 import { BADGES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
@@ -10,6 +11,13 @@ const StatsPage = () => {
     setShowAllBadges, setShowAllHistory, setShowExportModal, settings, showAllHistory,
     startEditSession, stats, t, translateCategory
   } = useApp();
+
+  // Progression des tempos : exercices du plus récemment travaillé au plus ancien,
+  // seul le premier est affiché tant qu'on ne demande pas à voir les autres
+  const [showAllTempos, setShowAllTempos] = useState(false);
+  const tempoExercises = exercises
+    .filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0)
+    .sort((a, b) => b.tempoHistory.at(-1).date.localeCompare(a.tempoHistory.at(-1).date));
 
   return (
     <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
@@ -293,7 +301,7 @@ const StatsPage = () => {
       <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📈 {t('stats.tempoProgress')}</h2>
 
-        {exercises.filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0).length === 0 ? (
+        {tempoExercises.length === 0 ? (
           <div className="text-center py-12">
             <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400 font-medium">{t('stats.noProgress')}</p>
@@ -303,8 +311,8 @@ const StatsPage = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {exercises
-              .filter(ex => ex.tempoHistory && ex.tempoHistory.length > 0)
+            {tempoExercises
+              .slice(0, showAllTempos ? tempoExercises.length : 1)
               .map(exercise => {
                 const history = exercise.tempoHistory;
                 const minTempo = Math.min(...history.map(h => h.tempo));
@@ -409,6 +417,14 @@ const StatsPage = () => {
                   </div>
                 );
               })}
+            {tempoExercises.length > 1 && (
+              <button
+                onClick={() => setShowAllTempos(!showAllTempos)}
+                className="w-full py-2 text-sm font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
+              >
+                {showAllTempos ? t('stats.showLess') : t('stats.showMore', { count: tempoExercises.length - 1 })}
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -255,6 +255,34 @@ describe('MyMusicCoach', () => {
     expect(remaining[0].id).toBe(1);
   });
 
+  it('affiche la progression du tempo le plus récent, et les autres sur demande', async () => {
+    const exercise = (id, name, date) => ({
+      id, name, duration: '5 min', sets: '3 séries', type: 'none', difficulty: 'Débutant',
+      category: 'Technique', description: '', baseTempo: 60, tempoHistory: [{ date, tempo: 70 }],
+    });
+    await set('mmc_exercises', [
+      exercise(1, 'Old scales', '2026-09-01'),
+      exercise(2, 'Recent arpeggios', '2026-10-11'),
+      exercise(3, 'Chords', '2026-10-05'),
+    ]);
+    const { user } = await startApp();
+
+    await user.click(nav('Stats'));
+    expect(screen.getByText('Recent arpeggios')).toBeTruthy();
+    expect(screen.queryByText('Chords')).toBeNull();
+    expect(screen.queryByText('Old scales')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Show more (2 others)' }));
+    const names = ['Recent arpeggios', 'Chords', 'Old scales'];
+    names.forEach(name => expect(screen.getByText(name)).toBeTruthy());
+    // Du plus récemment travaillé au plus ancien
+    const positions = names.map(name => screen.getByText(name).compareDocumentPosition(screen.getByText('Old scales')));
+    expect(positions[0] & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Show less' }));
+    expect(screen.queryByText('Chords')).toBeNull();
+  });
+
   it('met un exercice à la corbeille puis le restaure', async () => {
     const { user } = await startApp();
 
