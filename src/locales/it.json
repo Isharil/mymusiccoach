@@ -203,7 +203,8 @@
     "createExercise": "Crea un esercizio",
     "createSession": "Crea una sessione",
     "startSession": "Avvia",
-    "startSessionNamed": "Avvia la sessione {name}"
+    "startSessionNamed": "Avvia la sessione {name}",
+    "piecesTab": "Repertorio"
   },
   "stats": {
     "title": "Statistiche",
@@ -620,5 +621,43 @@
     "accidentalsSharps": "Diesis (Do♯, Re♯, Fa♯…)",
     "accidentalsFlats": "Bemolli (Re♭, Mi♭, Si♭…) — arpa, ottoni…",
     "noteNamesFlat": ["Do", "Re♭", "Re", "Mi♭", "Mi", "Fa", "Sol♭", "Sol", "La♭", "La", "Si♭", "Si"]
+  },
+  "repertoire": {
+    "hint": "Il tuo repertorio: brani da imparare, in corso o padroneggiati, con spartito o tablatura.",
+    "empty": "Nessun brano per ora. Aggiungi il tuo primo brano con il pulsante +.",
+    "status": {
+      "toLearn": "Da imparare",
+      "learning": "In corso",
+      "mastered": "Padroneggiato"
+    },
+    "statusLabel": "Stato",
+    "newTitle": "Nuovo brano",
+    "editTitle": "Modifica brano",
+    "title": "Titolo",
+    "titlePlaceholder": "Es: Asturias",
+    "artist": "Artista o compositore",
+    "artistPlaceholder": "Es: Isaac Albéniz",
+    "reminder": "Ricordami di esercitarmi",
+    "reminderHint": "Il brano comparirà nella home: ogni 2 giorni se è da imparare o in corso, a intervalli crescenti (3 giorni, 1 settimana, 2 settimane, 1 mese…) quando è padroneggiato.",
+    "reminderOn": "Promemoria attivo",
+    "file": "Spartito o tablatura",
+    "fileHint": "PDF, immagine, Guitar Pro (da GP3 a GP7) o MusicXML",
+    "link": "Link (registrazione, video…)",
+    "notes": "Note",
+    "notesPlaceholder": "Passaggi difficili, diteggiature, consigli dell'insegnante…",
+    "create": "Aggiungi brano",
+    "deleteConfirm": "Rimuovere questo brano dal repertorio? Il tempo di pratica già registrato resta nella cronologia.",
+    "logPractice": "L'ho esercitato",
+    "timeSpent": "Tempo dedicato",
+    "lastPracticed": "Ultima sessione",
+    "never": "Mai",
+    "nextReminder": "Prossimo promemoria: {date}",
+    "dueToday": "Da esercitare oggi",
+    "reviewDue": "Ripasso",
+    "reviewQuestion": "È ora di ripassare: il brano è ancora a posto?",
+    "stillMastered": "Ancora a posto",
+    "needsWork": "Da riprendere",
+    "openLink": "Apri il link",
+    "homeTitle": "Brano da esercitare | Brani da esercitare"
   }
 }

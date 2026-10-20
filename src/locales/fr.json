@@ -203,7 +203,8 @@
     "createExercise": "Créer un exercice",
     "createSession": "Créer une session",
     "startSession": "Démarrer",
-    "startSessionNamed": "Démarrer la session {name}"
+    "startSessionNamed": "Démarrer la session {name}",
+    "piecesTab": "Répertoire"
   },
   "stats": {
     "title": "Statistiques",
@@ -620,5 +621,43 @@
     "accidentalsSharps": "Dièses (Do♯, Ré♯, Fa♯…)",
     "accidentalsFlats": "Bémols (Ré♭, Mi♭, Si♭…) — harpe, cuivres…",
     "noteNamesFlat": ["Do", "Ré♭", "Ré", "Mi♭", "Mi", "Fa", "Sol♭", "Sol", "La♭", "La", "Si♭", "Si"]
+  },
+  "repertoire": {
+    "hint": "Ton répertoire : les morceaux à apprendre, en cours ou maîtrisés, avec leur partition ou tablature.",
+    "empty": "Aucun morceau pour l'instant. Ajoute ton premier morceau avec le bouton +.",
+    "status": {
+      "toLearn": "À apprendre",
+      "learning": "En cours",
+      "mastered": "Maîtrisé"
+    },
+    "statusLabel": "Statut",
+    "newTitle": "Nouveau morceau",
+    "editTitle": "Modifier le morceau",
+    "title": "Titre",
+    "titlePlaceholder": "Ex : Asturias",
+    "artist": "Artiste ou compositeur",
+    "artistPlaceholder": "Ex : Isaac Albéniz",
+    "reminder": "Rappelle-moi de le travailler",
+    "reminderHint": "Le morceau apparaîtra sur l'accueil : tous les 2 jours s'il est à apprendre ou en cours, à intervalles croissants (3 jours, 1 semaine, 2 semaines, 1 mois…) s'il est maîtrisé.",
+    "reminderOn": "Rappel activé",
+    "file": "Partition ou tablature",
+    "fileHint": "PDF, image, Guitar Pro (GP3 à GP7) ou MusicXML",
+    "link": "Lien (enregistrement, vidéo…)",
+    "notes": "Notes",
+    "notesPlaceholder": "Passages difficiles, doigtés, conseils du prof…",
+    "create": "Ajouter le morceau",
+    "deleteConfirm": "Supprimer ce morceau du répertoire ? Le temps de pratique déjà enregistré reste dans l'historique.",
+    "logPractice": "Je l'ai travaillé",
+    "timeSpent": "Temps passé",
+    "lastPracticed": "Dernière séance",
+    "never": "Jamais",
+    "nextReminder": "Prochain rappel : {date}",
+    "dueToday": "À travailler aujourd'hui",
+    "reviewDue": "Révision",
+    "reviewQuestion": "C'est l'heure de la révision : le morceau est-il toujours au point ?",
+    "stillMastered": "Toujours au point",
+    "needsWork": "À retravailler",
+    "openLink": "Ouvrir le lien",
+    "homeTitle": "Morceau à travailler | Morceaux à travailler"
   }
 }

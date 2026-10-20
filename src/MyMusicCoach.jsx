@@ -12,6 +12,7 @@ import { useTimer } from './hooks/useTimer';
 import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE } from './constants/appData';
 import { getCycleWeekNumber, getDayKey, getMondayOf, normalizeDate } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
+import { changePieceStatus, recordPiecePractice } from './utils/repertoire';
 import { buildProgressReport } from './utils/progressReport';
 import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
 import { parseBackup } from './utils/backup';
@@ -55,6 +56,8 @@ import BottomNav from './components/BottomNav';
 import Onboarding from './components/Onboarding';
 import FreePracticeModal from './components/modals/FreePracticeModal';
 import TunerModal from './components/modals/TunerModal';
+import PieceDetailModal from './components/modals/PieceDetailModal';
+import PieceFormModal from './components/modals/PieceFormModal';
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -108,6 +111,9 @@ const MyMusicCoach = () => {
   const [showFreePractice, setShowFreePractice] = useState(false);
   const [showTuner, setShowTuner] = useState(false);
   const [editingFreePractice, setEditingFreePractice] = useState(null); // entrée d'historique modifiée
+  const [freePracticeDraft, setFreePracticeDraft] = useState(null); // valeurs pré-remplies (ex. morceau travaillé)
+  const [editingPiece, setEditingPiece] = useState(null); // {} = nouveau morceau, sinon le morceau modifié
+  const [selectedPieceId, setSelectedPieceId] = useState(null); // fiche de morceau ouverte
   const [toasts, setToasts] = useState([]);
 
   // Fonction pour afficher un toast (remplace alert())
@@ -122,6 +128,8 @@ const MyMusicCoach = () => {
   const [exercises, setExercises, exercisesLoading] = useIndexedDB('mmc_exercises', DEFAULT_EXERCISES);
   const [workouts, setWorkouts, workoutsLoading] = useIndexedDB('mmc_workouts', DEFAULT_WORKOUTS);
   const [weeklySchedule, setWeeklySchedule, weeklyScheduleLoading] = useIndexedDB('mmc_weeklySchedule', DEFAULT_SCHEDULE);
+  // Répertoire de morceaux (utils/repertoire.js)
+  const [pieces, setPieces, piecesLoading] = useIndexedDB('mmc_pieces', []);
 
   const [viewingWeek, setViewingWeek] = useState(1); // Pour le modal de planning
 
@@ -129,7 +137,7 @@ const MyMusicCoach = () => {
   const isDataLoading = sessionHistoryLoading || settingsLoading ||
     deletedExercisesLoading || archivedWorkoutsLoading || exercisesLoading ||
     workoutsLoading || weeklyScheduleLoading || activeWorkoutLoading ||
-    workoutProgressLoading || currentTempoLoading || exerciseNotesLoading;
+    workoutProgressLoading || currentTempoLoading || exerciseNotesLoading || piecesLoading;
 
   // Migration weeklySchedule : ancien format (number|null) → nouveau format (array)
   useEffect(() => {
@@ -149,10 +157,10 @@ const MyMusicCoach = () => {
   }, [weeklyScheduleLoading, weeklySchedule, setWeeklySchedule]);
 
   // Migration (une fois par lancement) : fichiers joints sortis des exercices (ancien champ fileData),
-  // puis suppression des fichiers que plus aucun exercice ne référence
+  // puis suppression des fichiers que plus aucun exercice ni morceau ne référence
   const attachmentsCheckedRef = useRef(false);
   useEffect(() => {
-    if (exercisesLoading || deletedExercisesLoading || attachmentsCheckedRef.current) return;
+    if (exercisesLoading || deletedExercisesLoading || piecesLoading || attachmentsCheckedRef.current) return;
     attachmentsCheckedRef.current = true;
     const startedAt = Date.now();
 
@@ -168,12 +176,13 @@ const MyMusicCoach = () => {
         if (active.changed) applyMigrated(setExercises, active.exercises);
         const deleted = await moveInlineFiles(deletedExercises);
         if (deleted.changed) applyMigrated(setDeletedExercises, deleted.exercises);
-        await deleteOrphanAttachments([active.exercises, deleted.exercises], startedAt);
+        // Les partitions et tablatures des morceaux sont aussi des pièces jointes
+        await deleteOrphanAttachments([active.exercises, deleted.exercises, pieces], startedAt);
       } catch (error) {
         console.error('Erreur migration des pièces jointes:', error);
       }
     })();
-  }, [exercisesLoading, deletedExercisesLoading, exercises, deletedExercises, setExercises, setDeletedExercises]);
+  }, [exercisesLoading, deletedExercisesLoading, piecesLoading, exercises, deletedExercises, pieces, setExercises, setDeletedExercises]);
 
   // Migration depuis localStorage et demande de persistance au démarrage
   useEffect(() => {
@@ -416,25 +425,31 @@ const MyMusicCoach = () => {
 
   // Fonction pour démarrer l'édition d'une session terminée
   // ===== PRATIQUE LIBRE (hors sessions du planning) =====
-  const openFreePractice = (entry = null) => {
+  // entry : entrée d'historique à modifier ; draft : valeurs pré-remplies d'une nouvelle entrée
+  // (ex. { pieceId, name, category } quand on note le travail d'un morceau)
+  const openFreePractice = (entry = null, draft = null) => {
     setEditingFreePractice(entry);
+    setFreePracticeDraft(draft);
     setShowFreePractice(true);
   };
 
   const closeFreePractice = () => {
     setShowFreePractice(false);
     setEditingFreePractice(null);
+    setFreePracticeDraft(null);
   };
 
   // Entrée d'historique sans session : compte pour la série, le calendrier et le temps de pratique
   const saveFreePractice = ({ name, date, durationMinutes, category, note }) => {
     const now = new Date();
+    const pieceId = editingFreePractice?.pieceId ?? freePracticeDraft?.pieceId;
     const fields = {
       date,
       workoutName: name || t('freePractice.title'),
       durationMinutes,
       category: category || undefined,
       note: note || undefined,
+      ...(pieceId && { pieceId }),
     };
     if (editingFreePractice) {
       const updated = { ...editingFreePractice, ...fields };
@@ -453,6 +468,12 @@ const MyMusicCoach = () => {
       };
       setSessionHistory(prev => insertChronologically(prev, entry));
     }
+    // Travail d'un morceau : on note la date de la séance (la plus récente)
+    if (pieceId) {
+      updatePiece(pieceId, piece => (
+        !piece.lastPracticedAt || date > piece.lastPracticedAt ? recordPiecePractice(piece, { date }) : piece
+      ));
+    }
     closeFreePractice();
   };
 
@@ -460,6 +481,69 @@ const MyMusicCoach = () => {
     if (!window.confirm(t('freePractice.deleteConfirm'))) return;
     setSessionHistory(prev => prev.filter(s => s.id !== id));
     closeFreePractice();
+  };
+
+  // ===== RÉPERTOIRE DE MORCEAUX (utils/repertoire.js) =====
+  // changes : champs à modifier, ou fonction (morceau) => morceau modifié
+  const updatePiece = (id, changes) => {
+    setPieces(prev => prev.map(piece => (
+      piece.id === id ? (typeof changes === 'function' ? changes(piece) : { ...piece, ...changes }) : piece
+    )));
+  };
+
+  // Création (editingPiece = {}) ou modification (editingPiece = morceau)
+  const savePiece = async ({ status, reminder, ...fields }) => {
+    const today = getTodayDate();
+    const attachment = uploadedFile ? await saveAttachment(uploadedFile) : null;
+    if (editingPiece?.id) {
+      if (attachment && editingPiece.attachment) await deleteAttachment(editingPiece.attachment.id);
+      updatePiece(editingPiece.id, piece => ({
+        ...changePieceStatus(piece, status),
+        ...fields,
+        reminder,
+        // Le délai du premier rappel part du jour où il est activé
+        reminderSince: reminder && !piece.reminder ? today : piece.reminderSince,
+        ...(attachment && { attachment }),
+      }));
+    } else {
+      const piece = {
+        id: maxIdOf(pieces) + 1,
+        ...fields,
+        status,
+        reminder,
+        reminderSince: reminder ? today : undefined,
+        reviewStage: 0,
+        tempoHistory: [],
+        addedAt: today,
+        ...(attachment && { attachment }),
+      };
+      setPieces(prev => [...prev, piece]);
+    }
+    setEditingPiece(null);
+    setUploadedFile(null);
+  };
+
+  const deletePiece = (id) => {
+    if (!window.confirm(t('repertoire.deleteConfirm'))) return;
+    const piece = pieces.find(p => p.id === id);
+    if (piece?.attachment) deleteAttachment(piece.attachment.id);
+    setPieces(prev => prev.filter(p => p.id !== id));
+    setSelectedPieceId(null);
+  };
+
+  // « Je l'ai travaillé » : saisie de la durée, comme une pratique libre liée au morceau
+  const logPiecePractice = (piece) => {
+    openFreePractice(null, { pieceId: piece.id, name: piece.title, category: 'Morceaux' });
+  };
+
+  // Révision d'un morceau maîtrisé : toujours au point, ou à retravailler
+  const reviewPiece = (piece, stillMastered) => {
+    updatePiece(piece.id, p => recordPiecePractice(p, { date: getTodayDate(), stillMastered }));
+  };
+
+  // Tempo atteint sur le morceau
+  const savePieceTempo = (piece, tempo) => {
+    updatePiece(piece.id, p => ({ ...p, tempoHistory: [...(p.tempoHistory || []), { date: getTodayDate(), tempo }] }));
   };
 
   const startEditSession = (session) => {
@@ -844,7 +928,10 @@ const MyMusicCoach = () => {
     // Pratique libre
     openFreePractice, closeFreePractice, saveFreePractice, deleteFreePractice, editingFreePractice,
     // Accordeur
-    setShowTuner
+    setShowTuner,
+    // Répertoire de morceaux
+    pieces, editingPiece, setEditingPiece, selectedPieceId, setSelectedPieceId, savePiece, deletePiece,
+    updatePiece, logPiecePractice, reviewPiece, savePieceTempo, freePracticeDraft
   };
 
   return (
@@ -859,6 +946,8 @@ const MyMusicCoach = () => {
         {showCreateExercise && <ExerciseFormModal />}
         {showCreateWorkout && <WorkoutFormModal />}
         {selectedExercise && <ExerciseDetailModal />}
+        {selectedPieceId && <PieceDetailModal />}
+        {editingPiece && <PieceFormModal />}
 
         {/* Modal Métronome */}
         {showMetronome && (

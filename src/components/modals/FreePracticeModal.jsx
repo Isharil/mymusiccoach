@@ -9,16 +9,17 @@ import DurationField from '../DurationField';
 // Saisie (ou modification) d'une pratique libre, hors sessions du planning
 const FreePracticeModal = () => {
   const {
-    closeFreePractice, deleteFreePractice, editingFreePractice, saveFreePractice, showToast, t,
+    closeFreePractice, deleteFreePractice, editingFreePractice, freePracticeDraft, saveFreePractice, showToast, t,
     translateCategory
   } = useApp();
 
   const editing = editingFreePractice;
+  const draft = freePracticeDraft; // nouvelle entrée pré-remplie (ex. morceau travaillé)
   const today = toLocalDateStr(new Date());
-  const [name, setName] = useState(editing?.workoutName ?? '');
+  const [name, setName] = useState(editing?.workoutName ?? draft?.name ?? '');
   const [date, setDate] = useState(editing?.date ?? today);
   const [duration, setDuration] = useState(editing?.durationMinutes ? String(editing.durationMinutes) : '20');
-  const [category, setCategory] = useState(editing?.category ?? '');
+  const [category, setCategory] = useState(editing?.category ?? draft?.category ?? '');
   const [note, setNote] = useState(editing?.note ?? '');
 
   const inputClass = 'w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100';

@@ -203,7 +203,8 @@
     "createExercise": "Create an exercise",
     "createSession": "Create a session",
     "startSession": "Start",
-    "startSessionNamed": "Start session {name}"
+    "startSessionNamed": "Start session {name}",
+    "piecesTab": "Repertoire"
   },
   "stats": {
     "title": "Statistics",
@@ -620,5 +621,43 @@
     "accidentalsSharps": "Sharps (C♯, D♯, F♯…)",
     "accidentalsFlats": "Flats (D♭, E♭, B♭…) — harp, brass…",
     "noteNamesFlat": ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"]
+  },
+  "repertoire": {
+    "hint": "Your repertoire: pieces to learn, in progress or mastered, with their score or tab.",
+    "empty": "No pieces yet. Add your first piece with the + button.",
+    "status": {
+      "toLearn": "To learn",
+      "learning": "In progress",
+      "mastered": "Mastered"
+    },
+    "statusLabel": "Status",
+    "newTitle": "New piece",
+    "editTitle": "Edit piece",
+    "title": "Title",
+    "titlePlaceholder": "E.g. Asturias",
+    "artist": "Artist or composer",
+    "artistPlaceholder": "E.g. Isaac Albéniz",
+    "reminder": "Remind me to practice it",
+    "reminderHint": "The piece will appear on the home screen: every 2 days if it's to learn or in progress, at growing intervals (3 days, 1 week, 2 weeks, 1 month…) once mastered.",
+    "reminderOn": "Reminder on",
+    "file": "Score or tab",
+    "fileHint": "PDF, image, Guitar Pro (GP3 to GP7) or MusicXML",
+    "link": "Link (recording, video…)",
+    "notes": "Notes",
+    "notesPlaceholder": "Tricky passages, fingerings, teacher's advice…",
+    "create": "Add piece",
+    "deleteConfirm": "Remove this piece from your repertoire? Practice time already recorded stays in your history.",
+    "logPractice": "I practiced it",
+    "timeSpent": "Time spent",
+    "lastPracticed": "Last session",
+    "never": "Never",
+    "nextReminder": "Next reminder: {date}",
+    "dueToday": "To practice today",
+    "reviewDue": "Review",
+    "reviewQuestion": "Review time: is the piece still solid?",
+    "stillMastered": "Still solid",
+    "needsWork": "Needs work",
+    "openLink": "Open link",
+    "homeTitle": "Piece to practice | Pieces to practice"
   }
 }

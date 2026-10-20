@@ -30,6 +30,7 @@ const VALIDATORS = {
   workoutProgress: isObject,
   currentTempo: isObject,
   exerciseNotes: isObject,
+  pieces: (v) => Array.isArray(v) && v.every(p => hasId(p) && typeof p.title === 'string'),
 };
 
 export const BACKUP_KEYS = Object.keys(VALIDATORS);

@@ -1,13 +1,14 @@
 import { Clock, Plus, Book, Video, FileText, Activity, Trash2, Music, Archive, Upload, Play } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
+import PiecesTab from '../library/PiecesTab';
 
 const LibraryPage = () => {
   const {
     archivedWorkouts, deleteWorkout, deletedExercises, exerciseName, exercises, exportWorkout,
     formatSets, libraryFilter, librarySubTab, permanentlyDeleteExercise, permanentlyDeleteWorkout,
     restoreExercise, restoreWorkout, setActiveTab, setEditingWorkout, setLibraryFilter, setLibrarySubTab,
-    setSelectedExercise, setShowArchive, setShowCreateExercise, setShowCreateWorkout,
+    setEditingPiece, setSelectedExercise, setShowArchive, setShowCreateExercise, setShowCreateWorkout,
     setShowImportModal, setShowTrash, showArchive, showTrash, startWorkout, t, translateCategory,
     translateDifficulty, workoutName, workouts
   } = useApp();
@@ -65,6 +66,15 @@ const LibraryPage = () => {
                 <Plus aria-hidden="true" className="w-5 h-5" />
               </button>
             )}
+            {librarySubTab === 'pieces' && (
+              <button
+                onClick={() => setEditingPiece({})}
+                aria-label={t('repertoire.newTitle')}
+                className="bg-emerald-600 text-white p-3 rounded-full shadow-lg hover:bg-emerald-700 transition-colors"
+              >
+                <Plus aria-hidden="true" className="w-5 h-5" />
+              </button>
+            )}
             {librarySubTab === 'sessions' && !showArchive && (
               <>
                 <button
@@ -109,9 +119,22 @@ const LibraryPage = () => {
             >
               {t('library.sessionsTab')}
             </button>
+            <button
+              onClick={() => setLibrarySubTab('pieces')}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                librarySubTab === 'pieces'
+                  ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 shadow'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {t('library.piecesTab')}
+            </button>
           </div>
         )}
       </div>
+
+      {/* ===== SOUS-ONGLET MORCEAUX ===== */}
+      {librarySubTab === 'pieces' && <PiecesTab />}
 
       {/* ===== SOUS-ONGLET EXERCICES ===== */}
       {librarySubTab === 'exercises' && (

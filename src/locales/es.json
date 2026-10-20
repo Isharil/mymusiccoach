@@ -203,7 +203,8 @@
     "createExercise": "Crear un ejercicio",
     "createSession": "Crear una sesión",
     "startSession": "Iniciar",
-    "startSessionNamed": "Iniciar la sesión {name}"
+    "startSessionNamed": "Iniciar la sesión {name}",
+    "piecesTab": "Repertorio"
   },
   "stats": {
     "title": "Estadísticas",
@@ -620,5 +621,43 @@
     "accidentalsSharps": "Sostenidos (Do♯, Re♯, Fa♯…)",
     "accidentalsFlats": "Bemoles (Re♭, Mi♭, Si♭…) — arpa, metales…",
     "noteNamesFlat": ["Do", "Re♭", "Re", "Mi♭", "Mi", "Fa", "Sol♭", "Sol", "La♭", "La", "Si♭", "Si"]
+  },
+  "repertoire": {
+    "hint": "Tu repertorio: piezas por aprender, en curso o dominadas, con su partitura o tablatura.",
+    "empty": "Aún no hay piezas. Añade tu primera pieza con el botón +.",
+    "status": {
+      "toLearn": "Por aprender",
+      "learning": "En curso",
+      "mastered": "Dominada"
+    },
+    "statusLabel": "Estado",
+    "newTitle": "Nueva pieza",
+    "editTitle": "Editar pieza",
+    "title": "Título",
+    "titlePlaceholder": "Ej.: Asturias",
+    "artist": "Artista o compositor",
+    "artistPlaceholder": "Ej.: Isaac Albéniz",
+    "reminder": "Recuérdame practicarla",
+    "reminderHint": "La pieza aparecerá en la pantalla de inicio: cada 2 días si está por aprender o en curso, a intervalos crecientes (3 días, 1 semana, 2 semanas, 1 mes…) cuando esté dominada.",
+    "reminderOn": "Recordatorio activado",
+    "file": "Partitura o tablatura",
+    "fileHint": "PDF, imagen, Guitar Pro (GP3 a GP7) o MusicXML",
+    "link": "Enlace (grabación, vídeo…)",
+    "notes": "Notas",
+    "notesPlaceholder": "Pasajes difíciles, digitaciones, consejos del profesor…",
+    "create": "Añadir pieza",
+    "deleteConfirm": "¿Quitar esta pieza del repertorio? El tiempo de práctica ya registrado se queda en el historial.",
+    "logPractice": "La he practicado",
+    "timeSpent": "Tiempo dedicado",
+    "lastPracticed": "Última sesión",
+    "never": "Nunca",
+    "nextReminder": "Próximo recordatorio: {date}",
+    "dueToday": "Para practicar hoy",
+    "reviewDue": "Repaso",
+    "reviewQuestion": "Hora de repasar: ¿la pieza sigue saliendo bien?",
+    "stillMastered": "Sigue saliendo bien",
+    "needsWork": "Hay que retomarla",
+    "openLink": "Abrir el enlace",
+    "homeTitle": "Pieza para practicar | Piezas para practicar"
   }
 }

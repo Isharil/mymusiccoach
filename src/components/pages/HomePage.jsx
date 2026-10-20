@@ -1,6 +1,7 @@
-import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music, PenLine, AudioLines } from 'lucide-react';
+import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music, PenLine, AudioLines, Bell } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import PracticeTimeSummary from '../PracticeTimeSummary';
+import { duePieces } from '../../utils/repertoire';
 
 const HomePage = () => {
   const {
@@ -8,8 +9,9 @@ const HomePage = () => {
     getCompletedSessionForWorkout, getCurrentDay, getCurrentWeekNumber, getTodayWorkouts,
     isTodaySessionCompleted, isWorkoutCompletedToday, nextBadge, openFreePractice, setActiveTab, setLibrarySubTab,
     setShowMetronome, setShowSchedule, setShowTuner, setViewingWeek, settings, startEditSession, startWorkout,
-    stats, t, translateDifficulty, weeklySchedule, workoutName, workouts
+    stats, t, translateDifficulty, weeklySchedule, workoutName, workouts, pieces, setSelectedPieceId
   } = useApp();
+  const piecesDue = duePieces(pieces);
 
   return (
     <div className="p-6 space-y-6 max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto">
@@ -327,6 +329,34 @@ const HomePage = () => {
           <p className="text-xs text-gray-600 dark:text-gray-400">{t('home.sessionsLast28Days')}</p>
         </button>
       </div>
+
+      {/* Morceaux à travailler aujourd'hui : rappels demandés sur la fiche du morceau */}
+      {piecesDue.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+            <Bell aria-hidden="true" className="w-5 h-5 text-orange-500" />
+            {t('repertoire.homeTitle', { count: piecesDue.length })}
+          </h2>
+          <ul className="space-y-2">
+            {piecesDue.map(piece => (
+              <li key={piece.id}>
+                <button
+                  onClick={() => { setActiveTab('library'); setLibrarySubTab('pieces'); setSelectedPieceId(piece.id); }}
+                  className="w-full text-left flex items-center justify-between gap-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl px-4 py-3"
+                >
+                  <span className="min-w-0">
+                    <span className="block font-medium text-gray-900 dark:text-gray-100 truncate">{piece.title}</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400">
+                      {piece.status === 'mastered' ? t('repertoire.reviewDue') : t(`repertoire.status.${piece.status}`)}
+                    </span>
+                  </span>
+                  <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Temps de pratique de la semaine */}
       <PracticeTimeSummary onClick={() => setActiveTab('stats')} />

@@ -54,6 +54,7 @@ modification.
 | `mmc_workoutProgress` | Statut des exercices de la session en cours |
 | `mmc_currentTempo` | Tempos saisis mais pas encore enregistrés |
 | `mmc_exerciseNotes` | Notes prises pendant la session en cours |
+| `mmc_pieces` | Répertoire de morceaux (`utils/repertoire.js`) |
 | `mmc_file_<id>` | Une pièce jointe : `{ name, data, createdAt }`, `data` étant une URL `data:` |
 | `mmc_goals` | Ancienne donnée, plus utilisée (conservée dans les sauvegardes) |
 | `mmc_migration_done` | Migration depuis localStorage déjà faite |
@@ -119,6 +120,21 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   notes: {}
 }
 
+// Morceau du répertoire (mmc_pieces)
+{
+  id: number,
+  title: string, artist?: string,
+  status: 'toLearn' | 'learning' | 'mastered',
+  attachment?: { id, name },     // partition ou tablature, dans mmc_file_<id>
+  link?: string, notes?: string,
+  targetTempo?: number, tempoHistory: [{ date, tempo }],
+  reminder?: boolean,            // rappel sur l'accueil, seulement si demandé
+  reminderSince?: string,        // date d'activation du rappel
+  reviewStage: number,           // révisions espacées d'un morceau maîtrisé (REVIEW_INTERVALS_DAYS)
+  lastPracticedAt?: 'YYYY-MM-DD', addedAt: 'YYYY-MM-DD'
+}
+// Une séance de travail sur un morceau est une pratique libre avec pieceId
+
 // Planning : semaine du cycle -> jour -> ids de sessions
 { semaine1: { lundi: [1], mardi: [], ..., dimanche: [] }, semaine2: {...}, semaine3: {...}, semaine4: {...} }
 
@@ -155,7 +171,8 @@ l'ancien rappel quotidien répété, annulé au passage. Les autres notification
 - planning : un id seul ou `null` par jour devient un tableau ;
 - `settings.cycleStartDate` vide : lundi de la semaine en cours ;
 - pièces jointes stockées dans l'exercice (ancien champ `fileData`) déplacées vers
-  `mmc_file_<id>`, puis suppression des fichiers que plus aucun exercice ne référence.
+  `mmc_file_<id>`, puis suppression des fichiers que plus aucun exercice ni morceau ne référence
+  (toute nouvelle liste qui référence des pièces jointes doit être ajoutée à ce nettoyage).
 
 ## Conventions
 

@@ -37,6 +37,13 @@ export const EXAMPLE_WORKOUT_KEYS = { 1: 'workout1', 2: 'workout2' };
 export const SCHEDULE_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
 // Réglages de l'accordeur (settings.tuner) : La de référence, transposition, nom des notes, altérations
+// Couleur du badge de statut d'un morceau du répertoire
+export const PIECE_STATUS_BADGE = {
+  toLearn: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+  learning: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  mastered: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+};
+
 export const DEFAULT_TUNER_SETTINGS = { a4: 440, transposition: 'C', notation: 'auto', accidentals: 'sharps' };
 
 export const DEFAULT_SETTINGS = {

@@ -1,7 +1,8 @@
-import { Check, Clock, TrendingUp, Video, FileText, Activity, X, Edit2, Trash2, Music, MoreVertical } from 'lucide-react';
+import { Check, Clock, TrendingUp, Video, Activity, X, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import Metronome from '../Metronome';
 import { formatTime } from '../../utils/exercises';
 import { useAttachment } from '../../hooks/useAttachment';
+import AttachmentView from '../AttachmentView';
 import { suggestNextTempo, tempoProgress } from '../../utils/tempo';
 import { useApp } from '../../context/AppContext';
 
@@ -184,49 +185,8 @@ const ExerciseDetailModal = () => {
               </a>
             )}
 
-            {selectedExercise.type === 'file' && attachedFile && (
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 text-center shadow-lg">
-                {/* Vérifier si c'est une image pour l'afficher directement */}
-                {attachedFile.name.match(/\.(jpg|jpeg|png)$/i) ? (
-                  <>
-                    <img 
-                      src={attachedFile.data} 
-                      alt={exerciseName(selectedExercise)}
-                      className="max-w-full h-auto rounded-xl mb-4 shadow-md"
-                    />
-                    <a
-                      href={attachedFile.data}
-                      download={attachedFile.name}
-                      className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                    >
-                      {t('exercise.downloadImage')}
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    {/* Icône différente selon le type de fichier */}
-                    {attachedFile.name.match(/\.(gp5|gpx|gp)$/i) ? (
-                      <Music className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                    ) : (
-                      <FileText className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                    )}
-                    <p className="text-gray-700 dark:text-gray-300 font-medium mb-4">{attachedFile.name}</p>
-                    <a
-                      href={attachedFile.data}
-                      download={attachedFile.name}
-                      className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
-                    >
-                      {attachedFile.name.match(/\.(gp5|gpx|gp)$/i)
-                        ? t('exercise.downloadGuitarPro')
-                        : attachedFile.name.match(/\.(pdf)$/i)
-                        ? t('exercise.downloadPdf')
-                        : attachedFile.name.match(/\.(musicxml|xml)$/i)
-                        ? t('exercise.downloadScore')
-                        : t('exercise.downloadFile')}
-                    </a>
-                  </>
-                )}
-              </div>
+            {selectedExercise.type === 'file' && (
+              <AttachmentView file={attachedFile} alt={exerciseName(selectedExercise)} />
             )}
 
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">

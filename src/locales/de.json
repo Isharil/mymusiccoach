@@ -203,7 +203,8 @@
     "createExercise": "Übung erstellen",
     "createSession": "Session erstellen",
     "startSession": "Starten",
-    "startSessionNamed": "Session {name} starten"
+    "startSessionNamed": "Session {name} starten",
+    "piecesTab": "Repertoire"
   },
   "stats": {
     "title": "Statistiken",
@@ -620,5 +621,43 @@
     "accidentalsSharps": "Kreuze (C♯, D♯, F♯…)",
     "accidentalsFlats": "Bes (D♭, E♭, B…) — Harfe, Blechbläser…",
     "noteNamesFlat": ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B", "H"]
+  },
+  "repertoire": {
+    "hint": "Dein Repertoire: Stücke zum Lernen, in Arbeit oder beherrscht, mit Noten oder Tabulatur.",
+    "empty": "Noch keine Stücke. Füge dein erstes Stück mit der Schaltfläche + hinzu.",
+    "status": {
+      "toLearn": "Zu lernen",
+      "learning": "In Arbeit",
+      "mastered": "Beherrscht"
+    },
+    "statusLabel": "Status",
+    "newTitle": "Neues Stück",
+    "editTitle": "Stück bearbeiten",
+    "title": "Titel",
+    "titlePlaceholder": "z. B. Asturias",
+    "artist": "Künstler oder Komponist",
+    "artistPlaceholder": "z. B. Isaac Albéniz",
+    "reminder": "Erinnere mich ans Üben",
+    "reminderHint": "Das Stück erscheint auf der Startseite: alle 2 Tage, wenn es zu lernen oder in Arbeit ist, in wachsenden Abständen (3 Tage, 1 Woche, 2 Wochen, 1 Monat…), sobald es beherrscht wird.",
+    "reminderOn": "Erinnerung aktiv",
+    "file": "Noten oder Tabulatur",
+    "fileHint": "PDF, Bild, Guitar Pro (GP3 bis GP7) oder MusicXML",
+    "link": "Link (Aufnahme, Video…)",
+    "notes": "Notizen",
+    "notesPlaceholder": "Schwierige Stellen, Fingersätze, Tipps vom Lehrer…",
+    "create": "Stück hinzufügen",
+    "deleteConfirm": "Dieses Stück aus dem Repertoire entfernen? Bereits erfasste Übungszeit bleibt im Verlauf.",
+    "logPractice": "Ich habe es geübt",
+    "timeSpent": "Übungszeit",
+    "lastPracticed": "Letzte Session",
+    "never": "Nie",
+    "nextReminder": "Nächste Erinnerung: {date}",
+    "dueToday": "Heute zu üben",
+    "reviewDue": "Wiederholung",
+    "reviewQuestion": "Zeit für eine Wiederholung: Sitzt das Stück noch?",
+    "stillMastered": "Sitzt noch",
+    "needsWork": "Muss geübt werden",
+    "openLink": "Link öffnen",
+    "homeTitle": "Stück zum Üben | Stücke zum Üben"
   }
 }

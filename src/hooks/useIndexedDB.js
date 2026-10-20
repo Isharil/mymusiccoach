@@ -16,7 +16,8 @@ const APP_KEYS = [
   'mmc_activeWorkout',
   'mmc_workoutProgress',
   'mmc_currentTempo',
-  'mmc_exerciseNotes'
+  'mmc_exerciseNotes',
+  'mmc_pieces'
 ];
 
 /**

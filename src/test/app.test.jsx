@@ -381,6 +381,87 @@ describe('MyMusicCoach', () => {
     });
   });
 
+  describe('répertoire de morceaux', () => {
+    const openPieces = async (user) => {
+      await user.click(nav('Library'));
+      await user.click(screen.getByRole('button', { name: 'Repertoire' }));
+    };
+
+    it('ajoute un morceau avec sa partition, puis note une séance de travail', async () => {
+      const { user } = await startApp();
+      await openPieces(user);
+      expect(screen.getByText(/No pieces yet/)).toBeTruthy();
+
+      await user.click(screen.getByRole('button', { name: 'New piece' }));
+      const form = screen.getByRole('dialog', { name: 'New piece' });
+      await user.type(within(form).getByLabelText(/Title/), 'Asturias');
+      await user.type(within(form).getByLabelText('Artist or composer'), 'Isaac Albéniz');
+      await user.click(within(form).getByLabelText(/Remind me to practice it/));
+      await user.upload(within(form).getByLabelText('Score or tab'), new File(['%PDF'], 'asturias.pdf', { type: 'application/pdf' }));
+      expect(await within(form).findByText(/asturias\.pdf/)).toBeTruthy();
+      await user.click(within(form).getByRole('button', { name: /Add piece/ }));
+
+      const pieces = await stored('mmc_pieces', (list) => list?.length === 1 && !!list[0].attachment);
+      expect(pieces[0]).toMatchObject({
+        id: 1, title: 'Asturias', artist: 'Isaac Albéniz', status: 'learning', reminder: true,
+        reminderSince: '2026-10-12', addedAt: '2026-10-12',
+      });
+      expect(await get(`mmc_file_${pieces[0].attachment.id}`)).toMatchObject({ name: 'asturias.pdf' });
+
+      // Fiche du morceau et séance de travail
+      await user.click(screen.getByText('Asturias'));
+      const detail = screen.getByRole('dialog', { name: 'Asturias' });
+      expect(within(detail).getByText('Never')).toBeTruthy();
+      expect(await within(detail).findByRole('link', { name: 'Download PDF' })).toBeTruthy();
+      await user.click(within(detail).getByRole('button', { name: /I practiced it/ }));
+
+      const practice = screen.getByRole('dialog', { name: 'Free practice' });
+      expect(within(practice).getByLabelText('Title (optional)').value).toBe('Asturias');
+      expect(within(practice).getByLabelText('Category').value).toBe('Morceaux');
+      const duration = within(practice).getByLabelText('Practice time');
+      await user.clear(duration);
+      await user.type(duration, '30');
+      await user.click(within(practice).getByRole('button', { name: /Save/ }));
+
+      const history = await stored('mmc_sessionHistory', (h) => h?.length === 1);
+      expect(history[0]).toMatchObject({ pieceId: 1, durationMinutes: 30, free: true, workoutName: 'Asturias' });
+      await stored('mmc_pieces', (list) => list?.[0]?.lastPracticedAt === '2026-10-12');
+      expect(within(screen.getByRole('dialog', { name: 'Asturias' })).getByText('30 min')).toBeTruthy();
+    });
+
+    it("garde la partition d'un morceau lors du nettoyage des fichiers au démarrage", async () => {
+      await set('mmc_file_tab1', { name: 'song.gp5', data: 'data:application/octet-stream;base64,AA==', createdAt: 1 });
+      await set('mmc_file_orphan', { name: 'old.pdf', data: 'data:application/pdf;base64,AA==', createdAt: 1 });
+      await set('mmc_pieces', [{ id: 1, title: 'Song', status: 'learning', attachment: { id: 'tab1', name: 'song.gp5' }, tempoHistory: [] }]);
+      await startApp();
+
+      await waitFor(async () => expect(await get('mmc_file_orphan')).toBeUndefined());
+      expect(await get('mmc_file_tab1')).toMatchObject({ name: 'song.gp5' });
+    });
+
+    it("ne rappelle un morceau sur l'accueil que si c'est demandé, et gère la révision", async () => {
+      await set('mmc_pieces', [
+        { id: 1, title: 'No reminder', status: 'learning', lastPracticedAt: '2026-10-01', tempoHistory: [] },
+        { id: 2, title: 'Reviewed piece', status: 'mastered', reminder: true, reviewStage: 0, lastPracticedAt: '2026-10-09', tempoHistory: [] },
+      ]);
+      const { user } = await startApp();
+
+      expect(screen.getByRole('heading', { name: /Piece to practice/ })).toBeTruthy();
+      expect(screen.queryByText('No reminder')).toBeNull();
+      await user.click(screen.getByRole('button', { name: /Reviewed piece/ }));
+
+      const detail = screen.getByRole('dialog', { name: 'Reviewed piece' });
+      expect(within(detail).getByText(/Review time/)).toBeTruthy();
+      await user.click(within(detail).getByRole('button', { name: 'Still solid' }));
+      await stored('mmc_pieces', (list) => list?.[1]?.reviewStage === 1 && list[1].lastPracticedAt === '2026-10-12');
+
+      // Plus rien à réviser : la carte disparaît de l'accueil
+      await user.click(within(screen.getByRole('dialog', { name: 'Reviewed piece' })).getByRole('button', { name: 'Close' }));
+      await user.click(nav('Home'));
+      expect(screen.queryByRole('heading', { name: /Piece to practice/ })).toBeNull();
+    });
+  });
+
   it('met un exercice à la corbeille puis le restaure', async () => {
     const { user } = await startApp();
 

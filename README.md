@@ -22,6 +22,12 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Tempo cible** : Progression vers un tempo objectif, avec un tempo suggéré (+5 BPM quand les deux dernières séances sont au point)
 - **Corbeille** : Récupérez les exercices supprimés
 
+### Répertoire de morceaux
+- **Bibliothèque > Répertoire** : morceaux à apprendre, en cours ou maîtrisés
+- **Fiche par morceau** : artiste, partition ou tablature jointe (PDF, image, Guitar Pro, MusicXML), lien, tempo cible, notes
+- **« Je l'ai travaillé »** : la séance compte pour la série et le temps de pratique ; temps total par morceau
+- **Rappels sur demande** : tous les 2 jours pour un morceau en cours, révisions espacées (3 jours, 1 semaine, 2 semaines, 1 mois...) pour un morceau maîtrisé
+
 ### Métronome
 - **Tempo ajustable** : 20 à 300 BPM
 - **Signatures rythmiques** : 1/4, 2/4, 3/4, 4/4, 5/4, 5/8, 6/8, 7/8
