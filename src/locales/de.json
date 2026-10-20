@@ -425,7 +425,7 @@
     "backupNewerVersion": "Diese Sicherung stammt aus einer neueren App-Version. Aktualisiere MyMusicCoach, um sie zu importieren.",
     "backupConfirm": "Sicherung vom {date}\nÜbungen: {exercises} · Sessions: {workouts} · Verlauf: {sessions}\n\nSie ersetzt deine aktuellen Daten. Fortfahren?",
     "fileTooLarge": "Datei zu groß (maximal {max} MB).",
-    "unsupportedFile": "Format nicht unterstützt: PDF, Bild (PNG/JPEG), Guitar Pro oder MusicXML.",
+    "unsupportedFile": "Dieses Format wird nicht unterstützt. Wählen Sie eine PDF-Datei, ein Bild (PNG/JPEG), eine Guitar-Pro- oder MusicXML-Datei.",
     "reminderWithSessions": "Zeit zum Üben! Heute steht an: {sessions}"
   },
   "export": {

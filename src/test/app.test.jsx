@@ -445,7 +445,7 @@ describe('MyMusicCoach', () => {
       // Fichier d'un autre type (le sélecteur Android ne filtre pas) : refusé avec un message
       const uploader = userEvent.setup({ applyAccept: false });
       await uploader.upload(within(form).getByLabelText('Score or tab'), new File(['hello'], 'notes.txt', { type: 'text/plain' }));
-      expect(await screen.findByText(/Unsupported format/)).toBeTruthy();
+      expect(await screen.findByText(/This format isn't supported/)).toBeTruthy();
       await user.upload(within(form).getByLabelText('Score or tab'), new File(['%PDF'], 'asturias.pdf', { type: 'application/pdf' }));
       expect(await within(form).findByText(/asturias\.pdf/)).toBeTruthy();
       await user.click(within(form).getByRole('button', { name: /Add piece/ }));
