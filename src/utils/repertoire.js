@@ -1,5 +1,6 @@
 // Répertoire de morceaux : statuts, rappels de travail et révisions espacées.
 import { normalizeDate, parseLocalDate, toLocalDateStr } from './practiceStats';
+import { sessionPieceMinutes } from './practiceTime';
 
 export const PIECE_STATUSES = ['toLearn', 'learning', 'mastered'];
 
@@ -64,11 +65,29 @@ export const recordPiecePractice = (piece, { date, stillMastered = null }) => {
 export const changePieceStatus = (piece, status) =>
   status === piece.status ? piece : { ...piece, status, reviewStage: 0 };
 
-/** Temps total passé sur un morceau (minutes) et dernière séance, d'après l'historique */
-export const piecePracticeSummary = (pieceId, sessionHistory) => {
-  const entries = sessionHistory.filter(s => s.pieceId === pieceId);
-  return {
-    minutes: entries.reduce((sum, s) => sum + (Number(s.durationMinutes) || 0), 0),
-    sessions: entries.length,
-  };
+/**
+ * Temps total passé sur un morceau (minutes) et nombre de séances, d'après l'historique :
+ * séances notées depuis la fiche, et part des sessions où il a été travaillé.
+ * @param {Map} exercisesById - exercices, pour répartir la durée des sessions
+ */
+export const piecePracticeSummary = (pieceId, sessionHistory, exercisesById = new Map()) => {
+  let minutes = 0;
+  let sessions = 0;
+  for (const session of sessionHistory) {
+    if (session.pieceId === pieceId) {
+      minutes += Number(session.durationMinutes) || 0;
+      sessions++;
+    } else if (session.pieceProgress?.[pieceId] === 'completed') {
+      minutes += sessionPieceMinutes(session, exercisesById)[pieceId] || 0;
+      sessions++;
+    }
+  }
+  return { minutes: Math.round(minutes), sessions };
 };
+
+// Statut d'un morceau dans la session en cours de modification (à côté des ids d'exercices)
+export const PIECE_PROGRESS_PREFIX = 'piece-';
+
+/** Morceaux d'une session (les morceaux supprimés sont ignorés) */
+export const workoutPieces = (workout, pieces) =>
+  (workout?.pieces || []).map(id => pieces.find(piece => piece.id === id)).filter(Boolean);

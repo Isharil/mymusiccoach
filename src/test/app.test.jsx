@@ -512,6 +512,84 @@ describe('MyMusicCoach', () => {
     });
   });
 
+  it('ajoute un morceau à une session, le travaille pendant la session puis corrige la session', async () => {
+    await set('mmc_pieces', [{
+      id: 1, title: 'Romance', artist: 'Anonymous', status: 'learning', reminder: true, reminderSince: '2026-10-01',
+      addedAt: '2026-10-01', reviewStage: 0, tempoHistory: [],
+    }]);
+    const { user, container } = await startApp();
+    const field = (name) => container.querySelector(`[name="${name}"]`);
+
+    // Nouvelle session : un exercice et le morceau
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Sessions' }));
+    await user.click(screen.getByRole('button', { name: 'Create a session' }));
+    await user.type(field('name'), 'Piece routine');
+    await user.type(field('duration'), '20 min');
+    await user.type(field('category'), 'Pieces');
+    await user.click(screen.getByRole('checkbox', { name: /Technical warm-up/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Romance/ }));
+    await user.click(screen.getByRole('button', { name: /Create session/ }));
+    const workouts = await stored('mmc_workouts', (list) => list?.some(w => w.name === 'Piece routine'));
+    expect(workouts.find(w => w.name === 'Piece routine')).toMatchObject({ exercises: [1], pieces: [1] });
+    expect(await screen.findByText('1 piece')).toBeTruthy();
+
+    // Session : l'exercice validé, le morceau travaillé
+    await user.click(screen.getByRole('button', { name: 'Start session Piece routine' }));
+    expect(screen.getByRole('heading', { name: 'Repertoire pieces' })).toBeTruthy();
+    expect(screen.getByText('0/2 done')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'View details' }));
+    await user.click(screen.getByRole('button', { name: 'Validate exercise' }));
+    // La fiche de l'exercice peut rester ouverte après validation
+    const exerciseDialog = screen.queryByRole('dialog');
+    if (exerciseDialog) await user.click(within(exerciseDialog).getByRole('button', { name: '← Back' }));
+    expect(screen.getByRole('button', { name: 'Finish session' }).disabled).toBe(true);
+
+    // La fiche du morceau s'ouvre par-dessus la session
+    await user.click(screen.getByRole('button', { name: 'Open piece Romance' }));
+    expect(screen.getByRole('dialog', { name: 'Romance' })).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog', { name: 'Romance' })).getByRole('button', { name: 'Close' }));
+
+    await user.click(screen.getByRole('button', { name: /Practiced/ }));
+    expect(screen.getByRole('button', { name: /Practiced/ }).getAttribute('aria-pressed')).toBe('true');
+    const duration = container.querySelector('#session-duration');
+    await user.clear(duration);
+    await user.type(duration, '30');
+    await user.click(screen.getByRole('button', { name: 'Finish session' }));
+
+    const history = await stored('mmc_sessionHistory', (h) => h?.length === 1);
+    expect(history[0]).toMatchObject({
+      completed: 2, skipped: 0, total: 2, durationMinutes: 30,
+      exerciseProgress: { 1: 'completed' }, pieceProgress: { 1: 'completed' },
+    });
+    // Le morceau a été travaillé aujourd'hui : son rappel repart de là
+    await stored('mmc_pieces', (list) => list?.[0]?.lastPracticedAt === '2026-10-12');
+
+    // Fiche du morceau : sa part de la session (exercice 5 min, morceau compté 10 min -> 20 min sur 30)
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Repertoire' }));
+    await user.click(screen.getByRole('button', { name: /Romance/ }));
+    expect(within(screen.getByRole('dialog', { name: 'Romance' })).getByText('20 min')).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog', { name: 'Romance' })).getByRole('button', { name: 'Close' }));
+
+    // Correction depuis l'historique : le morceau finalement passé
+    await user.click(nav('Stats'));
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    expect(screen.getByRole('heading', { name: 'Edit session' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Practiced/ }).getAttribute('aria-pressed')).toBe('true');
+    await user.click(screen.getByRole('button', { name: /Skipped/ }));
+    await user.click(screen.getByRole('button', { name: /Save changes/ }));
+    const edited = await stored('mmc_sessionHistory', (h) => h?.[0]?.pieceProgress?.[1] === 'skipped');
+    expect(edited[0]).toMatchObject({ completed: 1, skipped: 1, exerciseProgress: { 1: 'completed' } });
+
+    // Morceau supprimé du répertoire : retiré de la session
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Repertoire' }));
+    await user.click(screen.getByRole('button', { name: /Romance/ }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Romance' })).getByRole('button', { name: 'Delete' }));
+    await stored('mmc_workouts', (list) => list?.find(w => w.name === 'Piece routine')?.pieces.length === 0);
+  });
+
   it("joue avec l'enregistrement audio et la vidéo YouTube d'un morceau", async () => {
     // Fausse API YouTube : position de lecture réglable, appels enregistrés
     const players = [];

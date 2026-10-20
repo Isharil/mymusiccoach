@@ -90,6 +90,7 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   duration: string,              // texte libre ("30 min")
   category: string,              // texte libre, traduit s'il correspond à une catégorie connue
   exercises: number[],           // ids des exercices, dans l'ordre
+  pieces?: number[],             // ids des morceaux du répertoire, joués après les exercices
   shortTermGoal?: string,        // objectif à 7 jours
   mediumTermGoal?: string,       // objectif à 28 jours
   isExample?: true
@@ -101,8 +102,9 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   date: 'YYYY-MM-DD', time: 'HH:MM',  // heure locale
   workoutId: number,
   workoutName: string,           // nom au moment de la séance
-  completed: number, skipped: number, total: number,
+  completed: number, skipped: number, total: number,   // exercices et morceaux
   exerciseProgress: { [exerciseId]: 'completed' | 'skipped' },  // absent des sessions avant la 1.11
+  pieceProgress?: { [pieceId]: 'completed' | 'skipped' },        // morceaux de la session
   durationMinutes?: number,      // temps de pratique, absent des sessions avant la 1.12
   notes: { [exerciseId]: string }
 }
@@ -134,7 +136,9 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   reviewStage: number,           // révisions espacées d'un morceau maîtrisé (REVIEW_INTERVALS_DAYS)
   lastPracticedAt?: 'YYYY-MM-DD', addedAt: 'YYYY-MM-DD'
 }
-// Une séance de travail sur un morceau est une pratique libre avec pieceId
+// Une séance de travail sur un morceau est une pratique libre avec pieceId, ou un morceau travaillé
+// dans une session : il compte alors pour 10 minutes prévues dans la répartition de la durée
+// (utils/practiceTime.js), ce qui donne son temps passé et la catégorie « Morceaux »
 
 // Planning : semaine du cycle -> jour -> ids de sessions
 { semaine1: { lundi: [1], mardi: [], ..., dimanche: [] }, semaine2: {...}, semaine3: {...}, semaine4: {...} }

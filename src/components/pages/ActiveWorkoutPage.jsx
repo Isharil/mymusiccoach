@@ -1,14 +1,26 @@
 import { useEffect, useState } from 'react';
-import { Play, Check, Clock, Activity, X } from 'lucide-react';
+import { Play, Check, Clock, Activity, Music, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import DurationField from '../DurationField';
+import SessionPieceCard from '../SessionPieceCard';
 import { elapsedMinutes, parseMinutesInput } from '../../utils/practiceTime';
+import { workoutPieces } from '../../utils/repertoire';
 
 const ActiveWorkoutPage = () => {
   const {
-    activeWorkout, exerciseName, exercises, formatSets, saveSession, setActiveWorkout,
-    setSelectedExercise, t, workoutName, workoutProgress
+    activeWorkout, exerciseName, exercises, formatSets, pieces, saveSession, setActiveWorkout,
+    setSelectedExercise, setWorkoutProgress, t, workoutName, workoutProgress
   } = useApp();
+  const sessionPieces = workoutPieces(activeWorkout, pieces);
+  const pieceKey = (pieceId) => `${activeWorkout.id}-piece-${pieceId}`;
+  const setPieceStatus = (pieceId, status) => {
+    setWorkoutProgress(prev => {
+      const next = { ...prev };
+      if (status) next[pieceKey(pieceId)] = status;
+      else delete next[pieceKey(pieceId)];
+      return next;
+    });
+  };
 
   // Durée de pratique : mesurée depuis le début de la session tant qu'elle n'a pas été modifiée
   const [now, setNow] = useState(() => Date.now());
@@ -39,6 +51,12 @@ const ActiveWorkoutPage = () => {
             <Activity className="w-4 h-4" />
             <span className="text-sm">{t('workout.exerciseCount', { count: activeWorkout.exercises.length })}</span>
           </div>
+          {sessionPieces.length > 0 && (
+            <div className="flex items-center gap-1">
+              <Music aria-hidden="true" className="w-4 h-4" />
+              <span className="text-sm">{t('workout.pieceCount', { count: sessionPieces.length })}</span>
+            </div>
+          )}
         </div>
         {(activeWorkout.shortTermGoal || activeWorkout.mediumTermGoal) && (
           <div className="mt-3 space-y-1">
@@ -106,22 +124,36 @@ const ActiveWorkoutPage = () => {
           );
         })}
 
+        {/* Morceaux du répertoire */}
+        {sessionPieces.length > 0 && (
+          <div className="space-y-4 pt-2">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('workout.pieces')}</h2>
+            {sessionPieces.map(piece => (
+              <SessionPieceCard
+                key={piece.id}
+                piece={piece}
+                status={workoutProgress[pieceKey(piece.id)]}
+                onStatusChange={(status) => setPieceStatus(piece.id, status)}
+              />
+            ))}
+          </div>
+        )}
+
         {(() => {
-          // Vérifier si tous les exercices ont été validés ou sautés
-          const allExercisesHandled = activeWorkout.exercises.every(exId => {
-            const key = `${activeWorkout.id}-${exId}`;
-            return workoutProgress[key] === 'completed' || workoutProgress[key] === 'skipped';
-          });
-          const handledCount = activeWorkout.exercises.filter(exId => {
-            const key = `${activeWorkout.id}-${exId}`;
-            return workoutProgress[key] === 'completed' || workoutProgress[key] === 'skipped';
-          }).length;
+          // Vérifier si tous les exercices et morceaux ont été validés ou sautés
+          const progressKeys = [
+            ...activeWorkout.exercises.map(exId => `${activeWorkout.id}-${exId}`),
+            ...sessionPieces.map(piece => pieceKey(piece.id)),
+          ];
+          const isHandled = (key) => workoutProgress[key] === 'completed' || workoutProgress[key] === 'skipped';
+          const allExercisesHandled = progressKeys.every(isHandled);
+          const handledCount = progressKeys.filter(isHandled).length;
 
           return (
             <div className="mt-6 space-y-2">
               {!allExercisesHandled && (
                 <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                  {t('workout.exercisesHandled', { done: handledCount, total: activeWorkout.exercises.length })}
+                  {t('workout.exercisesHandled', { done: handledCount, total: progressKeys.length })}
                 </p>
               )}
               {allExercisesHandled && (

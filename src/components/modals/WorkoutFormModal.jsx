@@ -4,7 +4,7 @@ import { useBackHandler } from '../../hooks/useBackHandler';
 
 const WorkoutFormModal = () => {
   const {
-    createOrUpdateWorkout, deleteWorkout, editingWorkout, exerciseName, exercises, getNextWorkoutId,
+    createOrUpdateWorkout, deleteWorkout, editingWorkout, exerciseName, exercises, getNextWorkoutId, pieces,
     setEditingWorkout, setShowCreateWorkout, setWorkouts, showToast, t, translateCategory,
     workoutName, workouts
   } = useApp();
@@ -40,7 +40,8 @@ const WorkoutFormModal = () => {
             name: formData.get('name'),
             duration: formData.get('duration'),
             category: formData.get('category'),
-            exercises: selectedExercises
+            exercises: selectedExercises,
+            pieces: formData.getAll('pieces').map(Number),
           };
           createOrUpdateWorkout(data);
         }}
@@ -129,6 +130,35 @@ const WorkoutFormModal = () => {
               ))}
             </div>
           </div>
+
+          {/* Morceaux du répertoire */}
+          {pieces.length > 0 && (
+            <fieldset className="pb-4">
+              <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">🎵 {t('workout.selectPieces')}</legend>
+              <div className="space-y-2">
+                {pieces.map(piece => (
+                  <label
+                    key={piece.id}
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  >
+                    <input
+                      type="checkbox"
+                      name="pieces"
+                      value={piece.id}
+                      defaultChecked={editingWorkout?.pieces?.includes(piece.id)}
+                      className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-gray-100 text-sm break-words">{piece.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {[piece.artist, t(`repertoire.status.${piece.status}`)].filter(Boolean).join(' · ')}
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
         </div>
 
         <div className="flex-shrink-0 border-t-2 border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800 shadow-2xl space-y-3">
@@ -150,6 +180,7 @@ const WorkoutFormModal = () => {
                 duration: formData.get('duration'),
                 category: formData.get('category'),
                 exercises: selectedExercises,
+                pieces: formData.getAll('pieces').map(Number),
                 shortTermGoal: formData.get('shortTermGoal') || '',
                 mediumTermGoal: formData.get('mediumTermGoal') || ''
               };

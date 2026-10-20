@@ -8,6 +8,11 @@ export const MAX_SESSION_MINUTES = 240;
 // Catégorie des minutes qu'on ne peut pas rattacher à un exercice
 export const OTHER_CATEGORY = 'other';
 
+// Morceau du répertoire travaillé dans une session : catégorie, et durée prévue qui sert à répartir
+// le temps de la session (en secondes, comme parseDuration)
+export const PIECE_CATEGORY = 'Morceaux';
+export const PIECE_PLANNED_SECONDS = 10 * 60;
+
 const clampMinutes = (minutes) => Math.min(MAX_SESSION_MINUTES, Math.max(1, Math.round(minutes)));
 
 /** Minutes écoulées depuis le début d'une session (entre 1 et MAX_SESSION_MINUTES) */
@@ -39,17 +44,43 @@ export const sessionCategoryMinutes = (session, exercisesById) => {
   if (!minutes) return {};
   if (session.free) return { [session.category || OTHER_CATEGORY]: minutes };
 
-  const weights = Object.entries(session.exerciseProgress || {})
-    .filter(([, status]) => status === 'completed')
-    .map(([id]) => exercisesById.get(Number(id)))
-    .filter(Boolean)
-    .map(ex => [ex.category || OTHER_CATEGORY, parseDuration(ex.duration)]);
-  const totalWeight = weights.reduce((sum, [, w]) => sum + w, 0);
-  if (!totalWeight) return { [OTHER_CATEGORY]: minutes };
+  const shares = sessionShares(session, exercisesById);
+  if (!shares.length) return { [OTHER_CATEGORY]: minutes };
 
   const result = {};
-  for (const [category, weight] of weights) {
-    result[category] = (result[category] || 0) + (minutes * weight) / totalWeight;
+  for (const share of shares) {
+    result[share.category] = (result[share.category] || 0) + share.minutes;
+  }
+  return result;
+};
+
+/**
+ * Part de chaque élément validé dans la durée d'une session guidée, au prorata de sa durée prévue :
+ * exercices validés et morceaux travaillés (PIECE_PLANNED_SECONDS chacun).
+ * @returns {Array<{ category: string, minutes: number, pieceId?: number }>}
+ */
+const sessionShares = (session, exercisesById) => {
+  const minutes = Number(session.durationMinutes) || 0;
+  const completed = (progress) => Object.entries(progress || {}).filter(([, status]) => status === 'completed');
+  const weights = [
+    ...completed(session.exerciseProgress)
+      .map(([id]) => exercisesById.get(Number(id)))
+      .filter(Boolean)
+      .map(ex => ({ category: ex.category || OTHER_CATEGORY, weight: parseDuration(ex.duration) })),
+    ...completed(session.pieceProgress)
+      .map(([id]) => ({ category: PIECE_CATEGORY, weight: PIECE_PLANNED_SECONDS, pieceId: Number(id) })),
+  ];
+  const totalWeight = weights.reduce((sum, { weight }) => sum + weight, 0);
+  if (!minutes || !totalWeight) return [];
+  return weights.map(({ weight, ...share }) => ({ ...share, minutes: (minutes * weight) / totalWeight }));
+};
+
+/** Minutes d'une session guidée attribuées à chaque morceau travaillé : { pieceId: minutes } */
+export const sessionPieceMinutes = (session, exercisesById) => {
+  if (session.free) return {};
+  const result = {};
+  for (const share of sessionShares(session, exercisesById)) {
+    if (share.pieceId != null) result[share.pieceId] = share.minutes;
   }
   return result;
 };

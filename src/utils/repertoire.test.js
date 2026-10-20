@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   changePieceStatus, duePieces, isPieceDue, nextReminderDate, piecePracticeSummary, recordPiecePractice,
-  REVIEW_INTERVALS_DAYS
+  REVIEW_INTERVALS_DAYS, workoutPieces
 } from './repertoire';
 import { parseLocalDate } from './practiceStats';
 
@@ -71,5 +71,23 @@ describe('séances et révisions', () => {
       { pieceId: 1, durationMinutes: 15 }, { workoutId: 3, durationMinutes: 30 },
     ];
     expect(piecePracticeSummary(1, history)).toEqual({ minutes: 35, sessions: 2 });
+  });
+
+  it('ajoute la part des sessions où le morceau a été travaillé', () => {
+    const exercisesById = new Map([[5, { id: 5, category: 'Technique', duration: '10 min' }]]);
+    const history = [
+      { pieceId: 1, durationMinutes: 20 },
+      // Exercice 5 (10 min) et morceau 1 (10 min) : 15 minutes chacun
+      { workoutId: 3, durationMinutes: 30, exerciseProgress: { 5: 'completed' }, pieceProgress: { 1: 'completed' } },
+      { workoutId: 3, durationMinutes: 30, exerciseProgress: { 5: 'completed' }, pieceProgress: { 1: 'skipped' } },
+    ];
+    expect(piecePracticeSummary(1, history, exercisesById)).toEqual({ minutes: 35, sessions: 2 });
+  });
+
+  it('donne les morceaux d’une session, sans ceux qui ont été supprimés', () => {
+    const pieces = [piece({ id: 1, title: 'A' }), piece({ id: 2, title: 'B' })];
+    expect(workoutPieces({ pieces: [2, 9, 1] }, pieces).map(p => p.title)).toEqual(['B', 'A']);
+    expect(workoutPieces({ exercises: [1] }, pieces)).toEqual([]);
+    expect(workoutPieces(null, pieces)).toEqual([]);
   });
 });

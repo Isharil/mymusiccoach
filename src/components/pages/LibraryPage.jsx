@@ -3,6 +3,7 @@ import { EXERCISE_CATEGORIES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import PiecesTab from '../library/PiecesTab';
+import { workoutPieces } from '../../utils/repertoire';
 
 const LibraryPage = () => {
   const {
@@ -11,7 +12,7 @@ const LibraryPage = () => {
     restoreExercise, restoreWorkout, setActiveTab, setEditingWorkout, setLibraryFilter, setLibrarySubTab,
     setEditingPiece, setSelectedExercise, setShowArchive, setShowCreateExercise, setShowCreateWorkout,
     setShowImportModal, setShowTrash, showArchive, showTrash, startWorkout, t, translateCategory,
-    translateDifficulty, workoutName, workouts
+    translateDifficulty, workoutName, workouts, pieces
   } = useApp();
   useBackHandler(() => setShowTrash(false), showTrash);
   useBackHandler(() => setShowArchive(false), showArchive);
@@ -375,6 +376,12 @@ const LibraryPage = () => {
                           <Activity className="w-4 h-4" />
                           <span>{t('workout.exerciseCount', { count: workout.exercises.length })}</span>
                         </div>
+                        {workoutPieces(workout, pieces).length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Music aria-hidden="true" className="w-4 h-4" />
+                            <span>{t('workout.pieceCount', { count: workoutPieces(workout, pieces).length })}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -450,6 +457,12 @@ const LibraryPage = () => {
                         <Activity className="w-4 h-4" />
                         <span>{t('workout.exerciseCount', { count: workout.exercises.length })}</span>
                       </div>
+                      {workoutPieces(workout, pieces).length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Music aria-hidden="true" className="w-4 h-4" />
+                          <span>{t('workout.pieceCount', { count: workoutPieces(workout, pieces).length })}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <button

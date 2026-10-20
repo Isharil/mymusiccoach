@@ -12,7 +12,7 @@ import { handleBackButton, useBackHandler } from './hooks/useBackHandler';
 import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE } from './constants/appData';
 import { getCycleWeekNumber, getDayKey, getMondayOf, normalizeDate } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
-import { changePieceStatus, recordPiecePractice } from './utils/repertoire';
+import { changePieceStatus, PIECE_PROGRESS_PREFIX, recordPiecePractice } from './utils/repertoire';
 import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
 import { parseBackup } from './utils/backup';
 import { ATTACHMENT_EXTENSIONS, hasExtension } from './utils/tabFiles';
@@ -423,6 +423,16 @@ const MyMusicCoach = () => {
       if (status === 'skipped') skipped++;
       if (status) exerciseProgress[exId] = status;
     });
+
+    // Morceaux du répertoire travaillés ou passés (comptés avec les exercices)
+    const sessionPieceIds = (workout.pieces || []).filter(id => pieces.some(piece => piece.id === id));
+    const pieceProgress = {};
+    sessionPieceIds.forEach(pieceId => {
+      const status = workoutProgress[`${workout.id}-piece-${pieceId}`];
+      if (status === 'completed') completed++;
+      if (status === 'skipped') skipped++;
+      if (status) pieceProgress[pieceId] = status;
+    });
     
     // Collecter les notes pour cette session
     const sessionNotes = {};
@@ -440,8 +450,9 @@ const MyMusicCoach = () => {
       workoutName: workoutName(workout),
       completed,
       skipped,
-      total: workoutExercises.length,
+      total: workoutExercises.length + sessionPieceIds.length,
       exerciseProgress,
+      ...(sessionPieceIds.length > 0 && { pieceProgress }),
       durationMinutes: durationMinutes
         ?? (workout.startedAt
           ? elapsedMinutes(workout.startedAt)
@@ -450,6 +461,12 @@ const MyMusicCoach = () => {
     };
 
     setSessionHistory([...sessionHistory, newSession]);
+    // Morceaux travaillés : le prochain rappel part d'aujourd'hui
+    if (Object.values(pieceProgress).includes('completed')) {
+      setPieces(prev => prev.map(piece => (
+        pieceProgress[piece.id] === 'completed' ? recordPiecePractice(piece, { date: dateStr }) : piece
+      )));
+    }
     setActiveWorkout(null);
     setWorkoutProgress({});
     setExerciseNotes({}); // Réinitialiser les notes
@@ -457,7 +474,7 @@ const MyMusicCoach = () => {
     // Notification de félicitations (uniquement sur mobile natif)
     sendImmediateNotification(
       `🎉 ${t('messages.sessionFinished')}`,
-      t('messages.congratulations', { name: settings.userName, count: completed, total: workoutExercises.length }),
+      t('messages.congratulations', { name: settings.userName, count: completed, total: newSession.total }),
       100
     );
   };
@@ -572,6 +589,9 @@ const MyMusicCoach = () => {
     if (piece?.attachment) deleteAttachment(piece.attachment.id);
     if (piece?.audio) deleteAttachment(piece.audio.id);
     setPieces(prev => prev.filter(p => p.id !== id));
+    const withoutPiece = (list) => list.map(w => (w.pieces?.includes(id) ? { ...w, pieces: w.pieces.filter(p => p !== id) } : w));
+    setWorkouts(withoutPiece);
+    setArchivedWorkouts(withoutPiece);
     setSelectedPieceId(null);
   };
 
@@ -620,6 +640,11 @@ const MyMusicCoach = () => {
       });
     }
 
+    (workout.pieces || []).forEach(pieceId => {
+      const status = session.pieceProgress?.[pieceId];
+      if (status) progress[`${PIECE_PROGRESS_PREFIX}${pieceId}`] = status;
+    });
+
     setEditingSession(session);
     setEditingSessionProgress(progress);
     setEditingSessionDuration(session.durationMinutes ? String(session.durationMinutes) : '');
@@ -637,13 +662,22 @@ const MyMusicCoach = () => {
       if (status === 'skipped') skipped++;
     });
 
+    // Clés "piece-<id>" : morceaux ; les autres : exercices
+    const exerciseProgress = {};
+    const pieceProgress = {};
+    Object.entries(editingSessionProgress).forEach(([key, status]) => {
+      if (key.startsWith(PIECE_PROGRESS_PREFIX)) pieceProgress[key.slice(PIECE_PROGRESS_PREFIX.length)] = status;
+      else exerciseProgress[key] = status;
+    });
+
     const updatedSessions = sessionHistory.map(session => {
       if (session.id === editingSession.id) {
         return {
           ...session,
           completed,
           skipped,
-          exerciseProgress: { ...editingSessionProgress },
+          exerciseProgress,
+          ...(Object.keys(pieceProgress).length > 0 && { pieceProgress }),
           // Durée modifiée ; si le champ est vide ou invalide, on garde l'ancienne
           durationMinutes: parseMinutesInput(editingSessionDuration) ?? session.durationMinutes
         };
@@ -1024,7 +1058,7 @@ const MyMusicCoach = () => {
         {showTuner && <TunerModal />}
         {tabPlayer && <TabPlayer file={tabPlayer.file} onClose={() => setTabPlayer(null)} />}
         {showImportModal && <ImportSessionModal />}
-        {editingSession && !selectedExercise && <EditSessionModal />}
+        {editingSession && !selectedExercise && !selectedPieceId && <EditSessionModal />}
         {exportModalData && <ExportChoiceModal />}
         {toasts.length > 0 && <Toasts />}
         </Suspense>

@@ -16,7 +16,7 @@ import { tempoProgress } from '../../utils/tempo';
 // Fiche d'un morceau du répertoire
 const PieceDetailModal = () => {
   const {
-    deletePiece, formatDisplayDate, formatMinutes, logPiecePractice, pieces, reviewPiece, savePieceTempo,
+    deletePiece, exercises, formatDisplayDate, formatMinutes, logPiecePractice, pieces, reviewPiece, savePieceTempo,
     selectedPieceId, sessionHistory, setEditingPiece, setSelectedPieceId, t, updatePiece
   } = useApp();
   useBackHandler(() => setSelectedPieceId(null));
@@ -27,7 +27,7 @@ const PieceDetailModal = () => {
 
   if (!piece) return null;
 
-  const summary = piecePracticeSummary(piece.id, sessionHistory);
+  const summary = piecePracticeSummary(piece.id, sessionHistory, new Map(exercises.map(ex => [ex.id, ex])));
   const nextReminder = nextReminderDate(piece);
   const due = isPieceDue(piece);
   const progress = tempoProgress({ baseTempo: 0, targetTempo: piece.targetTempo, tempoHistory: piece.tempoHistory || [] });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   elapsedMinutes, formatMinutes, MAX_SESSION_MINUTES, parseMinutesInput, plannedMinutes,
-  practiceTimeStats, sessionCategoryMinutes
+  practiceTimeStats, sessionCategoryMinutes, sessionPieceMinutes
 } from './practiceTime';
 import { parseLocalDate } from './practiceStats';
 
@@ -58,6 +58,16 @@ describe('sessionCategoryMinutes', () => {
 
   it('ignore les sessions sans durée', () => {
     expect(sessionCategoryMinutes({ exerciseProgress: { 1: 'completed' } }, byId)).toEqual({});
+  });
+
+  it('compte les morceaux travaillés comme 10 minutes prévues, en catégorie Morceaux', () => {
+    // Exercice 1 (10 min) + morceau 7 (10 min) : la durée est partagée en deux
+    const session = { durationMinutes: 30, exerciseProgress: { 1: 'completed' }, pieceProgress: { 7: 'completed', 8: 'skipped' } };
+    expect(sessionCategoryMinutes(session, byId)).toEqual({ Technique: 15, Morceaux: 15 });
+    expect(sessionPieceMinutes(session, byId)).toEqual({ 7: 15 });
+    // Session de morceaux seulement
+    expect(sessionCategoryMinutes({ durationMinutes: 20, pieceProgress: { 7: 'completed', 9: 'completed' } }, byId)).toEqual({ Morceaux: 20 });
+    expect(sessionPieceMinutes({ free: true, durationMinutes: 20, pieceId: 7 }, byId)).toEqual({});
   });
 });
 

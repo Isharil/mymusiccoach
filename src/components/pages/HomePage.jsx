@@ -1,7 +1,7 @@
 import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music, PenLine, AudioLines, Bell, PlayCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import PracticeTimeSummary from '../PracticeTimeSummary';
-import { duePieces } from '../../utils/repertoire';
+import { duePieces, workoutPieces } from '../../utils/repertoire';
 
 const HomePage = () => {
   const {
@@ -97,6 +97,12 @@ const HomePage = () => {
                           <Activity className="w-4 h-4" />
                           <span>{t('workout.exerciseCount', { count: workout.exercises.length })}</span>
                         </div>
+                        {workoutPieces(workout, pieces).length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Music aria-hidden="true" className="w-4 h-4" />
+                            <span>{t('workout.pieceCount', { count: workoutPieces(workout, pieces).length })}</span>
+                          </div>
+                        )}
                       </div>
                       {(workout.shortTermGoal || workout.mediumTermGoal) && (
                         <div className="space-y-1 mb-3">
@@ -162,6 +168,15 @@ const HomePage = () => {
                           </div>
                         ) : null;
                       })}
+                      {workoutPieces(workout, pieces).map(piece => (
+                        <div key={`piece-${piece.id}`} className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 flex items-center gap-3">
+                          <Music aria-hidden="true" className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">{piece.title}</p>
+                            {piece.artist && <p className="text-xs text-gray-500 dark:text-gray-400">{piece.artist}</p>}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );

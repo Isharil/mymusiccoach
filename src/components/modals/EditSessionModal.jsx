@@ -2,13 +2,24 @@ import { Play, Check, Clock, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import DurationField from '../DurationField';
+import SessionPieceCard from '../SessionPieceCard';
+import { PIECE_PROGRESS_PREFIX, workoutPieces } from '../../utils/repertoire';
 
 const EditSessionModal = () => {
   const {
     editingSession, editingSessionDuration, editingSessionProgress, exerciseName, exercises,
-    formatDisplayDate, formatSets, setEditingSession, setEditingSessionDuration,
+    formatDisplayDate, formatSets, pieces, setEditingSession, setEditingSessionDuration,
     setEditingSessionProgress, setSelectedExercise, t, updateSession, workouts
   } = useApp();
+  const setPieceStatus = (pieceId, status) => {
+    const key = `${PIECE_PROGRESS_PREFIX}${pieceId}`;
+    setEditingSessionProgress(prev => {
+      const next = { ...prev };
+      if (status) next[key] = status;
+      else delete next[key];
+      return next;
+    });
+  };
   useBackHandler(() => { setEditingSession(null); setEditingSessionProgress({}); });
 
   return (
@@ -46,7 +57,8 @@ const EditSessionModal = () => {
               );
             }
 
-            return workout.exercises.map((exerciseId, index) => {
+            const sessionPieces = workoutPieces(workout, pieces);
+            const exerciseCards = workout.exercises.map((exerciseId, index) => {
               const exercise = exercises.find(ex => ex.id === exerciseId);
               if (!exercise) return null;
 
@@ -96,6 +108,24 @@ const EditSessionModal = () => {
                 </div>
               );
             });
+            return (
+              <>
+                {exerciseCards}
+                {sessionPieces.length > 0 && (
+                  <>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 pt-2">{t('workout.pieces')}</h3>
+                    {sessionPieces.map(piece => (
+                      <SessionPieceCard
+                        key={piece.id}
+                        piece={piece}
+                        status={editingSessionProgress[`${PIECE_PROGRESS_PREFIX}${piece.id}`]}
+                        onStatusChange={(status) => setPieceStatus(piece.id, status)}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            );
           })()}
 
           <DurationField
