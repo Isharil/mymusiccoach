@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useIndexedDB, exportAppData, importAppData, migrateFromLocalStorage, requestStoragePersistence } from './hooks/useIndexedDB';
 import { App as CapacitorApp } from '@capacitor/app';
-import Metronome from './components/Metronome';
 import { useTranslation } from './hooks/useTranslation';
 import { useDisplayHelpers } from './hooks/useDisplayHelpers';
 import { usePracticeStats } from './hooks/usePracticeStats';
@@ -13,7 +12,6 @@ import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE
 import { getCycleWeekNumber, getDayKey, getMondayOf, normalizeDate } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { changePieceStatus, recordPiecePractice } from './utils/repertoire';
-import { buildProgressReport } from './utils/progressReport';
 import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
 import { parseBackup } from './utils/backup';
 import {
@@ -36,28 +34,35 @@ const BACKUP_ERROR_MESSAGES = {
   newerVersion: 'messages.backupNewerVersion',
 };
 import { AppContext } from './context/AppContext';
+import { lazyWithPreload, preloadLazyComponents } from './utils/lazyWithPreload';
 import HomePage from './components/pages/HomePage';
-import ScheduleModal from './components/modals/ScheduleModal';
 import ActiveWorkoutPage from './components/pages/ActiveWorkoutPage';
-import LibraryPage from './components/pages/LibraryPage';
-import StatsPage from './components/pages/StatsPage';
-import SettingsPage from './components/pages/SettingsPage';
-import ExerciseFormModal from './components/modals/ExerciseFormModal';
-import WorkoutFormModal from './components/modals/WorkoutFormModal';
-import ExerciseDetailModal from './components/modals/ExerciseDetailModal';
-import BadgesModal from './components/modals/BadgesModal';
-import ReportPeriodModal from './components/modals/ReportPeriodModal';
-import PrivacyPolicyModal from './components/modals/PrivacyPolicyModal';
-import ImportSessionModal from './components/modals/ImportSessionModal';
-import EditSessionModal from './components/modals/EditSessionModal';
-import ExportChoiceModal from './components/modals/ExportChoiceModal';
 import Toasts from './components/Toasts';
 import BottomNav from './components/BottomNav';
 import Onboarding from './components/Onboarding';
-import FreePracticeModal from './components/modals/FreePracticeModal';
-import TunerModal from './components/modals/TunerModal';
-import PieceDetailModal from './components/modals/PieceDetailModal';
-import PieceFormModal from './components/modals/PieceFormModal';
+
+// Écrans et fenêtres secondaires, chargés à la première ouverture (allège le démarrage).
+// Ils sont aussi préchargés en arrière-plan peu après le lancement : ils s'ouvrent ensuite sans
+// délai et, sur le web, le service worker les met en cache pour l'utilisation hors ligne.
+const PRELOAD_DELAY_MS = 3000;
+const Metronome = lazyWithPreload(() => import('./components/Metronome'));
+const ScheduleModal = lazyWithPreload(() => import('./components/modals/ScheduleModal'));
+const LibraryPage = lazyWithPreload(() => import('./components/pages/LibraryPage'));
+const StatsPage = lazyWithPreload(() => import('./components/pages/StatsPage'));
+const SettingsPage = lazyWithPreload(() => import('./components/pages/SettingsPage'));
+const ExerciseFormModal = lazyWithPreload(() => import('./components/modals/ExerciseFormModal'));
+const WorkoutFormModal = lazyWithPreload(() => import('./components/modals/WorkoutFormModal'));
+const ExerciseDetailModal = lazyWithPreload(() => import('./components/modals/ExerciseDetailModal'));
+const BadgesModal = lazyWithPreload(() => import('./components/modals/BadgesModal'));
+const ReportPeriodModal = lazyWithPreload(() => import('./components/modals/ReportPeriodModal'));
+const PrivacyPolicyModal = lazyWithPreload(() => import('./components/modals/PrivacyPolicyModal'));
+const ImportSessionModal = lazyWithPreload(() => import('./components/modals/ImportSessionModal'));
+const EditSessionModal = lazyWithPreload(() => import('./components/modals/EditSessionModal'));
+const ExportChoiceModal = lazyWithPreload(() => import('./components/modals/ExportChoiceModal'));
+const FreePracticeModal = lazyWithPreload(() => import('./components/modals/FreePracticeModal'));
+const TunerModal = lazyWithPreload(() => import('./components/modals/TunerModal'));
+const PieceDetailModal = lazyWithPreload(() => import('./components/modals/PieceDetailModal'));
+const PieceFormModal = lazyWithPreload(() => import('./components/modals/PieceFormModal'));
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -227,6 +232,15 @@ const MyMusicCoach = () => {
   }, [isNativePlatform]);
 
   const isDarkMode = useTheme(settings.theme);
+
+  // Préchargement des écrans secondaires, une fois l'app affichée
+  useEffect(() => {
+    if (!isAppReady) return;
+    const timer = setTimeout(() => {
+      preloadLazyComponents();
+    }, PRELOAD_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isAppReady]);
 
   // Scroll en haut à chaque changement d'onglet
   useEffect(() => {
@@ -879,6 +893,7 @@ const MyMusicCoach = () => {
   // Rapport de progression (HTML à imprimer en PDF)
   const generateProgressReport = async (weeks) => {
     setShowExportModal(false);
+    const { buildProgressReport } = await import('./utils/progressReport');
     const { html, fileName } = buildProgressReport({
       weeks, sessionHistory, exercises, settings, t, exerciseName, formatDisplayDate
     });
@@ -937,6 +952,7 @@ const MyMusicCoach = () => {
   return (
     <AppContext.Provider value={appContext}>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-950" style={{paddingTop: 'env(safe-area-inset-top, 12px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)'}}>
+        <Suspense fallback={null}>
         {activeTab === 'home' && !activeWorkout && <HomePage />}
         {showSchedule && <ScheduleModal />}
         {activeWorkout && <ActiveWorkoutPage />}
@@ -970,6 +986,7 @@ const MyMusicCoach = () => {
         {editingSession && !selectedExercise && <EditSessionModal />}
         {exportModalData && <ExportChoiceModal />}
         {toasts.length > 0 && <Toasts />}
+        </Suspense>
         {!selectedExercise && <BottomNav />}
         {!settings.onboardingDone && !isDataLoading && <Onboarding />}
       </div>

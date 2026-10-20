@@ -6,6 +6,7 @@ import { render, screen, within, waitFor, cleanup } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { clear, get, set } from 'idb-keyval';
 import App from '../App';
+import { preloadLazyComponents } from '../utils/lazyWithPreload';
 
 // Lundi 12 octobre 2026 : avec le planning par défaut, la session du jour est "Beginner routine"
 const MONDAY = new Date(2026, 9, 12, 10, 0);
@@ -26,6 +27,8 @@ afterEach(() => {
 
 // Lance l'app et passe le tutoriel
 const startApp = async () => {
+  // Écrans chargés à la demande : préchargés pour s'afficher dès le clic, comme dans l'app après quelques secondes
+  await preloadLazyComponents();
   const user = userEvent.setup();
   const view = render(<App />);
   await user.click(await screen.findByRole('button', { name: 'Skip' }));
@@ -637,6 +640,18 @@ describe('MyMusicCoach', () => {
     expect(nav('Accueil')).toBeTruthy();
     await user.click(nav('Accueil'));
     expect(screen.getByText('Routine Débutant')).toBeTruthy();
+  });
+
+  it('ouvre une fenêtre chargée à la demande avant la fin du préchargement', async () => {
+    // Copie neuve de l'app : aucun composant n'est encore préchargé
+    vi.resetModules();
+    const { default: FreshApp } = await import('../App');
+    const user = userEvent.setup();
+    render(<FreshApp />);
+    await user.click(await screen.findByRole('button', { name: 'Skip' }));
+
+    await user.click(screen.getByRole('button', { name: /Metronome/ }));
+    expect((await screen.findAllByText('BPM')).length).toBeGreaterThan(0);
   });
 
   it('ouvre le métronome depuis l\'accueil', async () => {
