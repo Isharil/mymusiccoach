@@ -49,7 +49,7 @@ const Gauge = ({ cents }) => {
 
 const TunerModal = () => {
   const { setSettings, setShowTuner, settings, t } = useApp();
-  const { status, frequency, start, stop } = useTuner();
+  const { status, frequency, level, start, stop } = useTuner();
   const tuner = { ...DEFAULT_TUNER_SETTINGS, ...settings.tuner };
   const updateTuner = (changes) => setSettings(prev => ({ ...prev, tuner: { ...DEFAULT_TUNER_SETTINGS, ...prev.tuner, ...changes } }));
 
@@ -147,6 +147,20 @@ const TunerModal = () => {
               </div>
 
               <Gauge cents={cents} />
+
+              {/* Niveau du micro : le trait marque le seuil à partir duquel la note est analysée */}
+              <div className="mx-auto max-w-[12rem] mb-2" aria-hidden="true">
+                <div className="relative h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-100 ${level >= 1 ? 'bg-green-500' : 'bg-gray-400'}`}
+                    style={{ width: `${Math.min(100, level * 50)}%` }}
+                  />
+                  <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-gray-500 dark:bg-gray-300" />
+                </div>
+              </div>
+              {!writtenLabel && level > 0.3 && level < 1 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mb-1">{t('tuner.tooQuiet')}</p>
+              )}
 
               <p className={`text-lg font-bold h-7 ${cents === null ? '' : accuracyColor(cents).text}`}>
                 {cents === null ? '' : Math.abs(cents) <= IN_TUNE_CENTS

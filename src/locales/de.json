@@ -615,6 +615,7 @@
     "unavailable": "Das Mikrofon ist auf diesem Gerät oder in diesem Browser nicht verfügbar.",
     "error": "Das Mikrofon kann nicht verwendet werden. Prüfe, ob keine andere App es nutzt, und versuche es erneut.",
     "noteNames": ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "H"],
-    "octaveOffset": "0"
+    "octaveOffset": "0",
+    "tooQuiet": "Ton zu leise: Halte das Mikrofon des Telefons näher ans Instrument oder spiel etwas lauter."
   }
 }

@@ -23,6 +23,25 @@ export const TRANSPOSITIONS = {
 // Noms des notes en lettres (notation internationale)
 export const LETTER_NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 
+// Seuil de silence adaptatif : un son est analysé s'il dépasse NOISE_GATE_RATIO fois le bruit
+// de fond mesuré, dans ces limites (un instrument doux, comme une guitare électrique non
+// branchée, arrive très faible sur le micro d'un téléphone)
+export const NOISE_GATE_RATIO = 3;
+export const MIN_NOISE_GATE = 0.0005;
+export const MAX_NOISE_GATE = 0.01;
+export const INITIAL_NOISE_FLOOR = 0.001;
+
+/**
+ * Suit le bruit de fond : descend tout de suite vers les niveaux plus bas, remonte très
+ * lentement (une note tenue ne doit pas être prise pour du bruit).
+ */
+export const updateNoiseFloor = (floor, level) =>
+  level < floor ? level : floor + (level - floor) * 0.01;
+
+/** Niveau minimal pour analyser un son, d'après le bruit de fond */
+export const noiseGate = (floor) =>
+  Math.min(MAX_NOISE_GATE, Math.max(MIN_NOISE_GATE, floor * NOISE_GATE_RATIO));
+
 /** Niveau sonore (moyenne quadratique) d'un échantillon */
 export const rms = (buffer) => {
   let sum = 0;
@@ -40,7 +59,7 @@ export const detectPitch = (buffer, sampleRate, {
   minFrequency = MIN_FREQUENCY,
   maxFrequency = MAX_FREQUENCY,
   threshold = 0.15,
-  minRms = 0.01,
+  minRms = MIN_NOISE_GATE,
 } = {}) => {
   if (rms(buffer) < minRms) return null; // silence
 

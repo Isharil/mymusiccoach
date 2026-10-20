@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { detectPitch, median } from '../utils/pitch';
+import { INITIAL_NOISE_FLOOR, detectPitch, median, noiseGate, rms, updateNoiseFloor } from '../utils/pitch';
 
 // Taille de l'échantillon analysé : couvre au moins deux périodes de la note la plus grave (27,5 Hz)
 const FFT_SIZE = 4096;
@@ -14,12 +14,14 @@ const SILENCE_RESET_MS = 1200;
  * @returns {{
  *   status: 'idle' | 'starting' | 'listening' | 'denied' | 'unavailable' | 'error',
  *   frequency: number | null,   // fréquence lissée de la note entendue, null en l'absence de son
+ *   level: number,              // niveau du micro rapporté au seuil de détection (>= 1 : assez fort)
  *   start: () => Promise<void>, stop: () => void
  * }}
  */
 export const useTuner = () => {
   const [status, setStatus] = useState('idle');
   const [frequency, setFrequency] = useState(null);
+  const [level, setLevel] = useState(0); // niveau du micro, 1 = seuil de détection
   const resources = useRef(null); // { stream, audioContext, timer }
 
   const stop = useCallback(() => {
@@ -31,6 +33,7 @@ export const useTuner = () => {
       current.audioContext.close().catch(() => {});
     }
     setFrequency(null);
+    setLevel(0);
     setStatus('idle');
   }, []);
 
@@ -50,16 +53,34 @@ export const useTuner = () => {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = FFT_SIZE;
-      audioContext.createMediaStreamSource(stream).connect(analyser);
+
+      // Filtrage : sous 30 Hz (souffle, manipulations) et au-dessus de 5 kHz il n'y a que du bruit
+      // pour l'accordage ; le retirer aide à détecter les sons faibles
+      const highPass = audioContext.createBiquadFilter();
+      highPass.type = 'highpass';
+      highPass.frequency.value = 30;
+      const lowPass = audioContext.createBiquadFilter();
+      lowPass.type = 'lowpass';
+      lowPass.frequency.value = 5000;
+      audioContext.createMediaStreamSource(stream).connect(highPass);
+      highPass.connect(lowPass);
+      lowPass.connect(analyser);
 
       const buffer = new Float32Array(FFT_SIZE);
       let recent = [];
       let lastHeard = 0;
+      let noiseFloor = INITIAL_NOISE_FLOOR;
 
       const analyse = () => {
         analyser.getFloatTimeDomainData(buffer);
-        const result = detectPitch(buffer, audioContext.sampleRate);
         const now = Date.now();
+
+        // Seuil de silence adapté au bruit de fond de la pièce
+        const currentLevel = rms(buffer);
+        const gate = noiseGate(noiseFloor);
+        const result = detectPitch(buffer, audioContext.sampleRate, { minRms: gate });
+        if (!result) noiseFloor = updateNoiseFloor(noiseFloor, currentLevel);
+        setLevel(currentLevel / gate);
 
         if (result) {
           // Nouvelle note (écart d'un demi-ton ou plus) : on repart de zéro pour réagir tout de suite
@@ -94,5 +115,5 @@ export const useTuner = () => {
     };
   }, [stop]);
 
-  return { status, frequency, start, stop };
+  return { status, frequency, level, start, stop };
 };

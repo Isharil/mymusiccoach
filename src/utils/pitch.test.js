@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  detectPitch, frequencyToNote, median, midiToFrequency, noteLabel, rms, transposeNote
+  MAX_NOISE_GATE, MIN_NOISE_GATE, detectPitch, frequencyToNote, median, midiToFrequency, noiseGate, noteLabel, rms,
+  transposeNote, updateNoiseFloor
 } from './pitch';
 
 const SAMPLE_RATE = 48000;
@@ -64,6 +65,46 @@ describe('detectPitch', () => {
     const random = seededRandom(7);
     const noise = Float32Array.from({ length: BUFFER }, () => (random() * 2 - 1) * 0.3);
     expect(detectPitch(noise, SAMPLE_RATE)).toBeNull();
+  });
+});
+
+describe('sons faibles (ex. guitare électrique non branchée)', () => {
+  // Captée par un téléphone : son faible, fondamentale très atténuée (les micros coupent le grave)
+  const quietString = (frequency, amplitude) => {
+    const buffer = tone(frequency, { harmonics: [0.1, 1, 0.7, 0.5, 0.35, 0.25], amplitude });
+    const random = seededRandom(11);
+    for (let i = 0; i < buffer.length; i++) buffer[i] += 0.0003 * (random() * 2 - 1); // bruit de fond
+    return buffer;
+  };
+  const roomNoise = () => {
+    const random = seededRandom(5);
+    return Float32Array.from({ length: BUFFER }, () => 0.0003 * (random() * 2 - 1));
+  };
+
+  it('suit le bruit de fond : vite vers le bas, lentement vers le haut', () => {
+    expect(updateNoiseFloor(0.001, 0.0002)).toBe(0.0002);
+    expect(updateNoiseFloor(0.001, 0.101)).toBeCloseTo(0.002, 6);
+  });
+
+  it('borne le seuil de silence', () => {
+    expect(noiseGate(0.0001)).toBe(MIN_NOISE_GATE);
+    expect(noiseGate(0.001)).toBeCloseTo(0.003, 6);
+    expect(noiseGate(1)).toBe(MAX_NOISE_GATE);
+  });
+
+  it('détecte les cordes de Mi jouées doucement, dans la bonne octave', () => {
+    const floor = rms(roomNoise());
+    for (const frequency of [82.41, 329.63]) {
+      const buffer = quietString(frequency, 0.01);
+      const result = detectPitch(buffer, SAMPLE_RATE, { minRms: noiseGate(floor) });
+      expect(result, `${frequency} Hz`).not.toBeNull();
+      expect(Math.abs(centsBetween(result.frequency, frequency))).toBeLessThan(5);
+    }
+  });
+
+  it('ignore le seul bruit de fond de la pièce', () => {
+    const noise = roomNoise();
+    expect(detectPitch(noise, SAMPLE_RATE, { minRms: noiseGate(rms(noise)) })).toBeNull();
   });
 });
 

@@ -299,6 +299,7 @@ describe('MyMusicCoach', () => {
           };
         }
         createMediaStreamSource() { return { connect() {} }; }
+        createBiquadFilter() { return { type: '', frequency: { value: 0 }, connect() {} }; }
         createOscillator() { return { frequency: { value: 0 }, connect: (node) => node, start() {}, stop() {} }; }
         createGain() { return { gain: { value: 0 }, connect() {} }; }
         close() { return Promise.resolve(); }
