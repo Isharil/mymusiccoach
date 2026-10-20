@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, FolderOpen, Pause, Play, Repeat, SkipBack, Timer, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useBackHandler } from '../hooks/useBackHandler';
 import { dataUrlToBytes, formatPlaybackTime, pickerAccept, TAB_FILE_ACCEPT } from '../utils/tabFiles';
 
 // Vitesses de lecture proposées
@@ -13,6 +14,7 @@ const SPEEDS = [0.5, 0.6, 0.75, 0.9, 1, 1.25];
  */
 const TabPlayer = ({ file, onClose }) => {
   const { t } = useApp();
+  useBackHandler(onClose);
   const scrollRef = useRef(null);
   const sheetRef = useRef(null);
   const apiRef = useRef(null);

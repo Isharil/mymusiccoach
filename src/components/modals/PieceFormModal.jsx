@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import { PIECE_STATUSES } from '../../utils/repertoire';
 import { ATTACHMENT_ACCEPT, pickerAccept } from '../../utils/tabFiles';
 
@@ -24,6 +25,7 @@ const PieceFormModal = () => {
     setEditingPiece(null);
     setUploadedFile(null);
   };
+  useBackHandler(close);
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -1,5 +1,6 @@
 import { Play, Check, Clock, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import DurationField from '../DurationField';
 
 const EditSessionModal = () => {
@@ -8,6 +9,7 @@ const EditSessionModal = () => {
     formatDisplayDate, formatSets, setEditingSession, setEditingSessionDuration,
     setEditingSessionProgress, setSelectedExercise, t, updateSession, workouts
   } = useApp();
+  useBackHandler(() => { setEditingSession(null); setEditingSessionProgress({}); });
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">

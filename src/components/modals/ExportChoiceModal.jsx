@@ -1,10 +1,12 @@
 import { Download, Upload } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const ExportChoiceModal = () => {
   const {
     exportModalData, saveToDownloads, setExportModalData, shareFile, t
   } = useApp();
+  useBackHandler(() => setExportModalData(null));
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

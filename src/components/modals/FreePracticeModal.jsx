@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Trash2 } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import { toLocalDateStr } from '../../utils/practiceStats';
 import { parseMinutesInput } from '../../utils/practiceTime';
 import DurationField from '../DurationField';
@@ -12,6 +13,7 @@ const FreePracticeModal = () => {
     closeFreePractice, deleteFreePractice, editingFreePractice, freePracticeDraft, saveFreePractice, showToast, t,
     translateCategory
   } = useApp();
+  useBackHandler(closeFreePractice);
 
   const editing = editingFreePractice;
   const draft = freePracticeDraft; // nouvelle entrée pré-remplie (ex. morceau travaillé)

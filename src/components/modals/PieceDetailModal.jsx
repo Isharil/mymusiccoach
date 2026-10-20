@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Bell, Edit2, ExternalLink, PenLine, Trash2, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import { useAttachment } from '../../hooks/useAttachment';
 import AttachmentView from '../AttachmentView';
 import { PIECE_STATUS_BADGE } from '../../constants/appData';
@@ -15,6 +16,7 @@ const PieceDetailModal = () => {
     deletePiece, formatDisplayDate, formatMinutes, logPiecePractice, pieces, reviewPiece, savePieceTempo,
     selectedPieceId, sessionHistory, setEditingPiece, setSelectedPieceId, t, updatePiece
   } = useApp();
+  useBackHandler(() => setSelectedPieceId(null));
   const piece = pieces.find(p => p.id === selectedPieceId);
   const file = useAttachment(piece?.attachment);
   const [tempoInput, setTempoInput] = useState('');

@@ -2,11 +2,12 @@
 // Tests de parcours : l'application complète est rendue dans un faux navigateur
 // avec une base IndexedDB en mémoire. Ils servent de filet de sécurité pour les refontes.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, within, waitFor, cleanup } from '@testing-library/react';
+import { act, render, screen, within, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { clear, get, set } from 'idb-keyval';
 import App from '../App';
 import { preloadLazyComponents } from '../utils/lazyWithPreload';
+import { handleBackButton } from '../hooks/useBackHandler';
 
 // Lecteur de tablatures : alphaTab ne peut pas dessiner ni jouer de son dans jsdom ; une version
 // factice enregistre ce que le lecteur lui demande (le vrai rendu se vérifie sur l'appareil)
@@ -509,6 +510,40 @@ describe('MyMusicCoach', () => {
       await user.click(nav('Home'));
       expect(screen.queryByRole('heading', { name: /Piece to practice/ })).toBeNull();
     });
+  });
+
+  it("le retour d'Android ferme la fenêtre ouverte la plus récente", async () => {
+    const { user } = await startApp();
+    const back = () => act(() => handleBackButton());
+
+    // Formulaire de morceau fermé par le retour, sans rien enregistrer
+    await user.click(nav('Library'));
+    await user.click(screen.getByRole('button', { name: 'Repertoire' }));
+    await user.click(screen.getByRole('button', { name: 'New piece' }));
+    expect(screen.getByRole('dialog', { name: 'New piece' })).toBeTruthy();
+    await back();
+    expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull();
+
+    // Fiche d'un morceau, puis lecteur ouvert depuis la fiche : le lecteur se ferme d'abord
+    await user.click(screen.getByRole('button', { name: 'New piece' }));
+    const form = screen.getByRole('dialog', { name: 'New piece' });
+    await user.type(within(form).getByLabelText(/Title/), 'Back song');
+    await user.upload(within(form).getByLabelText('Score or tab'), new File([new Uint8Array([1])], 'song.gp5', { type: 'application/octet-stream' }));
+    expect(await within(form).findByText(/song\.gp5/)).toBeTruthy();
+    await user.click(within(form).getByRole('button', { name: /Add piece/ }));
+    await user.click(await screen.findByRole('button', { name: /Back song/ }));
+    const detail = screen.getByRole('dialog', { name: 'Back song' });
+    await user.click(await within(detail).findByRole('button', { name: 'Open tab' }));
+    expect(await screen.findByRole('heading', { name: 'Test song' })).toBeTruthy();
+
+    await back();
+    expect(screen.queryByRole('heading', { name: 'Test song' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Back song' })).toBeTruthy();
+    await back();
+    expect(screen.queryByRole('dialog', { name: 'Back song' })).toBeNull();
+
+    // Plus aucune fenêtre : le retour est laissé à l'app (accueil, puis arrière-plan)
+    expect(handleBackButton()).toBe(false);
   });
 
   describe('lecteur de tablatures', () => {

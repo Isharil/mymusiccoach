@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Mic, MicOff, Minus, Plus, Volume2, Square } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import { useTuner } from '../../hooks/useTuner';
 import { DEFAULT_TUNER_SETTINGS } from '../../constants/appData';
 import {
@@ -113,6 +114,7 @@ const TunerModal = () => {
     stopReference();
     setShowTuner(false);
   };
+  useBackHandler(close);
 
   const selectClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm';
   const errorMessage = { denied: t('tuner.denied'), unavailable: t('tuner.unavailable'), error: t('tuner.error') }[status];

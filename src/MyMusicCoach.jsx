@@ -8,6 +8,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { useTheme } from './hooks/useTheme';
 import { useFileExport } from './hooks/useFileExport';
 import { useTimer } from './hooks/useTimer';
+import { handleBackButton, useBackHandler } from './hooks/useBackHandler';
 import { DEFAULT_SETTINGS, DEFAULT_EXERCISES, DEFAULT_WORKOUTS, DEFAULT_SCHEDULE } from './constants/appData';
 import { getCycleWeekNumber, getDayKey, getMondayOf, normalizeDate } from './utils/practiceStats';
 import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
@@ -233,6 +234,25 @@ const MyMusicCoach = () => {
     CapacitorApp.getInfo()
       .then(setNativeAppInfo)
       .catch(error => console.error('Erreur lecture version native:', error));
+  }, [isNativePlatform]);
+
+  // Retour d'Android : ferme la fenêtre ouverte la plus récente (voir useBackHandler), sinon revient
+  // à l'accueil, puis met l'app en arrière-plan
+  useBackHandler(() => setShowMetronome(false), showMetronome);
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+  useEffect(() => {
+    if (!isNativePlatform) return undefined;
+    const listener = CapacitorApp.addListener('backButton', () => {
+      if (handleBackButton()) return;
+      if (activeTabRef.current !== 'home') setActiveTab('home');
+      else CapacitorApp.minimizeApp();
+    });
+    return () => {
+      listener.then(handle => handle.remove());
+    };
   }, [isNativePlatform]);
 
   const isDarkMode = useTheme(settings.theme);

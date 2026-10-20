@@ -1,5 +1,6 @@
 import { X, ChevronRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const ScheduleModal = () => {
   const {
@@ -7,6 +8,7 @@ const ScheduleModal = () => {
     setShowSchedule, setViewingWeek, setWeeklySchedule, t, viewingWeek, weeklySchedule, workoutName,
     workouts
   } = useApp();
+  useBackHandler(() => setShowSchedule(false));
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl landscape:max-w-2xl mx-auto h-screen" role="dialog" aria-modal="true">

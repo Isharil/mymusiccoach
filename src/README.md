@@ -165,6 +165,13 @@ l'ouvre depuis Outils (sans fichier), une pièce jointe (`AttachmentView`) ou un
 `utils/tabFiles.js` reconnaît les extensions et décode les fichiers stockés en data URL. Dans les
 tests, alphaTab est remplacé par une fausse API (`test/app.test.jsx`).
 
+### Retour Android
+
+Chaque fenêtre appelle `useBackHandler(fermer, ouverte)` (`hooks/useBackHandler.js`) avec la même
+action que son bouton de fermeture. Le bouton ou geste retour d'Android ferme la fenêtre ouverte la
+plus récente ; s'il n'y en a aucune, il revient à l'accueil, puis met l'app en arrière-plan. Une
+nouvelle fenêtre doit s'inscrire de la même façon.
+
 ### Rappels
 
 Les rappels sont des notifications ponctuelles programmées pour les 28 prochains jours

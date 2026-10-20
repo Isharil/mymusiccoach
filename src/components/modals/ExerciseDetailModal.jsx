@@ -5,6 +5,7 @@ import { useAttachment } from '../../hooks/useAttachment';
 import AttachmentView from '../AttachmentView';
 import { suggestNextTempo, tempoProgress } from '../../utils/tempo';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const ExerciseDetailModal = () => {
   const {
@@ -17,6 +18,14 @@ const ExerciseDetailModal = () => {
     stopTimer, t, timerActive, timerFinished, timerPaused, timerSeconds, translateCategory,
     translateDifficulty, workoutProgress, workouts
   } = useApp();
+  const close = () => {
+    stopTimer();
+    setSelectedExercise(null);
+    setCurrentTempo({});
+    setShowExerciseMenu(false);
+  };
+  useBackHandler(close);
+  useBackHandler(() => setShowExerciseMenu(false), showExerciseMenu);
 
   // Fichier joint, chargé à part (ancien format fileData tant que la migration n'a pas tourné)
   const attachedFile = useAttachment(selectedExercise.attachment) ?? selectedExercise.fileData ?? null;
@@ -32,12 +41,7 @@ const ExerciseDetailModal = () => {
 
           <div className="flex items-center justify-between mb-4">
             <button
-              onClick={() => {
-                stopTimer();
-                setSelectedExercise(null);
-                setCurrentTempo({});
-                setShowExerciseMenu(false);
-              }}
+              onClick={close}
               className="text-white text-sm font-medium"
             >
               ← {t('exercise.back')}

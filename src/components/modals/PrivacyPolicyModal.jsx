@@ -1,10 +1,12 @@
 import { X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const PrivacyPolicyModal = () => {
   const {
     renderBold, setShowPrivacyPolicy, t
   } = useApp();
+  useBackHandler(() => setShowPrivacyPolicy(false));
 
   return (
     <div

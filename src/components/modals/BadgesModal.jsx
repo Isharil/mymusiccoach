@@ -1,11 +1,13 @@
 import { Check, X } from 'lucide-react';
 import { BADGES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const BadgesModal = () => {
   const {
     earnedBadges, getBadgeDescription, getBadgeName, setShowAllBadges, stats, t
   } = useApp();
+  useBackHandler(() => setShowAllBadges(false));
 
   return (
     <div

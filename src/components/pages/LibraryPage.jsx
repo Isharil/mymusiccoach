@@ -1,6 +1,7 @@
 import { Clock, Plus, Book, Video, FileText, Activity, Trash2, Music, Archive, Upload, Play } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import PiecesTab from '../library/PiecesTab';
 
 const LibraryPage = () => {
@@ -12,6 +13,8 @@ const LibraryPage = () => {
     setShowImportModal, setShowTrash, showArchive, showTrash, startWorkout, t, translateCategory,
     translateDifficulty, workoutName, workouts
   } = useApp();
+  useBackHandler(() => setShowTrash(false), showTrash);
+  useBackHandler(() => setShowArchive(false), showArchive);
 
   const categories = ['Tous', ...EXERCISE_CATEGORIES];
   const filteredExercises = libraryFilter === 'Tous' 

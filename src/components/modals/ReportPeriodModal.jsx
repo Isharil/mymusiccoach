@@ -1,10 +1,12 @@
 import { X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const ReportPeriodModal = () => {
   const {
     generateProgressReport, setShowExportModal, t
   } = useApp();
+  useBackHandler(() => setShowExportModal(false));
 
   return (
     <div

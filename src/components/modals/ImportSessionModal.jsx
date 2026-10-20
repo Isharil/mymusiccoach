@@ -1,10 +1,12 @@
 import { FileText, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const ImportSessionModal = () => {
   const {
     handleImportFile, setShowImportModal, t
   } = useApp();
+  useBackHandler(() => setShowImportModal(false));
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

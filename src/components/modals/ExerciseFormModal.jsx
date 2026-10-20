@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { EXERCISE_CATEGORIES } from '../../constants/appData';
 import { useApp } from '../../context/AppContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
 import { ATTACHMENT_ACCEPT, pickerAccept } from '../../utils/tabFiles';
 
 const ExerciseFormModal = () => {
@@ -9,6 +10,14 @@ const ExerciseFormModal = () => {
     newExerciseType, setEditingExercise, setNewExerciseType, setShowCreateExercise,
     setUploadedFile, showToast, t, translateCategory, updateExercise, uploadedFile
   } = useApp();
+
+  const close = () => {
+    setShowCreateExercise(false);
+    setUploadedFile(null);
+    setEditingExercise(null);
+    setNewExerciseType('none');
+  };
+  useBackHandler(close);
 
   // Enregistrement commun au bouton et à la touche Entrée (création ou modification)
   const saveExercise = (form) => {
@@ -36,10 +45,7 @@ const ExerciseFormModal = () => {
     } else {
       createExercise(data);
     }
-    setEditingExercise(null);
-    setShowCreateExercise(false);
-    setUploadedFile(null);
-    setNewExerciseType('none');
+    close();
   };
 
   return (
@@ -47,12 +53,7 @@ const ExerciseFormModal = () => {
       <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 shadow-lg" style={{paddingTop: 'calc(env(safe-area-inset-top, 12px) + 0.5rem)'}}>
         <div className="flex items-center justify-between">
           <button
-            onClick={() => {
-              setShowCreateExercise(false);
-              setUploadedFile(null);
-              setEditingExercise(null);
-              setNewExerciseType('none');
-            }}
+            onClick={close}
             className="flex items-center gap-2 text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
           >
             <span className="text-xl">←</span>
