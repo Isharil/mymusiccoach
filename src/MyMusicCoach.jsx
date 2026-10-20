@@ -14,6 +14,7 @@ import { maxIdOf, normalizeExerciseFields } from './utils/exercises';
 import { changePieceStatus, recordPiecePractice } from './utils/repertoire';
 import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
 import { parseBackup } from './utils/backup';
+import { ATTACHMENT_EXTENSIONS, hasExtension } from './utils/tabFiles';
 import {
   MAX_ATTACHMENT_MB, MAX_ATTACHMENT_SIZE, deleteAttachment, deleteOrphanAttachments, loadAttachment,
   moveInlineFiles, saveAttachment
@@ -717,6 +718,12 @@ const MyMusicCoach = () => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Sur Android, le sélecteur ne filtre pas les types (voir pickerAccept)
+    if (!hasExtension(file.name, ATTACHMENT_EXTENSIONS)) {
+      showToast(t('messages.unsupportedFile'), 'error');
+      e.target.value = '';
+      return;
+    }
     if (file.size > MAX_ATTACHMENT_SIZE) {
       showToast(t('messages.fileTooLarge', { max: MAX_ATTACHMENT_MB }), 'error');
       e.target.value = '';

@@ -442,6 +442,10 @@ describe('MyMusicCoach', () => {
       await user.type(within(form).getByLabelText(/Title/), 'Asturias');
       await user.type(within(form).getByLabelText('Artist or composer'), 'Isaac Albéniz');
       await user.click(within(form).getByLabelText(/Remind me to practice it/));
+      // Fichier d'un autre type (le sélecteur Android ne filtre pas) : refusé avec un message
+      const uploader = userEvent.setup({ applyAccept: false });
+      await uploader.upload(within(form).getByLabelText('Score or tab'), new File(['hello'], 'notes.txt', { type: 'text/plain' }));
+      expect(await screen.findByText(/Unsupported format/)).toBeTruthy();
       await user.upload(within(form).getByLabelText('Score or tab'), new File(['%PDF'], 'asturias.pdf', { type: 'application/pdf' }));
       expect(await within(form).findByText(/asturias\.pdf/)).toBeTruthy();
       await user.click(within(form).getByRole('button', { name: /Add piece/ }));

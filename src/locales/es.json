@@ -425,6 +425,7 @@
     "backupNewerVersion": "Esta copia de seguridad procede de una versión más reciente de la app. Actualiza MyMusicCoach para importarla.",
     "backupConfirm": "Copia del {date}\nEjercicios: {exercises} · Sesiones: {workouts} · Historial: {sessions}\n\nReemplazará tus datos actuales. ¿Continuar?",
     "fileTooLarge": "Archivo demasiado grande (máximo {max} MB).",
+    "unsupportedFile": "Formato no compatible: PDF, imagen (PNG/JPEG), Guitar Pro o MusicXML.",
     "reminderWithSessions": "¡Hora de practicar! Hoy toca: {sessions}"
   },
   "export": {

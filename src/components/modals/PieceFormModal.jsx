@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { PIECE_STATUSES } from '../../utils/repertoire';
+import { ATTACHMENT_ACCEPT, pickerAccept } from '../../utils/tabFiles';
 
 // Création ou modification d'un morceau du répertoire
 const PieceFormModal = () => {
@@ -98,7 +99,7 @@ const PieceFormModal = () => {
             <input
               id="piece-file"
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.gp3,.gp4,.gp5,.gpx,.gp"
+              accept={pickerAccept(ATTACHMENT_ACCEPT)}
               onChange={handleFileUpload}
               className="w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700"
             />

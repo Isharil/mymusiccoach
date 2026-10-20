@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, FolderOpen, Pause, Play, Repeat, SkipBack, Timer, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { dataUrlToBytes, formatPlaybackTime, TAB_FILE_ACCEPT } from '../utils/tabFiles';
+import { dataUrlToBytes, formatPlaybackTime, pickerAccept, TAB_FILE_ACCEPT } from '../utils/tabFiles';
 
 // Vitesses de lecture proposées
 const SPEEDS = [0.5, 0.6, 0.75, 0.9, 1, 1.25];
@@ -151,7 +151,7 @@ const TabPlayer = ({ file, onClose }) => {
         <button onClick={() => fileInputRef.current?.click()} aria-label={t('tabPlayer.openFile')} className="p-2 hover:bg-white/20 rounded-lg">
           <FolderOpen aria-hidden="true" className="w-5 h-5" />
         </button>
-        <input ref={fileInputRef} type="file" accept={TAB_FILE_ACCEPT} onChange={openLocalFile} className="hidden" aria-label={t('tabPlayer.chooseFile')} />
+        <input ref={fileInputRef} type="file" accept={pickerAccept(TAB_FILE_ACCEPT)} onChange={openLocalFile} className="hidden" aria-label={t('tabPlayer.chooseFile')} />
       </div>
 
       {/* Tablature (fond blanc, comme une partition imprimée) */}

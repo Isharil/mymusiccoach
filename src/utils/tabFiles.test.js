@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { dataUrlToBytes, formatPlaybackTime, isTabFile, TAB_FILE_ACCEPT } from './tabFiles';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  ATTACHMENT_ACCEPT, ATTACHMENT_EXTENSIONS, dataUrlToBytes, formatPlaybackTime, hasExtension, isTabFile, pickerAccept, TAB_FILE_ACCEPT,
+} from './tabFiles';
+
+const native = vi.hoisted(() => ({ value: false }));
+vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => native.value } }));
 
 describe('tabFiles', () => {
   it('reconnaît les fichiers Guitar Pro et MusicXML', () => {
@@ -10,6 +15,23 @@ describe('tabFiles', () => {
       expect(isTabFile(name), name).toBe(false);
     }
     expect(TAB_FILE_ACCEPT).toContain('.gp5');
+  });
+
+  it('reconnaît les pièces jointes acceptées', () => {
+    for (const name of ['score.PDF', 'photo.jpeg', 'song.gp5', 'score.musicxml']) {
+      expect(hasExtension(name, ATTACHMENT_EXTENSIONS), name).toBe(true);
+    }
+    for (const name of ['notes.txt', 'song.mp3', 'pdf', '']) {
+      expect(hasExtension(name, ATTACHMENT_EXTENSIONS), name).toBe(false);
+    }
+  });
+
+  it("ne filtre pas le sélecteur de fichiers dans l'app Android (Guitar Pro y serait grisé)", () => {
+    native.value = false;
+    expect(pickerAccept(ATTACHMENT_ACCEPT)).toBe(ATTACHMENT_ACCEPT);
+    native.value = true;
+    expect(pickerAccept(ATTACHMENT_ACCEPT)).toBeUndefined();
+    native.value = false;
   });
 
   it('convertit une pièce jointe (URL data:) en octets', () => {
