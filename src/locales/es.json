@@ -175,7 +175,7 @@
     "setsPlaceholder": "3 series",
     "descriptionPlaceholder": "Descripción del ejercicio...",
     "baseTempoHint": "poner 0 si no aplica",
-    "acceptedFormats": "Formatos aceptados: PDF, Imágenes (PNG/JPEG), Partituras (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "acceptedFormats": "Formatos aceptados: PDF, Imágenes (PNG/JPEG), Partituras (MusicXML), Guitar Pro (GP3 a GP7)",
     "fileAdded": "Archivo añadido: {name}",
     "fillRequired": "Por favor, rellene todos los campos obligatorios",
     "targetTempo": "Tempo objetivo (BPM)",
@@ -300,7 +300,8 @@
     "resetFinalConfirm": "Última confirmación: esta acción es IRREVERSIBLE.\n\n¿De verdad quieres borrarlo todo?",
     "versionMismatch": "El código de la app ({web}) no coincide con la versión de Android instalada ({native}). Ejecuta «npm run android» y reinstala desde Android Studio.",
     "weeklyGoal": "Objetivo de práctica semanal",
-    "weeklyGoalHint": "En minutos, de lunes a domingo. Déjalo vacío para no fijar objetivo."
+    "weeklyGoalHint": "En minutos, de lunes a domingo. Déjalo vacío para no fijar objetivo.",
+    "licenses": "Reproductor de tablaturas: alphaTab (MPL-2.0), fuente Bravura (SIL OFL 1.1), sonidos SONiVOX (Apache 2.0)."
   },
   "onboarding": {
     "step1Title": "Bienvenido a MyMusicCoach!",
@@ -659,5 +660,30 @@
     "needsWork": "Hay que retomarla",
     "openLink": "Abrir el enlace",
     "homeTitle": "Pieza para practicar | Piezas para practicar"
+  },
+  "tabPlayer": {
+    "title": "Reproductor de tablaturas",
+    "homeDesc": "Guitar Pro y MusicXML, con sonido",
+    "openTab": "Abrir la tablatura",
+    "openFile": "Abrir un archivo",
+    "chooseFile": "Elegir un archivo",
+    "emptyHint": "Abre una tablatura de Guitar Pro o una partitura MusicXML para reproducirla con sonido y desplazamiento automático.",
+    "formats": "Guitar Pro (GP3 a GP7) y MusicXML",
+    "loading": "Cargando la tablatura…",
+    "loadingSounds": "Cargando los sonidos…",
+    "loadError": "No se puede abrir este archivo. Comprueba que sea un archivo de Guitar Pro (GP3 a GP7) o MusicXML.",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "backToStart": "Volver al principio",
+    "speed": "Velocidad de reproducción",
+    "loop": "Bucle",
+    "metronome": "Metrónomo",
+    "countIn": "Cuenta atrás",
+    "score": "Partitura",
+    "track": "Pista",
+    "trackNumber": "Pista {number}",
+    "selectionHint": "Toca una nota para empezar desde ahí, o desliza el dedo para elegir un pasaje que repetir.",
+    "selectionActive": "Reproducción limitada al pasaje seleccionado.",
+    "clearSelection": "Toda la pieza"
   }
 }

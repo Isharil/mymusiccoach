@@ -20,6 +20,7 @@
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/local-notifications": "^8.2.1",
     "@capacitor/share": "^8.0.1",
+    "@coderline/alphatab": "^1.8.4",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.2.2",
     "lucide-react": "^0.562.0",
@@ -27,6 +28,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@coderline/alphatab-vite": "^1.8.4",
     "@eslint/js": "^9.39.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",

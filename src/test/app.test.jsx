@@ -8,6 +8,48 @@ import { clear, get, set } from 'idb-keyval';
 import App from '../App';
 import { preloadLazyComponents } from '../utils/lazyWithPreload';
 
+// Lecteur de tablatures : alphaTab ne peut pas dessiner ni jouer de son dans jsdom ; une version
+// factice enregistre ce que le lecteur lui demande (le vrai rendu se vérifie sur l'appareil)
+vi.mock('@coderline/alphatab', () => {
+  const emitter = () => {
+    const handlers = [];
+    return { on: (handler) => handlers.push(handler), off() {}, emit: (...args) => handlers.forEach(h => h(...args)) };
+  };
+  class AlphaTabApi {
+    constructor(element, settings) {
+      this.initialSettings = settings;
+      this.settings = { display: { staveProfile: settings.display.staveProfile } };
+      this.calls = [];
+      this.score = null;
+      for (const name of ['scoreLoaded', 'renderFinished', 'playerReady', 'playerStateChanged',
+        'playerPositionChanged', 'playbackRangeHighlightChanged', 'error']) {
+        this[name] = emitter();
+      }
+      globalThis.__fakeAlphaTab = this;
+    }
+    load(bytes, tracks) {
+      this.loaded = { bytes, tracks };
+      const score = { title: 'Test song', artist: 'Tester', tracks: [{ name: 'Guitar' }, { name: 'Bass' }] };
+      this.score = score;
+      setTimeout(() => {
+        this.scoreLoaded.emit(score);
+        this.renderFinished.emit({});
+        this.playerReady.emit();
+        this.playerPositionChanged.emit({ currentTime: 0, endTime: 125000 });
+      });
+      return true;
+    }
+    playPause() { this.calls.push('playPause'); this.playerStateChanged.emit({ state: 1 }); }
+    stop() { this.calls.push('stop'); }
+    updateSettings() { this.calls.push('updateSettings'); }
+    render() { this.calls.push('render'); }
+    renderTracks(tracks) { this.renderedTracks = tracks; }
+    clearPlaybackRangeHighlight() { this.calls.push('clearPlaybackRangeHighlight'); }
+    destroy() { this.destroyed = true; }
+  }
+  return { AlphaTabApi, synth: { PlayerState: { Paused: 0, Playing: 1 } } };
+});
+
 // Lundi 12 octobre 2026 : avec le planning par défaut, la session du jour est "Beginner routine"
 const MONDAY = new Date(2026, 9, 12, 10, 0);
 
@@ -462,6 +504,96 @@ describe('MyMusicCoach', () => {
       await user.click(within(screen.getByRole('dialog', { name: 'Reviewed piece' })).getByRole('button', { name: 'Close' }));
       await user.click(nav('Home'));
       expect(screen.queryByRole('heading', { name: /Piece to practice/ })).toBeNull();
+    });
+  });
+
+  describe('lecteur de tablatures', () => {
+    it('ouvre un fichier depuis les Outils et transmet les réglages de lecture', async () => {
+      const { user } = await startApp();
+
+      await user.click(screen.getByRole('button', { name: /Tab player/ }));
+      const player = screen.getByRole('dialog', { name: 'Tab player' });
+      expect(within(player).getByText(/Open a Guitar Pro tab/)).toBeTruthy();
+
+      const gp = new File([new Uint8Array([1, 2, 3])], 'song.gp5', { type: 'application/octet-stream' });
+      await user.upload(within(player).getByLabelText('Choose a file'), gp);
+
+      // Morceau chargé : titre, artiste, pistes
+      expect(await screen.findByRole('heading', { name: 'Test song' })).toBeTruthy();
+      const api = globalThis.__fakeAlphaTab;
+      expect([...api.loaded.bytes]).toEqual([1, 2, 3]);
+      // Tablature seule par défaut, fichiers servis par l'app, curseur et défilement
+      expect(api.initialSettings.display.staveProfile).toBe('tab');
+      expect(api.initialSettings.player.soundFont).toMatch(/alphatab\/soundfont\/sonivox\.sf3$/);
+      expect(api.initialSettings.core.fontDirectory).toMatch(/alphatab\/font\/$/);
+      expect(api.initialSettings.player.enableCursor).toBe(true);
+      expect(await screen.findByText('0:00 / 2:05')).toBeTruthy();
+
+      // Commandes (dans la fenêtre du lecteur)
+      const inPlayer = within(screen.getByRole('dialog', { name: 'Test song' }));
+      await user.click(inPlayer.getByRole('button', { name: 'Play' }));
+      expect(api.calls).toContain('playPause');
+      expect(inPlayer.getByRole('button', { name: 'Pause' })).toBeTruthy();
+
+      await user.selectOptions(inPlayer.getByLabelText('Playback speed'), '0.75');
+      expect(api.playbackSpeed).toBe(0.75);
+
+      await user.click(inPlayer.getByRole('button', { name: /Loop/ }));
+      expect(api.isLooping).toBe(true);
+      expect(inPlayer.getByText(/drag your finger to choose a passage/)).toBeTruthy();
+
+      await user.click(inPlayer.getByRole('button', { name: /Metronome/ }));
+      expect(api.metronomeVolume).toBe(1);
+      await user.click(inPlayer.getByRole('button', { name: /Count-in/ }));
+      expect(api.countInVolume).toBe(1);
+
+      await user.click(inPlayer.getByRole('button', { name: /Notation/ }));
+      expect(api.settings.display.staveProfile).toBe('scoretab');
+      expect(api.calls).toEqual(expect.arrayContaining(['updateSettings', 'render']));
+
+      await user.selectOptions(inPlayer.getByLabelText('Track'), '1');
+      expect(api.renderedTracks).toEqual([api.score.tracks[1]]);
+
+      // Fermeture : le lecteur est libéré
+      await user.click(within(screen.getByRole('dialog', { name: 'Test song' })).getByRole('button', { name: 'Close' }));
+      expect(api.destroyed).toBe(true);
+    });
+
+    it("ouvre la tablature jointe à un morceau, mais pas un PDF", async () => {
+      await set('mmc_file_tab', { name: 'riff.gp', data: 'data:application/octet-stream;base64,BAUG', createdAt: 1 });
+      await set('mmc_file_pdf', { name: 'score.pdf', data: 'data:application/pdf;base64,AA==', createdAt: 1 });
+      await set('mmc_pieces', [
+        { id: 1, title: 'Riff', status: 'learning', attachment: { id: 'tab', name: 'riff.gp' }, tempoHistory: [] },
+        { id: 2, title: 'Paper', status: 'learning', attachment: { id: 'pdf', name: 'score.pdf' }, tempoHistory: [] },
+      ]);
+      const { user } = await startApp();
+      await user.click(nav('Library'));
+      await user.click(screen.getByRole('button', { name: 'Repertoire' }));
+
+      await user.click(screen.getByText('Paper'));
+      expect(await screen.findByRole('link', { name: 'Download PDF' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /Open tab/ })).toBeNull();
+      await user.click(within(screen.getByRole('dialog', { name: 'Paper' })).getByRole('button', { name: 'Close' }));
+
+      await user.click(screen.getByText('Riff'));
+      await user.click(await screen.findByRole('button', { name: /Open tab/ }));
+      expect(await screen.findByRole('heading', { name: 'Test song' })).toBeTruthy();
+      expect([...globalThis.__fakeAlphaTab.loaded.bytes]).toEqual([4, 5, 6]);
+    });
+
+    it("signale un fichier illisible", async () => {
+      const { user } = await startApp();
+      await user.click(screen.getByRole('button', { name: /Tab player/ }));
+      // Le prochain chargement échoue
+      const { AlphaTabApi } = await import('@coderline/alphatab');
+      const originalLoad = AlphaTabApi.prototype.load;
+      AlphaTabApi.prototype.load = function () { setTimeout(() => this.error.emit(new Error('format inconnu'))); return false; };
+      try {
+        await user.upload(screen.getByLabelText('Choose a file'), new File(['xx'], 'broken.gp', { type: 'application/octet-stream' }));
+        expect((await screen.findByRole('alert')).textContent).toMatch(/Can't open this file/);
+      } finally {
+        AlphaTabApi.prototype.load = originalLoad;
+      }
     });
   });
 

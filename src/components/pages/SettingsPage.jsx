@@ -296,6 +296,7 @@ const SettingsPage = () => {
             </span>
             <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           </button>
+          <p className="text-xs text-gray-500 dark:text-gray-400 px-1">{t('settings.licenses')}</p>
           <button
             onClick={() => { setSettings(prev => ({ ...prev, onboardingDone: false })); setOnboardingStep(0); }}
             className="w-full flex items-center justify-between py-3 px-4 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-xl transition-colors"

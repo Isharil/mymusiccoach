@@ -1,4 +1,4 @@
-import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music, PenLine, AudioLines, Bell } from 'lucide-react';
+import { Play, Check, Clock, Video, FileText, Activity, Calendar, ChevronRight, Music, PenLine, AudioLines, Bell, PlayCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import PracticeTimeSummary from '../PracticeTimeSummary';
 import { duePieces } from '../../utils/repertoire';
@@ -7,7 +7,7 @@ const HomePage = () => {
   const {
     earnedBadges, exerciseName, exercises, getBadgeDescription, getBadgeName,
     getCompletedSessionForWorkout, getCurrentDay, getCurrentWeekNumber, getTodayWorkouts,
-    isTodaySessionCompleted, isWorkoutCompletedToday, nextBadge, openFreePractice, setActiveTab, setLibrarySubTab,
+    isTodaySessionCompleted, isWorkoutCompletedToday, nextBadge, openFreePractice, openTabPlayer, setActiveTab, setLibrarySubTab,
     setShowMetronome, setShowSchedule, setShowTuner, setViewingWeek, settings, startEditSession, startWorkout,
     stats, t, translateDifficulty, weeklySchedule, workoutName, workouts, pieces, setSelectedPieceId
   } = useApp();
@@ -284,6 +284,19 @@ const HomePage = () => {
           <div className="text-left">
             <p className="font-bold text-lg">{t('tuner.title')}</p>
             <p className="text-sm text-white/80">{t('tuner.homeDesc')}</p>
+          </div>
+          <ChevronRight aria-hidden="true" className="w-6 h-6 ml-auto" />
+        </button>
+        <button
+          onClick={() => openTabPlayer()}
+          className="mt-3 w-full bg-gradient-to-r from-sky-500 to-indigo-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-4"
+        >
+          <div className="bg-white/20 rounded-xl p-3">
+            <PlayCircle aria-hidden="true" className="w-7 h-7" />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-lg">{t('tabPlayer.title')}</p>
+            <p className="text-sm text-white/80">{t('tabPlayer.homeDesc')}</p>
           </div>
           <ChevronRight aria-hidden="true" className="w-6 h-6 ml-auto" />
         </button>

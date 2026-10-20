@@ -80,7 +80,7 @@ self.addEventListener('fetch', (event) => {
 
 // Déterminer si c'est un asset statique
 function isStaticAsset(pathname) {
-  return /\.(js|css|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|mp3|wav|ogg)$/i.test(pathname) ||
+  return /\.(js|css|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|mp3|wav|ogg|sf3)$/i.test(pathname) ||
          pathname.startsWith('/assets/') ||
          pathname.startsWith('/icons/') ||
          pathname.startsWith('/sounds/');

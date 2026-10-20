@@ -155,6 +155,16 @@ fermeture de l'accordeur et quand l'app passe en arrière-plan. Le nom des notes
 `tuner.noteNames` dans chaque langue ; `tuner.octaveOffset` vaut -1 en français et en italien
 (La3 = 440 Hz). Android : permissions `RECORD_AUDIO` et `MODIFY_AUDIO_SETTINGS` dans le manifeste.
 
+### Lecteur de tablatures
+
+`components/TabPlayer.jsx` affiche un fichier Guitar Pro ou MusicXML avec alphaTab, chargé
+seulement à l'ouverture du lecteur (fichier à part d'environ 1,2 Mo). Les workers et l'audio
+worklet sont produits par `@coderline/alphatab-vite` ; `vite.config.js` copie seulement la police
+`Bravura.woff2` et la banque de sons `sonivox.sf3` sous `alphatab/`. `openTabPlayer(file)` (contexte)
+l'ouvre depuis Outils (sans fichier), une pièce jointe (`AttachmentView`) ou un morceau.
+`utils/tabFiles.js` reconnaît les extensions et décode les fichiers stockés en data URL. Dans les
+tests, alphaTab est remplacé par une fausse API (`test/app.test.jsx`).
+
 ### Rappels
 
 Les rappels sont des notifications ponctuelles programmées pour les 28 prochains jours

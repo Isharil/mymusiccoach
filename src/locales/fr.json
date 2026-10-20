@@ -175,7 +175,7 @@
     "setsPlaceholder": "3 séries",
     "descriptionPlaceholder": "Description de l'exercice...",
     "baseTempoHint": "mettre 0 si non applicable",
-    "acceptedFormats": "Formats acceptés : PDF, Images (PNG/JPEG), Partitions (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "acceptedFormats": "Formats acceptés : PDF, Images (PNG/JPEG), Partitions (MusicXML), Guitar Pro (GP3 à GP7)",
     "fileAdded": "Fichier ajouté : {name}",
     "fillRequired": "Veuillez remplir tous les champs obligatoires",
     "targetTempo": "Tempo cible (BPM)",
@@ -300,7 +300,8 @@
     "resetFinalConfirm": "Dernière confirmation : cette action est IRRÉVERSIBLE.\n\nVeux-tu vraiment tout supprimer ?",
     "versionMismatch": "Le code de l'app ({web}) ne correspond pas à la version Android installée ({native}). Lance « npm run android » puis réinstalle depuis Android Studio.",
     "weeklyGoal": "Objectif de pratique hebdomadaire",
-    "weeklyGoalHint": "En minutes, du lundi au dimanche. Laisse vide pour ne pas fixer d'objectif."
+    "weeklyGoalHint": "En minutes, du lundi au dimanche. Laisse vide pour ne pas fixer d'objectif.",
+    "licenses": "Lecteur de tablatures : alphaTab (MPL-2.0), police Bravura (SIL OFL 1.1), sons SONiVOX (Apache 2.0)."
   },
   "onboarding": {
     "step1Title": "Bienvenue dans MyMusicCoach !",
@@ -659,5 +660,30 @@
     "needsWork": "À retravailler",
     "openLink": "Ouvrir le lien",
     "homeTitle": "Morceau à travailler | Morceaux à travailler"
+  },
+  "tabPlayer": {
+    "title": "Lecteur de tablatures",
+    "homeDesc": "Guitar Pro et MusicXML, avec le son",
+    "openTab": "Ouvrir la tablature",
+    "openFile": "Ouvrir un fichier",
+    "chooseFile": "Choisir un fichier",
+    "emptyHint": "Ouvre une tablature Guitar Pro ou une partition MusicXML pour la lire avec le son et le défilement.",
+    "formats": "Guitar Pro (GP3 à GP7) et MusicXML",
+    "loading": "Chargement de la tablature…",
+    "loadingSounds": "Chargement des sons…",
+    "loadError": "Impossible d'ouvrir ce fichier. Vérifie qu'il s'agit bien d'un fichier Guitar Pro (GP3 à GP7) ou MusicXML.",
+    "play": "Lecture",
+    "pause": "Pause",
+    "backToStart": "Revenir au début",
+    "speed": "Vitesse de lecture",
+    "loop": "Boucle",
+    "metronome": "Métronome",
+    "countIn": "Décompte",
+    "score": "Partition",
+    "track": "Piste",
+    "trackNumber": "Piste {number}",
+    "selectionHint": "Touche une note pour démarrer à cet endroit, ou fais glisser ton doigt pour choisir un passage à répéter.",
+    "selectionActive": "Lecture limitée au passage sélectionné.",
+    "clearSelection": "Tout le morceau"
   }
 }

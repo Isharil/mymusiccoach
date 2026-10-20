@@ -156,7 +156,7 @@ const ExerciseFormModal = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('exercise.importFile')}</label>
               <input
                 type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.gp5,.gpx,.gp"
+                accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.gp3,.gp4,.gp5,.gpx,.gp"
                 onChange={handleFileUpload}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 dark:bg-purple-900/30 file:text-purple-700 dark:text-purple-300 hover:file:bg-purple-100 dark:bg-purple-900/40"
               />

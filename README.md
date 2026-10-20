@@ -28,6 +28,13 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **« Je l'ai travaillé »** : la séance compte pour la série et le temps de pratique ; temps total par morceau
 - **Rappels sur demande** : tous les 2 jours pour un morceau en cours, révisions espacées (3 jours, 1 semaine, 2 semaines, 1 mois...) pour un morceau maîtrisé
 
+### Lecteur de tablatures
+- **Fichiers Guitar Pro** (.gp3, .gp4, .gp5, .gpx, .gp) et **MusicXML**
+- **Tablature** par défaut, **partition** en option ; choix de la piste
+- **Lecture avec son** et défilement automatique, curseur sur la note jouée
+- **Vitesse** de 50 % à 125 %, **boucle** sur une sélection, métronome et décompte
+- Ouverture depuis **Outils**, un exercice ou un morceau du répertoire avec un fichier joint
+
 ### Métronome
 - **Tempo ajustable** : 20 à 300 BPM
 - **Signatures rythmiques** : 1/4, 2/4, 3/4, 4/4, 5/4, 5/8, 6/8, 7/8
@@ -84,6 +91,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **IndexedDB** (via idb-keyval) pour la persistance des données
 - **Wake Lock API** pour le chronomètre
 - **Web Audio API** pour le métronome et l'accordeur (détection de hauteur YIN)
+- **alphaTab** pour le lecteur de tablatures
 
 ## Installation
 
@@ -179,3 +187,6 @@ rend l'application complète dans un navigateur simulé (jsdom + IndexedDB en m�
 ## Licence
 
 MIT
+
+Le lecteur de tablatures utilise [alphaTab](https://www.alphatab.net) (MPL-2.0), la police
+Bravura (SIL OFL 1.1) et la banque de sons Sonivox (Apache 2.0).

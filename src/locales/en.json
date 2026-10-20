@@ -175,7 +175,7 @@
     "setsPlaceholder": "3 sets",
     "descriptionPlaceholder": "Exercise description...",
     "baseTempoHint": "set to 0 if not applicable",
-    "acceptedFormats": "Accepted formats: PDF, Images (PNG/JPEG), Scores (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "acceptedFormats": "Accepted formats: PDF, Images (PNG/JPEG), Scores (MusicXML), Guitar Pro (GP3 to GP7)",
     "fileAdded": "File added: {name}",
     "fillRequired": "Please fill in all required fields",
     "targetTempo": "Target tempo (BPM)",
@@ -300,7 +300,8 @@
     "resetFinalConfirm": "Final confirmation: this action is IRREVERSIBLE.\n\nDo you really want to delete everything?",
     "versionMismatch": "The app code ({web}) does not match the installed Android version ({native}). Run \"npm run android\" and reinstall from Android Studio.",
     "weeklyGoal": "Weekly practice goal",
-    "weeklyGoalHint": "In minutes, Monday to Sunday. Leave empty for no goal."
+    "weeklyGoalHint": "In minutes, Monday to Sunday. Leave empty for no goal.",
+    "licenses": "Tab player: alphaTab (MPL-2.0), Bravura font (SIL OFL 1.1), SONiVOX sounds (Apache 2.0)."
   },
   "onboarding": {
     "step1Title": "Welcome to MyMusicCoach!",
@@ -659,5 +660,30 @@
     "needsWork": "Needs work",
     "openLink": "Open link",
     "homeTitle": "Piece to practice | Pieces to practice"
+  },
+  "tabPlayer": {
+    "title": "Tab player",
+    "homeDesc": "Guitar Pro and MusicXML, with sound",
+    "openTab": "Open tab",
+    "openFile": "Open a file",
+    "chooseFile": "Choose a file",
+    "emptyHint": "Open a Guitar Pro tab or a MusicXML score to play it with sound and auto-scrolling.",
+    "formats": "Guitar Pro (GP3 to GP7) and MusicXML",
+    "loading": "Loading tab…",
+    "loadingSounds": "Loading sounds…",
+    "loadError": "Can't open this file. Make sure it's a Guitar Pro (GP3 to GP7) or MusicXML file.",
+    "play": "Play",
+    "pause": "Pause",
+    "backToStart": "Back to start",
+    "speed": "Playback speed",
+    "loop": "Loop",
+    "metronome": "Metronome",
+    "countIn": "Count-in",
+    "score": "Notation",
+    "track": "Track",
+    "trackNumber": "Track {number}",
+    "selectionHint": "Tap a note to start from there, or drag your finger to choose a passage to repeat.",
+    "selectionActive": "Playback limited to the selected passage.",
+    "clearSelection": "Whole song"
   }
 }

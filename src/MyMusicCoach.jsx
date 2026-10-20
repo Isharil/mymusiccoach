@@ -63,6 +63,7 @@ const FreePracticeModal = lazyWithPreload(() => import('./components/modals/Free
 const TunerModal = lazyWithPreload(() => import('./components/modals/TunerModal'));
 const PieceDetailModal = lazyWithPreload(() => import('./components/modals/PieceDetailModal'));
 const PieceFormModal = lazyWithPreload(() => import('./components/modals/PieceFormModal'));
+const TabPlayer = lazyWithPreload(() => import('./components/TabPlayer'));
 
 const MyMusicCoach = () => {
   // État pour la migration et l'initialisation
@@ -115,6 +116,8 @@ const MyMusicCoach = () => {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showFreePractice, setShowFreePractice] = useState(false);
   const [showTuner, setShowTuner] = useState(false);
+  // Lecteur de tablatures : { file } ({ name, data } ou null pour choisir un fichier), ou null si fermé
+  const [tabPlayer, setTabPlayer] = useState(null);
   const [editingFreePractice, setEditingFreePractice] = useState(null); // entrée d'historique modifiée
   const [freePracticeDraft, setFreePracticeDraft] = useState(null); // valeurs pré-remplies (ex. morceau travaillé)
   const [editingPiece, setEditingPiece] = useState(null); // {} = nouveau morceau, sinon le morceau modifié
@@ -946,7 +949,9 @@ const MyMusicCoach = () => {
     setShowTuner,
     // Répertoire de morceaux
     pieces, editingPiece, setEditingPiece, selectedPieceId, setSelectedPieceId, savePiece, deletePiece,
-    updatePiece, logPiecePractice, reviewPiece, savePieceTempo, freePracticeDraft
+    updatePiece, logPiecePractice, reviewPiece, savePieceTempo, freePracticeDraft,
+    // Lecteur de tablatures
+    openTabPlayer: (file = null) => setTabPlayer({ file })
   };
 
   return (
@@ -982,6 +987,7 @@ const MyMusicCoach = () => {
         {showPrivacyPolicy && <PrivacyPolicyModal />}
         {showFreePractice && <FreePracticeModal />}
         {showTuner && <TunerModal />}
+        {tabPlayer && <TabPlayer file={tabPlayer.file} onClose={() => setTabPlayer(null)} />}
         {showImportModal && <ImportSessionModal />}
         {editingSession && !selectedExercise && <EditSessionModal />}
         {exportModalData && <ExportChoiceModal />}

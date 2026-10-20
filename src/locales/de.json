@@ -175,7 +175,7 @@
     "setsPlaceholder": "3 Sätze",
     "descriptionPlaceholder": "Beschreibung der Übung...",
     "baseTempoHint": "auf 0 setzen, wenn nicht zutreffend",
-    "acceptedFormats": "Akzeptierte Formate: PDF, Bilder (PNG/JPEG), Partituren (MusicXML), Guitar Pro (GP5/GPX/GP)",
+    "acceptedFormats": "Akzeptierte Formate: PDF, Bilder (PNG/JPEG), Noten (MusicXML), Guitar Pro (GP3 bis GP7)",
     "fileAdded": "Datei hinzugefügt: {name}",
     "fillRequired": "Bitte alle Pflichtfelder ausfüllen",
     "targetTempo": "Zieltempo (BPM)",
@@ -300,7 +300,8 @@
     "resetFinalConfirm": "Letzte Bestätigung: Diese Aktion kann NICHT rückgängig gemacht werden.\n\nMöchtest du wirklich alles löschen?",
     "versionMismatch": "Der App-Code ({web}) passt nicht zur installierten Android-Version ({native}). Führe „npm run android“ aus und installiere die App über Android Studio neu.",
     "weeklyGoal": "Wöchentliches Übungsziel",
-    "weeklyGoalHint": "In Minuten, von Montag bis Sonntag. Leer lassen für kein Ziel."
+    "weeklyGoalHint": "In Minuten, von Montag bis Sonntag. Leer lassen für kein Ziel.",
+    "licenses": "Tabulatur-Player: alphaTab (MPL-2.0), Schrift Bravura (SIL OFL 1.1), Klänge SONiVOX (Apache 2.0)."
   },
   "onboarding": {
     "step1Title": "Willkommen bei MyMusicCoach!",
@@ -659,5 +660,30 @@
     "needsWork": "Muss geübt werden",
     "openLink": "Link öffnen",
     "homeTitle": "Stück zum Üben | Stücke zum Üben"
+  },
+  "tabPlayer": {
+    "title": "Tabulatur-Player",
+    "homeDesc": "Guitar Pro und MusicXML, mit Ton",
+    "openTab": "Tabulatur öffnen",
+    "openFile": "Datei öffnen",
+    "chooseFile": "Datei auswählen",
+    "emptyHint": "Öffne eine Guitar-Pro-Tabulatur oder MusicXML-Noten, um sie mit Ton und automatischem Scrollen abzuspielen.",
+    "formats": "Guitar Pro (GP3 bis GP7) und MusicXML",
+    "loading": "Tabulatur wird geladen…",
+    "loadingSounds": "Klänge werden geladen…",
+    "loadError": "Diese Datei kann nicht geöffnet werden. Prüfe, ob es eine Guitar-Pro- (GP3 bis GP7) oder MusicXML-Datei ist.",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "backToStart": "Zurück zum Anfang",
+    "speed": "Wiedergabegeschwindigkeit",
+    "loop": "Schleife",
+    "metronome": "Metronom",
+    "countIn": "Einzählen",
+    "score": "Noten",
+    "track": "Spur",
+    "trackNumber": "Spur {number}",
+    "selectionHint": "Tippe auf eine Note, um dort zu starten, oder ziehe mit dem Finger, um eine Stelle zum Wiederholen auszuwählen.",
+    "selectionActive": "Wiedergabe auf die ausgewählte Stelle beschränkt.",
+    "clearSelection": "Ganzes Stück"
   }
 }
