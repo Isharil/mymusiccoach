@@ -126,6 +126,7 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
   title: string, artist?: string,
   status: 'toLearn' | 'learning' | 'mastered',
   attachment?: { id, name },     // partition ou tablature, dans mmc_file_<id>
+  audio?: { id, name },          // enregistrement pour jouer avec, dans mmc_file_<id>
   link?: string, notes?: string,
   targetTempo?: number, tempoHistory: [{ date, tempo }],
   reminder?: boolean,            // rappel sur l'accueil, seulement si demandé
@@ -164,6 +165,16 @@ worklet sont produits par `@coderline/alphatab-vite` ; `vite.config.js` copie se
 l'ouvre depuis Outils (sans fichier), une pièce jointe (`AttachmentView`) ou un morceau.
 `utils/tabFiles.js` reconnaît les extensions et décode les fichiers stockés en data URL. Dans les
 tests, alphaTab est remplacé par une fausse API (`test/app.test.jsx`).
+
+### Enregistrements et vidéos
+
+`components/AudioPlayer.jsx` lit un fichier audio joint (morceau : champ `audio`, exercice : fichier
+joint) depuis une URL `blob:`, et `components/YouTubePlayer.jsx` intègre une vidéo YouTube avec l'API
+IFrame (domaine youtube-nocookie.com), chargée seulement à l'ouverture d'une vidéo. Les deux partagent
+`components/PracticeControls.jsx` : vitesse et boucle A-B (`setLoopPoint` dans `utils/media.js`).
+Sans connexion, ou si la chaîne interdit l'intégration, un lien ouvre la vidéo sur YouTube. Taille
+maximale d'un fichier audio : `MAX_AUDIO_MB` (20 Mo). La politique de confidentialité mentionne
+YouTube (section 7 dans l'app, PRIVACY_POLICY.md).
 
 ### Retour Android
 

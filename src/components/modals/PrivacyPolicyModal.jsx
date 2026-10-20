@@ -56,6 +56,9 @@ const PrivacyPolicyModal = () => {
           <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.micTitle')}</h3>
           <p>{renderBold(t('privacy.micBody'))}</p>
 
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.youtubeTitle')}</h3>
+          <p>{renderBold(t('privacy.youtubeBody'))}</p>
+
           <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">{t('privacy.s6Title')}</h3>
           <p>{t('privacy.s6Body')}</p>
 

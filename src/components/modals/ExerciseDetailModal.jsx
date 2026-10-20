@@ -3,6 +3,8 @@ import Metronome from '../Metronome';
 import { formatTime } from '../../utils/exercises';
 import { useAttachment } from '../../hooks/useAttachment';
 import AttachmentView from '../AttachmentView';
+import YouTubePlayer from '../YouTubePlayer';
+import { parseYouTubeUrl } from '../../utils/media';
 import { suggestNextTempo, tempoProgress } from '../../utils/tempo';
 import { useApp } from '../../context/AppContext';
 import { useBackHandler } from '../../hooks/useBackHandler';
@@ -170,7 +172,12 @@ const ExerciseDetailModal = () => {
         <div className="flex-1 overflow-y-auto relative">
 
           <div className="p-6 space-y-6">
-            {selectedExercise.type === 'video' && selectedExercise.videoUrl && (
+            {selectedExercise.type === 'video' && parseYouTubeUrl(selectedExercise.videoUrl) && (
+              <YouTubePlayer url={selectedExercise.videoUrl} />
+            )}
+
+            {/* Lien qui n'est pas une vidéo YouTube reconnue : ouvert à part */}
+            {selectedExercise.type === 'video' && selectedExercise.videoUrl && !parseYouTubeUrl(selectedExercise.videoUrl) && (
               <a
                 href={selectedExercise.videoUrl}
                 target="_blank"

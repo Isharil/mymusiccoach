@@ -17,14 +17,15 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Création d'exercices personnalisés** : Nom, durée, séries, difficulté, catégorie
 - **Catégories** : Technique, Gammes, Rythme, Théorie, Morceaux, Improvisation
 - **Niveaux de difficulté** : Débutant, Intermédiaire, Avancé
-- **Pièces jointes** : Lien YouTube ou fichier (PDF, image, audio)
+- **Pièces jointes** : vidéo YouTube intégrée, ou fichier (PDF, image, Guitar Pro, MusicXML, audio)
 - **Suivi du tempo** : Enregistrez votre progression de tempo par exercice
 - **Tempo cible** : Progression vers un tempo objectif, avec un tempo suggéré (+5 BPM quand les deux dernières séances sont au point)
 - **Corbeille** : Récupérez les exercices supprimés
 
 ### Répertoire de morceaux
 - **Bibliothèque > Répertoire** : morceaux à apprendre, en cours ou maîtrisés
-- **Fiche par morceau** : artiste, partition ou tablature jointe (PDF, image, Guitar Pro, MusicXML), lien, tempo cible, notes
+- **Fiche par morceau** : artiste, partition ou tablature jointe (PDF, image, Guitar Pro, MusicXML), enregistrement audio, lien, tempo cible, notes
+- **Jouer avec le morceau** : enregistrement audio (MP3, M4A, WAV, OGG…) ou vidéo YouTube, avec ralenti (50 à 100 %, sans changer la hauteur pour l'audio) et boucle A-B sur un passage
 - **« Je l'ai travaillé »** : la séance compte pour la série et le temps de pratique ; temps total par morceau
 - **Rappels sur demande** : tous les 2 jours pour un morceau en cours, révisions espacées (3 jours, 1 semaine, 2 semaines, 1 mois...) pour un morceau maîtrisé
 

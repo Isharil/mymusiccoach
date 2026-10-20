@@ -4,6 +4,9 @@ import { useApp } from '../../context/AppContext';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import { useAttachment } from '../../hooks/useAttachment';
 import AttachmentView from '../AttachmentView';
+import AudioPlayer from '../AudioPlayer';
+import YouTubePlayer from '../YouTubePlayer';
+import { parseYouTubeUrl } from '../../utils/media';
 import { PIECE_STATUS_BADGE } from '../../constants/appData';
 import {
   PIECE_STATUSES, changePieceStatus, isPieceDue, nextReminderDate, piecePracticeSummary
@@ -19,6 +22,7 @@ const PieceDetailModal = () => {
   useBackHandler(() => setSelectedPieceId(null));
   const piece = pieces.find(p => p.id === selectedPieceId);
   const file = useAttachment(piece?.attachment);
+  const audio = useAttachment(piece?.audio);
   const [tempoInput, setTempoInput] = useState('');
 
   if (!piece) return null;
@@ -116,9 +120,13 @@ const PieceDetailModal = () => {
             </p>
           )}
 
+          {/* Pour jouer avec le morceau : enregistrement, vidéo */}
+          {audio && <AudioPlayer file={audio} />}
+          {piece.link && parseYouTubeUrl(piece.link) && <YouTubePlayer url={piece.link} />}
+
           {file && <AttachmentView file={file} alt={piece.title} />}
 
-          {piece.link && (
+          {piece.link && !parseYouTubeUrl(piece.link) && (
             <a href={piece.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-medium break-all">
               <ExternalLink aria-hidden="true" className="w-4 h-4 flex-shrink-0" />
               {t('repertoire.openLink')}

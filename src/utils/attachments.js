@@ -54,7 +54,7 @@ export const deleteAllAttachments = async () => {
  * le nettoyage peut appartenir à un exercice pas encore enregistré.
  */
 export const deleteOrphanAttachments = async (exerciseLists, createdBefore) => {
-  const used = new Set(exerciseLists.flat().map(ex => ex.attachment?.id).filter(Boolean));
+  const used = new Set(exerciseLists.flat().flatMap(item => [item.attachment?.id, item.audio?.id]).filter(Boolean));
   for (const id of await attachmentIds()) {
     if (used.has(id)) continue;
     const file = await loadAttachment(id);

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  ATTACHMENT_ACCEPT, ATTACHMENT_EXTENSIONS, dataUrlToBytes, formatPlaybackTime, hasExtension, isTabFile, pickerAccept, TAB_FILE_ACCEPT,
+  ATTACHMENT_ACCEPT, ATTACHMENT_EXTENSIONS, dataUrlToBytes, formatPlaybackTime, hasExtension, isTabFile, pickerAccept, SCORE_EXTENSIONS, TAB_FILE_ACCEPT,
 } from './tabFiles';
 
 const native = vi.hoisted(() => ({ value: false }));
@@ -18,12 +18,15 @@ describe('tabFiles', () => {
   });
 
   it('reconnaît les pièces jointes acceptées', () => {
-    for (const name of ['score.PDF', 'photo.jpeg', 'song.gp5', 'score.musicxml']) {
+    for (const name of ['score.PDF', 'photo.jpeg', 'song.gp5', 'score.musicxml', 'backing.mp3']) {
       expect(hasExtension(name, ATTACHMENT_EXTENSIONS), name).toBe(true);
     }
-    for (const name of ['notes.txt', 'song.mp3', 'pdf', '']) {
+    for (const name of ['notes.txt', 'video.mp4', 'pdf', '']) {
       expect(hasExtension(name, ATTACHMENT_EXTENSIONS), name).toBe(false);
     }
+    // Partition d'un morceau : pas d'audio (champ à part)
+    expect(hasExtension('song.gp5', SCORE_EXTENSIONS)).toBe(true);
+    expect(hasExtension('backing.mp3', SCORE_EXTENSIONS)).toBe(false);
   });
 
   it("ne filtre pas le sélecteur de fichiers dans l'app Android (Guitar Pro y serait grisé)", () => {

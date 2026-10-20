@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, render, screen, within, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { clear, get, set } from 'idb-keyval';
+import { clear, get, keys, set } from 'idb-keyval';
 import App from '../App';
 import { preloadLazyComponents } from '../utils/lazyWithPreload';
 import { handleBackButton } from '../hooks/useBackHandler';
@@ -510,6 +510,82 @@ describe('MyMusicCoach', () => {
       await user.click(nav('Home'));
       expect(screen.queryByRole('heading', { name: /Piece to practice/ })).toBeNull();
     });
+  });
+
+  it("joue avec l'enregistrement audio et la vidéo YouTube d'un morceau", async () => {
+    // Fausse API YouTube : position de lecture réglable, appels enregistrés
+    const players = [];
+    window.YT = {
+      Player: class {
+        constructor(element, options) {
+          this.options = options;
+          this.time = 42;
+          this.rates = [];
+          this.seeks = [];
+          element.replaceWith(document.createElement('iframe'));
+          players.push(this);
+          setTimeout(() => options.events.onReady({ target: this }));
+        }
+        getCurrentTime() { return this.time; }
+        setPlaybackRate(rate) { this.rates.push(rate); }
+        seekTo(seconds) { this.seeks.push(seconds); }
+        destroy() {}
+      },
+    };
+    try {
+      const { user } = await startApp();
+      await user.click(nav('Library'));
+      await user.click(screen.getByRole('button', { name: 'Repertoire' }));
+      await user.click(screen.getByRole('button', { name: 'New piece' }));
+      const form = screen.getByRole('dialog', { name: 'New piece' });
+      await user.type(within(form).getByLabelText(/Title/), 'Blackbird');
+
+      // Enregistrement : seulement un fichier audio
+      const uploader = userEvent.setup({ applyAccept: false });
+      await uploader.upload(within(form).getByLabelText('Audio recording'), new File(['x'], 'tab.gp5'));
+      expect(await screen.findByText(/Choose an audio file/)).toBeTruthy();
+      await user.upload(within(form).getByLabelText('Audio recording'), new File([new Uint8Array([1, 2])], 'backing.mp3', { type: 'audio/mpeg' }));
+      expect(await within(form).findByText(/backing\.mp3/)).toBeTruthy();
+      await user.type(within(form).getByLabelText(/^Link/), 'https://youtu.be/dQw4w9WgXcQ?t=30');
+      await user.click(within(form).getByRole('button', { name: /Add piece/ }));
+      const pieces = await stored('mmc_pieces', (list) => list?.length === 1 && !!list[0].audio);
+      expect(pieces[0].audio.name).toBe('backing.mp3');
+
+      // Fiche : lecteur audio
+      await user.click(await screen.findByRole('button', { name: /Blackbird/ }));
+      const detail = screen.getByRole('dialog', { name: 'Blackbird' });
+      const recording = await within(detail).findByRole('region', { name: 'Recording' });
+      expect(within(recording).getByText('backing.mp3')).toBeTruthy();
+      await user.click(within(recording).getByRole('button', { name: 'Play recording' }));
+      expect(within(recording).getByRole('button', { name: 'Pause' })).toBeTruthy();
+      await user.selectOptions(within(recording).getByLabelText('Speed'), '0.75');
+      expect(recording.querySelector('audio').playbackRate).toBe(0.75);
+
+      // Fiche : vidéo YouTube intégrée, ralentie, avec une boucle A-B
+      const video = within(detail).getByRole('region', { name: 'YouTube video' });
+      await waitFor(() => expect(within(video).getByLabelText('Speed').disabled).toBe(false));
+      const player = players[0];
+      expect(player.options).toMatchObject({ videoId: 'dQw4w9WgXcQ', playerVars: { start: 30 } });
+      await user.selectOptions(within(video).getByLabelText('Speed'), '0.5');
+      expect(player.rates).toEqual([0.5]);
+      await user.click(within(video).getByRole('button', { name: 'Loop start (A)' }));
+      player.time = 50;
+      await user.click(within(video).getByRole('button', { name: 'Loop end (B)' }));
+      expect(within(video).getByText('Loop 0:42 → 0:50')).toBeTruthy();
+      expect(player.seeks).toEqual([42]);
+
+      // Modification : l'enregistrement retiré est supprimé
+      await user.click(within(detail).getByRole('button', { name: 'Edit' }));
+      const editForm = screen.getByRole('dialog', { name: 'Edit piece' });
+      await user.click(within(editForm).getByRole('button', { name: 'Remove recording' }));
+      await user.click(within(editForm).getByRole('button', { name: /Save changes/ }));
+      await stored('mmc_pieces', (list) => list?.length === 1 && !list[0].audio);
+      await waitFor(async () => {
+        expect((await keys()).filter(key => String(key).startsWith('mmc_file_'))).toEqual([]);
+      });
+    } finally {
+      delete window.YT;
+    }
   });
 
   it("le retour d'Android ferme la fenêtre ouverte la plus récente", async () => {

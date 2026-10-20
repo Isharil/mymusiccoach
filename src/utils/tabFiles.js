@@ -1,12 +1,17 @@
 // Fichiers de tablature et de partition lisibles par le lecteur (alphaTab).
 import { Capacitor } from '@capacitor/core';
+import { AUDIO_EXTENSIONS } from './media';
 
 // Guitar Pro 3 à 7, et MusicXML
 export const TAB_FILE_EXTENSIONS = ['gp3', 'gp4', 'gp5', 'gpx', 'gp', 'musicxml', 'xml'];
 export const TAB_FILE_ACCEPT = TAB_FILE_EXTENSIONS.map(ext => `.${ext}`).join(',');
 
-// Pièces jointes d'un exercice ou d'un morceau : PDF, images, tablatures et partitions
-export const ATTACHMENT_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', ...TAB_FILE_EXTENSIONS];
+// Partition d'un morceau : PDF, images, tablatures et partitions
+export const SCORE_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', ...TAB_FILE_EXTENSIONS];
+export const SCORE_ACCEPT = SCORE_EXTENSIONS.map(ext => `.${ext}`).join(',');
+
+// Fichier d'un exercice : partition ou enregistrement audio
+export const ATTACHMENT_EXTENSIONS = [...SCORE_EXTENSIONS, ...AUDIO_EXTENSIONS];
 export const ATTACHMENT_ACCEPT = ATTACHMENT_EXTENSIONS.map(ext => `.${ext}`).join(',');
 
 /** Le nom de fichier a-t-il l'une de ces extensions ? */

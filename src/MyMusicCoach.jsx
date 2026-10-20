@@ -16,8 +16,9 @@ import { changePieceStatus, recordPiecePractice } from './utils/repertoire';
 import { elapsedMinutes, formatMinutes, parseMinutesInput, plannedMinutes } from './utils/practiceTime';
 import { parseBackup } from './utils/backup';
 import { ATTACHMENT_EXTENSIONS, hasExtension } from './utils/tabFiles';
+import { isAudioFile, MAX_AUDIO_MB } from './utils/media';
 import {
-  MAX_ATTACHMENT_MB, MAX_ATTACHMENT_SIZE, deleteAttachment, deleteOrphanAttachments, loadAttachment,
+  MAX_ATTACHMENT_MB, deleteAttachment, deleteOrphanAttachments, loadAttachment,
   moveInlineFiles, saveAttachment
 } from './utils/attachments';
 
@@ -530,11 +531,13 @@ const MyMusicCoach = () => {
   };
 
   // Création (editingPiece = {}) ou modification (editingPiece = morceau)
-  const savePiece = async ({ status, reminder, ...fields }) => {
+  const savePiece = async ({ status, reminder, audioFile, removeAudio, ...fields }) => {
     const today = getTodayDate();
     const attachment = uploadedFile ? await saveAttachment(uploadedFile) : null;
+    const audio = audioFile ? await saveAttachment(audioFile) : null;
     if (editingPiece?.id) {
       if (attachment && editingPiece.attachment) await deleteAttachment(editingPiece.attachment.id);
+      if ((audio || removeAudio) && editingPiece.audio) await deleteAttachment(editingPiece.audio.id);
       updatePiece(editingPiece.id, piece => ({
         ...changePieceStatus(piece, status),
         ...fields,
@@ -542,6 +545,7 @@ const MyMusicCoach = () => {
         // Le délai du premier rappel part du jour où il est activé
         reminderSince: reminder && !piece.reminder ? today : piece.reminderSince,
         ...(attachment && { attachment }),
+        ...((audio || removeAudio) && { audio: audio ?? undefined }),
       }));
     } else {
       const piece = {
@@ -554,6 +558,7 @@ const MyMusicCoach = () => {
         tempoHistory: [],
         addedAt: today,
         ...(attachment && { attachment }),
+        ...(audio && { audio }),
       };
       setPieces(prev => [...prev, piece]);
     }
@@ -565,6 +570,7 @@ const MyMusicCoach = () => {
     if (!window.confirm(t('repertoire.deleteConfirm'))) return;
     const piece = pieces.find(p => p.id === id);
     if (piece?.attachment) deleteAttachment(piece.attachment.id);
+    if (piece?.audio) deleteAttachment(piece.audio.id);
     setPieces(prev => prev.filter(p => p.id !== id));
     setSelectedPieceId(null);
   };
@@ -744,8 +750,10 @@ const MyMusicCoach = () => {
       e.target.value = '';
       return;
     }
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      showToast(t('messages.fileTooLarge', { max: MAX_ATTACHMENT_MB }), 'error');
+    // Un enregistrement audio peut être plus lourd qu'une partition
+    const maxMb = isAudioFile(file.name) ? MAX_AUDIO_MB : MAX_ATTACHMENT_MB;
+    if (file.size > maxMb * 1024 * 1024) {
+      showToast(t('messages.fileTooLarge', { max: maxMb }), 'error');
       e.target.value = '';
       return;
     }

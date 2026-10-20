@@ -1,6 +1,8 @@
 import { FileText, Music, PlayCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { isAudioFile } from '../utils/media';
 import { isTabFile } from '../utils/tabFiles';
+import AudioPlayer from './AudioPlayer';
 
 const isImage = (name) => /\.(jpg|jpeg|png)$/i.test(name);
 const isGuitarPro = (name) => /\.(gp3|gp4|gp5|gpx|gp)$/i.test(name);
@@ -9,6 +11,7 @@ const isGuitarPro = (name) => /\.(gp3|gp4|gp5|gpx|gp)$/i.test(name);
 const AttachmentView = ({ file, alt }) => {
   const { openTabPlayer, t } = useApp();
   if (!file) return null;
+  if (isAudioFile(file.name)) return <AudioPlayer file={file} />;
 
   const downloadLabel = isImage(file.name) ? t('exercise.downloadImage')
     : isGuitarPro(file.name) ? t('exercise.downloadGuitarPro')
