@@ -215,7 +215,7 @@ describe('MyMusicCoach', () => {
     ]);
     const { user } = await startApp();
 
-    await user.click(screen.getByRole('button', { name: /Log free practice/ }));
+    await user.click(screen.getByRole('button', { name: /^Free practice/ }));
     const dialog = screen.getByRole('dialog', { name: 'Free practice' });
     await user.type(within(dialog).getByLabelText('Title (optional)'), 'Jam with friends');
     const date = within(dialog).getByLabelText('Date');

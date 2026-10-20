@@ -293,7 +293,7 @@ const HomePage = () => {
             <PenLine aria-hidden="true" className="w-7 h-7" />
           </div>
           <div className="text-left">
-            <p className="font-bold text-lg">{t('freePractice.logButton')}</p>
+            <p className="font-bold text-lg">{t('freePractice.title')}</p>
             <p className="text-sm text-white/80">{t('freePractice.logDesc')}</p>
           </div>
           <ChevronRight aria-hidden="true" className="w-6 h-6 ml-auto" />
