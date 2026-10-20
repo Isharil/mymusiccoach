@@ -615,6 +615,10 @@
     "error": "Can't use the microphone. Make sure no other app is using it, then try again.",
     "noteNames": ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"],
     "octaveOffset": "0",
-    "tooQuiet": "Sound too quiet: bring the phone's microphone closer to the instrument, or play a little louder."
+    "tooQuiet": "Sound too quiet: bring the phone's microphone closer to the instrument, or play a little louder.",
+    "accidentals": "Accidentals",
+    "accidentalsSharps": "Sharps (C♯, D♯, F♯…)",
+    "accidentalsFlats": "Flats (D♭, E♭, B♭…) — harp, brass…",
+    "noteNamesFlat": ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"]
   }
 }

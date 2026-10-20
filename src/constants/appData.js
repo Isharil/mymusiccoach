@@ -36,8 +36,8 @@ export const EXAMPLE_WORKOUT_KEYS = { 1: 'workout1', 2: 'workout2' };
 // Jours du planning, du lundi au dimanche (clés stockées)
 export const SCHEDULE_DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
-// Réglages de l'accordeur (settings.tuner) : La de référence, transposition, nom des notes
-export const DEFAULT_TUNER_SETTINGS = { a4: 440, transposition: 'C', notation: 'auto' };
+// Réglages de l'accordeur (settings.tuner) : La de référence, transposition, nom des notes, altérations
+export const DEFAULT_TUNER_SETTINGS = { a4: 440, transposition: 'C', notation: 'auto', accidentals: 'sharps' };
 
 export const DEFAULT_SETTINGS = {
   notifications: true,

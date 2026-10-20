@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { useTuner } from '../../hooks/useTuner';
 import { DEFAULT_TUNER_SETTINGS } from '../../constants/appData';
 import {
-  IN_TUNE_CENTS, LETTER_NOTE_NAMES, MAX_A4, MIN_A4, TRANSPOSITIONS,
+  IN_TUNE_CENTS, LETTER_NOTE_NAMES, LETTER_NOTE_NAMES_FLAT, MAX_A4, MIN_A4, TRANSPOSITIONS,
   frequencyToNote, midiToFrequency, noteLabel, transposeNote
 } from '../../utils/pitch';
 
@@ -54,9 +54,11 @@ const TunerModal = () => {
   const updateTuner = (changes) => setSettings(prev => ({ ...prev, tuner: { ...DEFAULT_TUNER_SETTINGS, ...prev.tuner, ...changes } }));
 
   // Nom des notes : celui de la langue (Do Ré Mi, C D E, ... H en allemand) ou les lettres
-  const languageNames = t('tuner.noteNames');
+  // Altérations en dièses (Do♯, Ré♯...) ou en bémols (Ré♭, Mi♭...)
+  const flats = tuner.accidentals === 'flats';
+  const languageNames = t(flats ? 'tuner.noteNamesFlat' : 'tuner.noteNames');
   const useLetters = tuner.notation === 'letters' || !Array.isArray(languageNames);
-  const names = useLetters ? LETTER_NOTE_NAMES : languageNames;
+  const names = useLetters ? (flats ? LETTER_NOTE_NAMES_FLAT : LETTER_NOTE_NAMES) : languageNames;
   const octaveOffset = useLetters ? 0 : (parseInt(t('tuner.octaveOffset'), 10) || 0);
   const label = (note) => {
     const { name, octave } = noteLabel(note, names, octaveOffset);
@@ -243,8 +245,21 @@ const TunerModal = () => {
                 onChange={(e) => updateTuner({ notation: e.target.value })}
                 className={selectClass}
               >
-                <option value="auto">{t('tuner.notationLanguage', { example: Array.isArray(languageNames) ? languageNames.slice(0, 3).join(', ') : 'C, D, E' })}</option>
+                <option value="auto">{t('tuner.notationLanguage', { example: Array.isArray(languageNames) ? [0, 2, 4].map(i => languageNames[i]).join(', ') : 'C, D, E' })}</option>
                 <option value="letters">{t('tuner.notationLetters')}</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="tuner-accidentals" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('tuner.accidentals')}</label>
+              <select
+                id="tuner-accidentals"
+                value={tuner.accidentals}
+                onChange={(e) => updateTuner({ accidentals: e.target.value })}
+                className={selectClass}
+              >
+                <option value="sharps">{t('tuner.accidentalsSharps')}</option>
+                <option value="flats">{t('tuner.accidentalsFlats')}</option>
               </select>
             </div>
 

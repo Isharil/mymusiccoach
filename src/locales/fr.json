@@ -615,6 +615,10 @@
     "error": "Impossible d'utiliser le micro. Vérifie qu'aucune autre app ne l'utilise, puis réessaie.",
     "noteNames": ["Do", "Do♯", "Ré", "Ré♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"],
     "octaveOffset": "-1",
-    "tooQuiet": "Son trop faible : rapproche le micro du téléphone de l'instrument, ou joue un peu plus fort."
+    "tooQuiet": "Son trop faible : rapproche le micro du téléphone de l'instrument, ou joue un peu plus fort.",
+    "accidentals": "Altérations",
+    "accidentalsSharps": "Dièses (Do♯, Ré♯, Fa♯…)",
+    "accidentalsFlats": "Bémols (Ré♭, Mi♭, Si♭…) — harpe, cuivres…",
+    "noteNamesFlat": ["Do", "Ré♭", "Ré", "Mi♭", "Mi", "Fa", "Sol♭", "Sol", "La♭", "La", "Si♭", "Si"]
   }
 }

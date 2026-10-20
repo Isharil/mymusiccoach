@@ -348,6 +348,29 @@ describe('MyMusicCoach', () => {
       expect(screen.queryByRole('dialog', { name: 'Tuner' })).toBeNull();
     });
 
+    it('écrit les altérations en dièses ou en bémols', async () => {
+      installFakeMicrophone({ frequency: 466.16 }); // La♯4 / Si♭4
+      const { user } = await startApp();
+
+      await user.click(screen.getByRole('button', { name: /Tuner/ }));
+      await user.click(screen.getByRole('button', { name: /Turn on microphone/ }));
+      expect(await screen.findByText('A♯')).toBeTruthy();
+
+      await user.selectOptions(screen.getByLabelText('Accidentals'), 'flats');
+      expect(await screen.findByText('B♭')).toBeTruthy();
+      await stored('mmc_settings', (s) => s?.tuner?.accidentals === 'flats');
+
+      // En français : Si♭, octave 3 (La3 = 440 Hz)
+      await user.click(within(screen.getByRole('dialog', { name: 'Tuner' })).getByRole('button', { name: 'Close' }));
+      await user.click(nav('Settings'));
+      await user.selectOptions(screen.getByLabelText('Language'), 'fr');
+      await user.click(nav('Accueil'));
+      await user.click(screen.getByRole('button', { name: /Accordeur/ }));
+      await user.click(screen.getByRole('button', { name: /Activer le micro/ }));
+      expect(await screen.findByText('Si♭')).toBeTruthy();
+      expect(screen.getByText('3')).toBeTruthy();
+    });
+
     it("explique quoi faire si l'accès au micro est refusé", async () => {
       installFakeMicrophone({ error: 'NotAllowedError' });
       const { user } = await startApp();

@@ -127,7 +127,7 @@ En plus, `localStorage.mmc_theme` mémorise le thème résolu (`light` ou `dark`
 { '<workoutId>-<exerciseId>': 'completed' | 'skipped' }
 ```
 
-Réglages notables : `tuner` (`{ a4, transposition, notation }`, voir `DEFAULT_TUNER_SETTINGS`), `weeklyGoalMinutes` (objectif de pratique hebdomadaire, 0 = aucun),
+Réglages notables : `tuner` (`{ a4, transposition, notation, accidentals }`, voir `DEFAULT_TUNER_SETTINGS`), `weeklyGoalMinutes` (objectif de pratique hebdomadaire, 0 = aucun),
 `practiceReminder` (heure des rappels), `cycleStartDate` (lundi de la semaine 1 du planning).
 
 ### Accordeur

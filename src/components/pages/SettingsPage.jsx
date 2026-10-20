@@ -16,8 +16,9 @@ const SettingsPage = () => {
 
       <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.yourName')}</label>
+          <label htmlFor="settings-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.yourName')}</label>
           <input
+            id="settings-name"
             type="text"
             value={settings.userName}
             onChange={(e) => setSettings({...settings, userName: e.target.value})}
@@ -26,8 +27,9 @@ const SettingsPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎯 {t('settings.longTermGoal')}</label>
+          <label htmlFor="settings-long-term-goal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎯 {t('settings.longTermGoal')}</label>
           <input
+            id="settings-long-term-goal"
             type="text"
             value={settings.longTermGoal || ''}
             onChange={(e) => setSettings({...settings, longTermGoal: e.target.value})}
@@ -57,8 +59,9 @@ const SettingsPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📅 {t('settings.cycleStartDate')}</label>
+          <label htmlFor="settings-cycle-start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📅 {t('settings.cycleStartDate')}</label>
           <input
+            id="settings-cycle-start"
             type="date"
             value={settings.cycleStartDate || ''}
             onChange={(e) => setSettings({...settings, cycleStartDate: e.target.value})}
@@ -68,8 +71,9 @@ const SettingsPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.language')}</label>
+          <label htmlFor="settings-language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.language')}</label>
           <select
+            id="settings-language"
             value={settings.language || 'en'}
             onChange={(e) => setSettings({...settings, language: e.target.value})}
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 bg-white dark:bg-gray-800"
@@ -103,7 +107,7 @@ const SettingsPage = () => {
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.dailyReminder')}</label>
+            <label htmlFor="settings-reminder-time" className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.dailyReminder')}</label>
             <button
               onClick={() => setSettings({...settings, reminderEnabled: !settings.reminderEnabled})}
               className={`w-12 h-6 rounded-full transition-colors ${
@@ -116,6 +120,7 @@ const SettingsPage = () => {
             </button>
           </div>
           <input
+            id="settings-reminder-time"
             type="time"
             value={settings.practiceReminder}
             onChange={(e) => setSettings({...settings, practiceReminder: e.target.value})}

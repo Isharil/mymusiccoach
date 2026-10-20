@@ -22,6 +22,8 @@ export const TRANSPOSITIONS = {
 
 // Noms des notes en lettres (notation internationale)
 export const LETTER_NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
+// Mêmes notes, altérations écrites en bémols
+export const LETTER_NOTE_NAMES_FLAT = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
 
 // Seuil de silence adaptatif : un son est analysé s'il dépasse NOISE_GATE_RATIO fois le bruit
 // de fond mesuré, dans ces limites (un instrument doux, comme une guitare électrique non

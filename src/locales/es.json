@@ -615,6 +615,10 @@
     "error": "No se puede usar el micrófono. Comprueba que ninguna otra app lo esté usando y vuelve a intentarlo.",
     "noteNames": ["Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si"],
     "octaveOffset": "0",
-    "tooQuiet": "Sonido demasiado débil: acerca el micrófono del teléfono al instrumento o toca un poco más fuerte."
+    "tooQuiet": "Sonido demasiado débil: acerca el micrófono del teléfono al instrumento o toca un poco más fuerte.",
+    "accidentals": "Alteraciones",
+    "accidentalsSharps": "Sostenidos (Do♯, Re♯, Fa♯…)",
+    "accidentalsFlats": "Bemoles (Re♭, Mi♭, Si♭…) — arpa, metales…",
+    "noteNamesFlat": ["Do", "Re♭", "Re", "Mi♭", "Mi", "Fa", "Sol♭", "Sol", "La♭", "La", "Si♭", "Si"]
   }
 }

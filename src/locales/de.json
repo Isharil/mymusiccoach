@@ -615,6 +615,10 @@
     "error": "Das Mikrofon kann nicht verwendet werden. Prüfe, ob keine andere App es nutzt, und versuche es erneut.",
     "noteNames": ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "H"],
     "octaveOffset": "0",
-    "tooQuiet": "Ton zu leise: Halte das Mikrofon des Telefons näher ans Instrument oder spiel etwas lauter."
+    "tooQuiet": "Ton zu leise: Halte das Mikrofon des Telefons näher ans Instrument oder spiel etwas lauter.",
+    "accidentals": "Vorzeichen",
+    "accidentalsSharps": "Kreuze (C♯, D♯, F♯…)",
+    "accidentalsFlats": "Bes (D♭, E♭, B…) — Harfe, Blechbläser…",
+    "noteNamesFlat": ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B", "H"]
   }
 }

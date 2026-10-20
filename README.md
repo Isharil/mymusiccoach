@@ -34,7 +34,7 @@ Application mobile et web pour accompagner les musiciens dans leur pratique quot
 - **Justesse** : aiguille en cents, note juste à ±5 cents, fréquence affichée
 - **La de référence** réglable de 415 à 466 Hz, et son de référence
 - **Instruments transpositeurs** : en Ut, Si♭, Mi♭ ou Fa (note écrite et son réel)
-- **Nom des notes** selon la langue (Do Ré Mi, C D E, H en allemand) ou en lettres
+- **Nom des notes** selon la langue (Do Ré Mi, C D E, H en allemand) ou en lettres, altérations en dièses ou en bémols (harpe, cuivres...)
 - Le son est analysé sur l'appareil, sans enregistrement
 
 ### Statistiques et récompenses
